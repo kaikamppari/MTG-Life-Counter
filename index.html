@@ -23,7 +23,8 @@ input,textarea,select{font-family:inherit;user-select:text;-webkit-user-select:t
 #names input{background:#222;border:2px solid #444;color:#fff;border-radius:10px;padding:10px;font-size:16px;width:100%}
 .psetup{display:grid;grid-template-columns:1fr 48px;grid-template-rows:auto auto;gap:6px 8px;background:#1a1a1a;padding:10px;border-radius:12px;border-left:4px solid #444;width:min(100%,210px)}
 .psetup input{grid-column:1;grid-row:1}
-.psetup select{grid-column:1;grid-row:2;width:100%;background:#222;border:2px solid #444;color:#fff;border-radius:10px;padding:8px;font-size:14px}
+.cmdpickbtn{text-align:left;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.psetup select,.psetup .cmdsel{grid-column:1;grid-row:2;width:100%;background:#222;border:2px solid #444;color:#fff;border-radius:10px;padding:8px;font-size:14px}
 .ppreview{grid-column:2;grid-row:1/3;border-radius:8px;background:#222 center/cover no-repeat;min-height:44px}
 #board{position:fixed;inset:0;display:grid;gap:6px;padding:6px}
 .cell{container-type:size;position:relative;border-radius:16px;overflow:hidden;border:3px solid transparent}
@@ -408,9 +409,10 @@ function buildSetup(){
     inp.style.borderColor=COLORS[i];
     inp.placeholder='Player '+(i+1);
     inp.oninput=()=>{cfg.names[i]=inp.value;};
-    const sel=document.createElement('select');
-    sel.className='cmdsel';
-    sel.innerHTML=commanderOptions(cfg.commanders[i]||'');
+    const sel=document.createElement('button');
+    sel.type='button';sel.className='cmdsel cmdpickbtn';
+    sel.textContent=(cfg.commanders[i]||'None (solid color)')+'  \u25BE';
+    sel.onclick=()=>{syncSetupFromDom();openDeckPick(i,true);};
     const prev=document.createElement('div');
     prev.className='ppreview';
     const setPrev=()=>{
@@ -418,7 +420,6 @@ function buildSetup(){
       prev.style.backgroundImage=c?`url(${c.img})`:'none';
       prev.style.backgroundColor=c?'#222':COLORS[i];
     };
-    sel.onchange=()=>{cfg.commanders[i]=sel.value;setPrev();};
     setPrev();
     wrap.appendChild(inp);wrap.appendChild(sel);wrap.appendChild(prev);
     nm.appendChild(wrap);
@@ -428,9 +429,7 @@ function syncSetupFromDom(){
   const wraps=document.querySelectorAll('#names .psetup');
   wraps.forEach((w,i)=>{
     const inp=w.querySelector('input');
-    const sel=w.querySelector('select');
     if(inp)cfg.names[i]=inp.value;
-    if(sel)cfg.commanders[i]=sel.value;
   });
 }
 function newGame(){
@@ -753,19 +752,23 @@ function openLightbox(id){
   openScreen('lightbox');
 }
 
-function openDeckPick(i){
-  pickPlayer=i;
+let pickFromSetup=false;
+function normQ(t){return (t||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9 ]/g,'').replace(/\s+/g,' ').trim();}
+function openDeckPick(i,fromSetup){
+  pickPlayer=i;pickFromSetup=!!fromSetup;
   document.getElementById('deckfilter').value='';
   renderDeckGrid();
   openScreen('deckpick');
+  try{document.getElementById('deckfilter').focus();}catch(e){}
 }
 function renderDeckGrid(){
-  const q=(document.getElementById('deckfilter').value||'').trim().toLowerCase();
+  const q=normQ(document.getElementById('deckfilter').value);
   const grid=document.getElementById('deckgrid');
   const cur=cfg.commanders[pickPlayer]||'';
   let list=[{name:'',img:'',lab:'None (solid color)'}].concat(commandersSorted().map(c=>({name:c.name,img:c.img,lab:c.name})));
-  if(q)list=list.filter(c=>c.lab.toLowerCase().includes(q));
-  grid.innerHTML='';
+  if(q)list=list.filter(c=>normQ(c.lab).includes(q)||normQ(c.lab).replace(/ /g,'').includes(q.replace(/ /g,'')));
+  if(!list.length)grid.innerHTML='<div style="opacity:.7;padding:12px">No commanders match.</div>';
+  if(list.length)grid.innerHTML='';
   for(const c of list){
     const b=document.createElement('button');
     b.className='deckopt'+(c.name===cur?' sel':'');
@@ -775,7 +778,7 @@ function renderDeckGrid(){
       cfg.commanders[pickPlayer]=c.name;
       save();
       closeScreens();
-      render();
+      if(pickFromSetup){pickFromSetup=false;buildSetup();}else render();
     };
     grid.appendChild(b);
   }
