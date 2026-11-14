@@ -67,6 +67,20 @@ input,textarea,select{font-family:inherit;user-select:text;-webkit-user-select:t
 #camfab{position:fixed;left:50%;top:50%;transform:translate(-50%,-62px);z-index:10;width:40px;height:40px;border-radius:50%;background:#111;border:2px solid #fff;color:#fff;font-size:18px;cursor:pointer}
 #menupanel{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:15;display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;overflow:auto;padding:20px}
 #menupanel.open{display:flex}
+#timerpill{position:fixed;left:50%;top:50%;transform:translate(-50%,30px);z-index:10;background:#111;border:2px solid #fff;color:#fff;font-weight:800;font-size:16px;border-radius:18px;padding:5px 8px 5px 12px;display:none;align-items:center;gap:8px;font-variant-numeric:tabular-nums}
+#timerpill.paused{opacity:.6}
+#timerpill.low{border-color:#ff5252;color:#ff8080}
+#timerpill.over{background:#b00;border-color:#fff;color:#fff;animation:fxflash 1s infinite alternate}
+#timerpill .tx{background:#333;border:none;color:#fff;border-radius:50%;width:22px;height:22px;font-size:13px;line-height:22px;padding:0}
+.taxbtn,.histbtn{background:rgba(0,0,0,.35);border:none;color:#fff;font-weight:600;border-radius:20px;cursor:pointer;font-size:13px;padding:7px 10px;white-space:nowrap;touch-action:none}
+.inner:not(.has-art) .cmdbtn,.inner:not(.has-art) .taxbtn,.inner:not(.has-art) .histbtn{background:rgba(0,0,0,.45)}
+.histpanel{position:absolute;inset:0;background:rgba(15,15,15,.95);z-index:6;display:none;flex-direction:column;align-items:center;padding:8px;gap:4px;overflow:hidden}
+.histpanel.open{display:flex}
+.histpanel .t{font-size:13px;color:#bbb;text-align:center}
+.histlist{flex:1;overflow-y:auto;width:100%;max-width:320px;-webkit-overflow-scrolling:touch}
+.hrow{display:flex;justify-content:space-between;gap:8px;font-size:15px;padding:5px 6px;border-bottom:1px solid #2a2a2a;color:#eee}
+.hrow .d.neg{color:#ff6b6b;font-weight:700}.hrow .d.pos{color:#5dff8a;font-weight:700}
+.hrow .w{color:#999;font-size:12px}
 #fxlayer{position:fixed;inset:0;pointer-events:none;z-index:9;overflow:hidden}
 .fxbox{position:absolute;display:flex;align-items:center;justify-content:center;pointer-events:none;overflow:hidden;border-radius:14px}
 .fxin{display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;height:100%}
@@ -130,6 +144,7 @@ input,textarea,select{font-family:inherit;user-select:text;-webkit-user-select:t
 <button id="menu" style="display:none" aria-label="Menu">⚙</button>
 <button id="camfab" style="display:none" aria-label="Take photo">📷</button>
 <div id="fxlayer"></div>
+<div id="timerpill"><span class="tt">5:00</span><button class="tx" aria-label="Cancel timer">✕</button></div>
 <div id="menupanel">
   <button class="btn" id="mreset">Reset life (same players)</button>
   <button class="btn" id="mnew">New game setup</button>
@@ -137,6 +152,7 @@ input,textarea,select{font-family:inherit;user-select:text;-webkit-user-select:t
   <button class="btn" id="mrec">Records</button>
   <button class="btn" id="march">Photo archive</button>
   <button class="btn" id="mphoto">Take photo</button>
+  <button class="btn" id="mtimer">Start 5-min timer</button>
   <button class="btn" id="msound">Sound effects: on</button>
   <button class="btn" id="mclose">Close</button>
 </div>
@@ -208,7 +224,7 @@ function fmtDate(iso){
 
 let cfg={n:4,start:40,names:['Player 1','Player 2','Player 3','Player 4'],commanders:['','','','']};
 let st=null; // {players:[{life,cmd:[]}], gameId, startedAt, ended}
-let openCmd=-1;
+let openCmd=-1,openHist=-1;
 let deltaT={},deltaV={};
 let pickPlayer=-1;
 let pendingPhoto=null;
@@ -452,7 +468,7 @@ function newGame(){
     if(!cfg.names[i]||!String(cfg.names[i]).trim())cfg.names[i]='Player '+(i+1);
   }
   st={
-    players:Array.from({length:cfg.n},()=>({life:cfg.start,cmd:Array(cfg.n).fill(0)})),
+    players:Array.from({length:cfg.n},()=>({life:cfg.start,cmd:Array(cfg.n).fill(0),tax:0,hist:[]})),
     gameId:uid(),
     startedAt:new Date().toISOString(),
     ended:false
@@ -464,9 +480,17 @@ function layout(n){
   if(n==3)return{cols:'1fr 1fr',rows:'1fr 1.4fr',cells:[{r:'r180',area:'1/1/2/3'},{r:'r90',area:'2/1'},{r:'r270',area:'2/2'}]};
   return{cols:'1fr 1fr',rows:'1fr 1fr',cells:[{r:'r90',area:'1/1'},{r:'r270',area:'1/2'},{r:'r90',area:'2/1'},{r:'r270',area:'2/2'}]};
 }
-function changeLife(i,d){
+function addHist(i,d,src){
+  const p=st.players[i];if(!p.hist)p.hist=[];
+  const kind=src==null?'life':'cmd'+src, now=Date.now(), last=p.hist[p.hist.length-1];
+  if(last&&last.k===kind&&now-last.t<1500){last.d+=d;last.l=p.life;last.t=now;if(!last.d)p.hist.pop();}
+  else p.hist.push({t:now,d:d,l:p.life,k:kind});
+  if(p.hist.length>400)p.hist.splice(0,p.hist.length-400);
+}
+function changeLife(i,d,src){
   const wasDead=isDead(st.players[i]);
   st.players[i].life+=d;
+  try{addHist(i,d,src);}catch(e){}
   deltaV[i]=(deltaV[i]||0)+d;
   clearTimeout(deltaT[i]);
   deltaT[i]=setTimeout(()=>{deltaV[i]=0;fxFired[i]={};render();},1500);
@@ -481,7 +505,7 @@ function changeCmd(target,src,d){
   const wasCk=p.cmd[src]>=21;
   p.cmd[src]=nv;
   if(!wasCk&&nv>=21)fxCmdKill={t:target,s:src};
-  changeLife(target,-real);
+  changeLife(target,-real,src);
 }
 function isDead(p){return p.life<=0||p.cmd.some(c=>c>=21);}
 /* ---------- Effects ---------- */
@@ -495,7 +519,7 @@ function sfx(kind){
   if(!fxSound)return;
   if(kind==='bazinga'){tone(180,900,.35,'square',.18);tone(900,300,.25,'triangle',.15,.35);say('Bazinga!',1.6,1.1);}
   else if(kind==='heal'){[523,659,784,1047].forEach((f,k)=>tone(f,f*1.01,.18,'triangle',.18,k*.08));}
-  else if(kind==='dead'){tone(220,40,1.1,'sawtooth',.25);tone(110,30,1.2,'square',.15,.05);say('Eliminated',.6,.9);}
+  else if(kind==='dead'){tone(220,40,1.1,'sawtooth',.25);tone(110,30,1.2,'square',.15,.05);say('Boggled!',.7,.95);}
   else if(kind==='cmdkill'){tone(1200,200,.5,'sawtooth',.18);tone(80,40,.8,'square',.2,.1);say('Commander kill!',.9,1);}
   else if(kind==='win'){[523,659,784,1047,784,1047].forEach((f,k)=>tone(f,f,.22,'square',.14,k*.13));}
 }
@@ -522,10 +546,38 @@ function checkFx(i,wasDead){
   const p=st.players[i];fxFired[i]=fxFired[i]||{};
   const nowDead=isDead(p);
   if(fxCmdKill&&fxCmdKill.t===i){const s=fxCmdKill.s;fxCmdKill=null;showFx(i,'COMMANDER KILL!','#ffcc00','21 from '+esc(shortName(cfg.commanders[s]||cfg.names[s])),{flash:'#b00',shake:true,emoji:['⚔️','💥']});sfx('cmdkill');fxFired[i].dead=1;}
-  else if(nowDead&&!wasDead){showFx(i,'ELIMINATED','#ff3b3b','💀',{flash:'#900',shake:true,emoji:['💀','🔥']});sfx('dead');}
+  else if(nowDead&&!wasDead){showFx(i,'BOGGLED!','#ff3b3b','💀',{flash:'#900',shake:true,emoji:['💀','🔥']});sfx('dead');}
   else if(deltaV[i]<=-10&&!fxFired[i].baz){fxFired[i].baz=1;showFx(i,'BAZINGA!','#ffe14d',deltaV[i]+' life',{shake:true,emoji:['💥','😱','⚡']});sfx('bazinga');}
   else if(deltaV[i]>=10&&!fxFired[i].heal){fxFired[i].heal=1;showFx(i,'HEALED UP!','#5dff8a','+'+deltaV[i],{flash:'rgba(80,255,140,.5)',emoji:['✨','💚','✨']});sfx('heal');}
   if(nowDead&&!wasDead&&cfg.n>1){const alive=st.players.map((q,k)=>isDead(q)?-1:k).filter(k=>k>=0);if(alive.length===1){const w=alive[0];setTimeout(()=>{showFx(w,'VICTORY!','#ffd700','👑 '+esc(cfg.names[w]),{flash:'rgba(255,215,0,.45)',emoji:['👑','🎉','✨']});sfx('win');},1700);}}
+}
+/* ---------- 5-minute timer ---------- */
+let tmr={end:0,left:0,running:false,active:false,iv:null,over:false};
+const TMR_MS=5*60*1000;
+function fmtT(ms){const s=Math.max(0,Math.ceil(ms/1000));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0');}
+function tmrLeft(){return tmr.running?tmr.end-Date.now():tmr.left;}
+function tmrDraw(){
+  const pill=document.getElementById('timerpill');if(!pill)return;
+  const onBoard=document.getElementById('setup').style.display==='none'&&st;
+  pill.style.display=(tmr.active&&onBoard&&document.getElementById('menu').style.display!=='none')?'flex':'none';
+  const L=tmrLeft();
+  pill.querySelector('.tt').textContent=tmr.over?"TIME'S UP":(fmtT(L)+(tmr.running?'':' ⏸'));
+  pill.classList.toggle('paused',!tmr.running&&!tmr.over);
+  pill.classList.toggle('low',!tmr.over&&L<=30000);
+  pill.classList.toggle('over',tmr.over);
+  const mb=document.getElementById('mtimer');if(mb)mb.textContent=tmr.active?'Restart 5-min timer':'Start 5-min timer';
+}
+function tmrTick(){
+  if(tmr.running&&tmrLeft()<=0){tmr.running=false;tmr.left=0;tmr.over=true;tmrDone();}
+  tmrDraw();
+}
+function tmrStart(){ac();tmr={end:Date.now()+TMR_MS,left:TMR_MS,running:true,active:true,iv:tmr.iv,over:false};if(!tmr.iv)tmr.iv=setInterval(tmrTick,250);tmrDraw();}
+function tmrStop(){tmr.active=false;tmr.running=false;tmr.over=false;clearInterval(tmr.iv);tmr.iv=null;tmrDraw();}
+function tmrToggle(){if(tmr.over){tmrStop();return;}if(tmr.running){tmr.left=tmrLeft();tmr.running=false;}else{tmr.end=Date.now()+tmr.left;tmr.running=true;}tmrDraw();}
+function tmrDone(){
+  try{navigator.vibrate&&navigator.vibrate([300,150,300,150,600]);}catch(e){}
+  if(fxSound){[0,.45,.9].forEach(dl=>{tone(880,880,.18,'square',.2,dl);tone(1175,1175,.18,'square',.2,dl+.2);});say("Time's up!",1.1,1);}
+  for(let i=0;i<cfg.n;i++)showFx(i,"TIME'S UP!",'#ff9d3b','⏰',{flash:'rgba(255,140,0,.5)',emoji:['⏰','⌛']});
 }
 function holdable(el,fn){
   let t,iv,held=false;
@@ -564,10 +616,33 @@ function render(){
       <div class="name">${esc(cfg.names[i])}</div>
       <button class="deckbtn">${esc(deckLab)}</button>
       <div class="life">${p.life}</div>
-      <div class="actions"><button class="cmdbtn">⚔ Commander dmg</button></div>`;
+      <div class="actions"><button class="cmdbtn">⚔ Cmdr dmg</button><button class="taxbtn">Tax +${p.tax||0}</button><button class="histbtn" aria-label="Life history">📜</button></div>`;
     holdable(inner.querySelector('.minus'),k=>changeLife(i,-k));
     holdable(inner.querySelector('.plus'),k=>changeLife(i,k));
-    inner.querySelector('.cmdbtn').onclick=()=>{openCmd=i;render();};
+    inner.querySelector('.cmdbtn').onclick=()=>{openCmd=i;openHist=-1;render();};
+    inner.querySelector('.histbtn').onclick=()=>{openHist=i;openCmd=-1;render();};
+    (function(tb){let ht,long=false;
+      tb.addEventListener('pointerdown',e=>{e.preventDefault();long=false;ht=setTimeout(()=>{long=true;p.tax=Math.max(0,(p.tax||0)-2);save();render();},550);},{passive:false});
+      tb.addEventListener('pointerup',e=>{e.preventDefault();clearTimeout(ht);if(!long){p.tax=(p.tax||0)+2;save();render();}},{passive:false});
+      tb.addEventListener('pointerleave',()=>clearTimeout(ht));
+      tb.addEventListener('contextmenu',e=>e.preventDefault());
+    })(inner.querySelector('.taxbtn'));
+    const hp=document.createElement('div');
+    hp.className='histpanel'+(openHist==i?' open':'');
+    if(openHist==i){
+      const H=(p.hist||[]).slice().reverse();
+      let hh=`<div class="t">Life history: ${esc(cfg.names[i])} (started at ${cfg.start})</div><div class="histlist">`;
+      if(!H.length)hh+='<div class="hrow"><span>No changes yet</span></div>';
+      for(const e of H){
+        const tm=new Date(e.t).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});
+        const why=e.k&&e.k.startsWith('cmd')?('cmdr dmg from '+esc(cfg.names[+e.k.slice(3)]||'?')):'';
+        hh+=`<div class="hrow"><span class="d ${e.d<0?'neg':'pos'}">${e.d>0?'+':''}${e.d}</span><span>→ ${e.l}</span><span class="w">${why?why+' · ':''}${tm}</span></div>`;
+      }
+      hh+='</div><button class="done">Done</button>';
+      hp.innerHTML=hh;
+      hp.querySelector('.done').onclick=()=>{openHist=-1;render();};
+    }
+    inner.appendChild(hp);
     inner.querySelector('.deckbtn').onclick=()=>openDeckPick(i);
     const pan=document.createElement('div');
     pan.className='cmdpanel'+(openCmd==i?' open':'');
@@ -591,6 +666,7 @@ function render(){
 function setBoardChrome(on){
   document.getElementById('menu').style.display=on?'block':'none';
   document.getElementById('camfab').style.display=on?'block':'none';
+  try{setTimeout(tmrDraw,0);}catch(e){}
 }
 function showBoard(){
   document.getElementById('setup').style.display='none';
@@ -652,7 +728,9 @@ async function finishGame(winnerIndex){
     players:st.players.map((p,i)=>({
       name:cfg.names[i]||('Player '+(i+1)),
       commander:cfg.commanders[i]||'',
-      finalLife:p.life
+      finalLife:p.life,
+      tax:p.tax||0,
+      history:(p.hist||[]).map(e=>({t:e.t,d:e.d,l:e.l,k:e.k}))
     })),
     winner:winnerIndex
   };
@@ -885,13 +963,15 @@ function wireEvents(){
   };
   document.getElementById('menu').onclick=()=>document.getElementById('menupanel').classList.add('open');
   document.getElementById('mclose').onclick=()=>document.getElementById('menupanel').classList.remove('open');
+  document.getElementById('mtimer').onclick=()=>{tmrStart();document.getElementById('menupanel').classList.remove('open');};
+  document.getElementById('timerpill').addEventListener('click',e=>{if(e.target.classList.contains('tx')){tmrStop();}else tmrToggle();});
   const ms=document.getElementById('msound');const msLab=()=>ms.textContent='Sound effects: '+(fxSound?'on':'off');msLab();
   ms.onclick=()=>{fxSound=!fxSound;try{localStorage.setItem('lc_sound',fxSound?'on':'off');}catch(e){}msLab();if(fxSound){ac();tone(660,880,.12,'triangle',.15);}};
   document.getElementById('mreset').onclick=()=>{
     if(!unsavedWarn())return;
     if(!confirm('Reset all life totals?'))return;
     newGame();
-    openCmd=-1;
+    openCmd=-1;openHist=-1;
     document.getElementById('menupanel').classList.remove('open');
     render();
   };
