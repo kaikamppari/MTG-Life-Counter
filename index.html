@@ -40,6 +40,12 @@ input,textarea,select{font-family:inherit;user-select:text;-webkit-user-select:t
 .zone{position:absolute;top:0;bottom:0;width:50%;display:flex;align-items:center;font-size:34px;font-weight:300;color:rgba(0,0,0,.45);padding:0 6%;z-index:1}
 .zone.minus{left:0;justify-content:flex-start}.zone.plus{right:0;justify-content:flex-end}
 .zone:active{background:rgba(255,255,255,.12)}
+.liferow{position:relative;z-index:2;display:flex;align-items:center;gap:min(3cqw,3cqh);pointer-events:none}
+.cchips{display:flex;flex-direction:column;gap:5px;pointer-events:auto}
+.cchip{width:min(12cqh,12cqw,40px);height:min(12cqh,12cqw,40px);min-width:26px;min-height:26px;border-radius:50%;border:3px solid var(--c);background:rgba(0,0,0,.55);color:#fff;font-weight:800;font-size:min(6cqh,6cqw,16px);padding:0;display:flex;align-items:center;justify-content:center;cursor:pointer;touch-action:none;position:relative;z-index:4}
+.cchip.l{background:#b00020}
+.r90 .cchips,.r270 .cchips{flex-direction:row}
+.r90 .liferow,.r270 .liferow{margin-bottom:6cqw}
 .life{font-size:min(38cqh,30cqw);font-weight:700;color:#111;line-height:1;pointer-events:none;position:relative;z-index:2}
 .r90 .life,.r270 .life{font-size:min(38cqw,30cqh)}
 .name{font-size:16px;font-weight:600;color:rgba(0,0,0,.65);pointer-events:none;z-index:2;margin-bottom:4px;position:relative;max-width:90%;text-align:center}
@@ -582,13 +588,20 @@ function tmrDone(){
   if(fxSound){[0,.45,.9].forEach(dl=>{tone(880,880,.18,'square',.2,dl);tone(1175,1175,.18,'square',.2,dl+.2);});say("Time's up!",1.1,1);}
   for(let i=0;i<cfg.n;i++)showFx(i,"TIME'S UP!",'#ff9d3b','⏰',{flash:'rgba(255,140,0,.5)',emoji:['⏰','⌛']});
 }
+let HOLD=null;
+function stopHold(){if(HOLD){clearTimeout(HOLD.t);clearInterval(HOLD.iv);}const h=HOLD;HOLD=null;return h;}
+['pointerup','pointercancel','touchend','touchcancel','mouseup'].forEach(ev=>document.addEventListener(ev,()=>{stopHold();}));
+window.addEventListener('blur',()=>stopHold());document.addEventListener('visibilitychange',()=>stopHold());
 function holdable(el,fn){
-  let t,iv,held=false;
-  const start=e=>{e.preventDefault();held=false;t=setTimeout(()=>{held=true;fn(10);iv=setInterval(()=>fn(10),600);},450);};
-  const end=e=>{e.preventDefault();clearTimeout(t);clearInterval(iv);if(!held)fn(1);};
+  const start=e=>{e.preventDefault();stopHold();const h={held:false,iv:0};h.t=setTimeout(()=>{if(HOLD!==h)return;h.held=true;fn(10);h.iv=setInterval(()=>{if(HOLD!==h){clearInterval(h.iv);return;}fn(10);},600);},450);HOLD=h;};
+  const end=e=>{e.preventDefault();const h=stopHold();if(h&&!h.held)fn(1);};
   el.addEventListener('pointerdown',start,{passive:false});
   el.addEventListener('pointerup',end,{passive:false});
-  el.addEventListener('pointerleave',()=>{clearTimeout(t);clearInterval(iv);});
+  el.addEventListener('contextmenu',e=>e.preventDefault());
+}
+function holdTap(el,onTap,onHold){
+  el.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();stopHold();const h={held:false};h.t=setTimeout(()=>{if(HOLD!==h)return;h.held=true;HOLD=null;onHold();},550);HOLD=h;},{passive:false});
+  el.addEventListener('pointerup',e=>{e.preventDefault();const h=stopHold();if(h&&!h.held)onTap();},{passive:false});
   el.addEventListener('contextmenu',e=>e.preventDefault());
 }
 function render(){
@@ -618,18 +631,14 @@ function render(){
       <div class="delta ${deltaV[i]?'show':''}">${deltaV[i]>0?'+':''}${deltaV[i]||''}</div>
       <div class="name">${esc(cfg.names[i])}</div>
       <button class="deckbtn">${esc(deckLab)}</button>
-      <div class="life">${p.life}</div>
+      <div class="liferow"><div class="life">${p.life}</div><div class="cchips">${st.players.map((q,s)=>s==i?'':`<button class="cchip${p.cmd[s]>=21?' l':''}" data-s="${s}" style="--c:${COLORS[s]}">${p.cmd[s]}</button>`).join('')}</div></div>
       <div class="actions"><button class="cmdbtn">⚔ Cmdr dmg</button><button class="taxbtn">Tax +${p.tax||0}</button><button class="histbtn" aria-label="Life history">📜</button></div>`;
     holdable(inner.querySelector('.minus'),k=>changeLife(i,-k));
     holdable(inner.querySelector('.plus'),k=>changeLife(i,k));
     inner.querySelector('.cmdbtn').onclick=()=>{openCmd=i;openHist=-1;render();};
     inner.querySelector('.histbtn').onclick=()=>{openHist=i;openCmd=-1;render();};
-    (function(tb){let ht,long=false;
-      tb.addEventListener('pointerdown',e=>{e.preventDefault();long=false;ht=setTimeout(()=>{long=true;p.tax=Math.max(0,(p.tax||0)-2);save();render();},550);},{passive:false});
-      tb.addEventListener('pointerup',e=>{e.preventDefault();clearTimeout(ht);if(!long){p.tax=(p.tax||0)+2;save();render();}},{passive:false});
-      tb.addEventListener('pointerleave',()=>clearTimeout(ht));
-      tb.addEventListener('contextmenu',e=>e.preventDefault());
-    })(inner.querySelector('.taxbtn'));
+    holdTap(inner.querySelector('.taxbtn'),()=>{p.tax=(p.tax||0)+2;save();render();},()=>{p.tax=Math.max(0,(p.tax||0)-2);save();render();});
+    inner.querySelectorAll('.cchip').forEach(ch=>{const s2=+ch.dataset.s;holdTap(ch,()=>changeCmd(i,s2,1),()=>changeCmd(i,s2,-1));});
     const hp=document.createElement('div');
     hp.className='histpanel'+(openHist==i?' open':'');
     if(openHist==i){
