@@ -7,6 +7,9 @@
 <title>Commander Life Counter</title>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+html,body,button,a,input,select,.cell,.inner,.cmdpanel,.histpanel,.screen{touch-action:manipulation}
+.zone{touch-action:none}
+html{-webkit-text-size-adjust:100%}
 html,body{margin:0;height:100%;background:#111;font-family:-apple-system,system-ui,Segoe UI,Roboto,sans-serif;color:#fff;overflow:hidden;touch-action:manipulation}
 input,textarea,select{font-family:inherit;user-select:text;-webkit-user-select:text}
 #setup{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:14px;padding:max(16px,env(safe-area-inset-top)) 16px max(28px,env(safe-area-inset-bottom));background:#111;z-index:20;overflow-y:auto;-webkit-overflow-scrolling:touch}
@@ -1053,4 +1056,21 @@ wireEvents();
 if(st&&st.players&&st.players.length==cfg.n)showBoard();
 initStore().catch(()=>{});
 
-</script></body></html>
+</script><script>
+(function(){
+  document.addEventListener('dblclick',function(e){e.preventDefault();},{passive:false});
+  ['gesturestart','gesturechange','gestureend'].forEach(function(t){document.addEventListener(t,function(e){e.preventDefault();},{passive:false});});
+  var lastT=0;
+  document.addEventListener('touchend',function(e){
+    var now=Date.now();
+    var el=e.target;
+    if(now-lastT<350 && el && el.closest && el.closest('#board') && !el.closest('input,textarea,select')){
+      e.preventDefault();
+      var b=el.closest('button');
+      if(b && !b.classList.contains('taxbtn')) b.click();
+    }
+    lastT=now;
+  },{passive:false});
+})();
+</script>
+</body></html>
