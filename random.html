@@ -152,16 +152,35 @@ header a:hover{color:var(--gold);border-bottom-color:var(--gold)}
   padding:10px 16px var(--safe-b);
   background:linear-gradient(to top, var(--bg) 70%, transparent);
 }
+.drawrow{
+  display:flex;gap:8px;width:100%;max-width:430px;margin:0 auto;
+}
 .draw{
-  display:block;width:100%;max-width:430px;margin:0 auto;
+  flex:1;display:block;width:auto;margin:0;
   background:linear-gradient(#f0c15c,#d89a28);
   color:#2a1f0c;border:0;border-radius:16px;
-  font-size:1.15rem;font-weight:800;letter-spacing:.01em;
-  padding:16px 18px;cursor:pointer;
+  font-size:1.05rem;font-weight:800;letter-spacing:.01em;
+  padding:15px 10px;cursor:pointer;
   box-shadow:0 8px 20px rgba(216,154,40,.35);
+}
+.draw-ten{
+  background:linear-gradient(#3a3126,#2a241c);
+  color:var(--gold);
+  box-shadow:0 8px 16px rgba(0,0,0,.28);
+  border:2px solid var(--gold);
 }
 .draw:active{transform:translateY(1px)}
 .draw:disabled{opacity:.55;cursor:wait}
+
+.batch-total{
+  width:min(100%,372px);margin:0 auto 18px;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:14px;padding:12px 14px;text-align:center;
+}
+.batch-total .amt{font-size:1.15rem;font-weight:800;color:var(--gold)}
+.batch-total .note{display:block;margin-top:4px;font-size:.78rem;font-weight:600;color:var(--muted)}
+.batch-list{display:flex;flex-direction:column;align-items:center;gap:40px;}
+.card-item{width:100%;display:flex;flex-direction:column;align-items:center;}
 
 .status{
   text-align:center;color:var(--muted);font-size:.88rem;min-height:1.2em;
@@ -336,9 +355,9 @@ footer a{color:var(--muted)}
 
     <p class="status" id="status" role="status"></p>
 
-    <div class="stage">
+    <div class="stage" id="stage">
       <div class="cardframe" id="frame" aria-live="polite">
-        <div class="empty" id="placeholder"><span>Tap <strong>Random card</strong> to draw a rare or mythic.</span></div>
+        <div class="empty" id="placeholder"><span>Tap <strong>Random card</strong> or <strong>Draw 10</strong> to draw a rare or mythic.</span></div>
         <img class="art" id="art" alt="" hidden>
       </div>
       <button type="button" class="flip" id="flip">Flip</button>
@@ -358,6 +377,11 @@ footer a{color:var(--muted)}
       </div>
     </div>
 
+    <div id="batch" hidden>
+      <div class="batch-total" id="batch-total" hidden></div>
+      <div class="batch-list" id="batch-list"></div>
+    </div>
+
     <section class="history" id="history-wrap" hidden>
       <span class="lbl">Recent draws</span>
       <div class="thumbs" id="thumbs"></div>
@@ -370,7 +394,10 @@ footer a{color:var(--muted)}
   </div>
 
   <div class="drawbar">
-    <button type="button" class="draw" id="draw">Random card</button>
+    <div class="drawrow">
+      <button type="button" class="draw" id="draw">Random card</button>
+      <button type="button" class="draw draw-ten" id="draw10">Draw 10</button>
+    </div>
   </div>
 
 <script>
@@ -379,7 +406,9 @@ footer a{color:var(--muted)}
   const LS_OLD = "mtg-random-legend-v1";
   const PRICE_URL = "cardkingdom_prices.json";
   const MIN_GAP_MS = 150;
-  const HISTORY_MAX = 10;
+  const HISTORY_MAX = 20;
+  const BATCH_SIZE = 10;
+  const BATCH_MAX_TRIES = 18;
   const COLOR_ORDER = ["W", "U", "B", "R", "G"];
   const TYPE_ORDER = ["creature", "instant", "sorcery", "enchantment", "artifact", "planeswalker", "land", "battle"];
   const MV_ORDER = ["0", "1", "2", "3", "4", "5", "6", "7+"];
@@ -409,7 +438,8 @@ footer a{color:var(--muted)}
     face: 0,
     loading: false,
     lastFetchAt: 0,
-    prices: null
+    prices: null,
+    batchCards: []
   };
 
   const $ = (id) => document.getElementById(id);
@@ -420,6 +450,7 @@ footer a{color:var(--muted)}
   const placeholder = $("placeholder");
   const meta = $("meta");
   const drawBtn = $("draw");
+  const draw10Btn = $("draw10");
 
   function loadSettings() {
     try {
@@ -605,8 +636,8 @@ footer a{color:var(--muted)}
     return uris.small || uris.normal || imageUrl(uris);
   }
 
-  function renderMana(cost) {
-    const box = $("mana");
+  function renderMana(cost, box) {
+    box = box || $("mana");
     box.innerHTML = "";
     if (!cost) return;
     const re = /\{([^}]+)\}/g;
@@ -700,23 +731,23 @@ footer a{color:var(--muted)}
       state.prices = { i: {}, n: {} };
       asof.textContent = "CK prices unavailable.";
     }
-    if (state.card) renderPrices(state.card);
+    if (state.card && $("stage") && !$("stage").hidden) renderPrices(state.card);
+    if (state.batchCards.length && $("batch") && !$("batch").hidden) renderBatchList(state.batchCards);
     if (state.history.length) renderHistory();
   }
 
-  function renderPrices(card) {
-    const row = $("ck-prices");
-    const tcg = $("tcg-price");
-    const buy = $("ck-buy");
+  function fillPricesInto(card, row, tcg, buy, datasetEl) {
     row.innerHTML = "";
     row.hidden = true;
     tcg.hidden = true;
     tcg.textContent = "";
     buy.hidden = true;
-    delete meta.dataset.ckNf;
-    delete meta.dataset.ckFoil;
-    delete meta.dataset.ckSource;
-    delete meta.dataset.tcg;
+    if (datasetEl && datasetEl.dataset) {
+      delete datasetEl.dataset.ckNf;
+      delete datasetEl.dataset.ckFoil;
+      delete datasetEl.dataset.ckSource;
+      delete datasetEl.dataset.tcg;
+    }
     if (!card) return;
 
     const ck = lookupCk(card);
@@ -727,28 +758,27 @@ footer a{color:var(--muted)}
         amt.className = "ck-amt";
         amt.textContent = money(ck.nonfoil);
         row.appendChild(amt);
-        meta.dataset.ckNf = String(ck.nonfoil);
+        if (datasetEl) datasetEl.dataset.ckNf = String(ck.nonfoil);
       }
       if (ck.foil != null) {
         const foil = document.createElement("span");
         foil.className = "ck-foil";
         foil.textContent = "foil " + money(ck.foil);
         row.appendChild(foil);
-        meta.dataset.ckFoil = String(ck.foil);
+        if (datasetEl) datasetEl.dataset.ckFoil = String(ck.foil);
       }
       const note = document.createElement("span");
       note.className = "ck-note";
-      if (ck.source === "name") note.textContent = "CK, cheapest printing";
-      else note.textContent = "Card Kingdom";
+      note.textContent = ck.source === "name" ? "CK, cheapest printing" : "Card Kingdom";
       row.appendChild(note);
-      meta.dataset.ckSource = ck.source;
+      if (datasetEl) datasetEl.dataset.ckSource = ck.source;
     } else if (state.prices) {
       row.hidden = false;
       const none = document.createElement("span");
       none.className = "ck-none";
       none.textContent = "No Card Kingdom price";
       row.appendChild(none);
-      meta.dataset.ckSource = "none";
+      if (datasetEl) datasetEl.dataset.ckSource = "none";
     }
 
     const usd = card.prices && card.prices.usd ? parseFloat(card.prices.usd) : NaN;
@@ -759,7 +789,7 @@ footer a{color:var(--muted)}
     if (tcgParts.length) {
       tcg.hidden = false;
       tcg.textContent = "TCGplayer (via Scryfall) " + tcgParts.join(" · ");
-      if (!isNaN(usd)) meta.dataset.tcg = String(usd);
+      if (datasetEl && !isNaN(usd)) datasetEl.dataset.tcg = String(usd);
     }
 
     const purchase = (card.purchase_uris || {}).cardkingdom;
@@ -772,8 +802,13 @@ footer a{color:var(--muted)}
     }
   }
 
+  function renderPrices(card) {
+    fillPricesInto(card, $("ck-prices"), $("tcg-price"), $("ck-buy"), meta);
+  }
+
   function showCard(card, opts) {
     const options = opts || {};
+    leaveBatchView();
     state.card = card;
     state.face = options.face || 0;
     const faces = facesOf(card);
@@ -868,41 +903,217 @@ footer a{color:var(--muted)}
     });
   }
 
+  function setBusy(on) {
+    state.loading = on;
+    drawBtn.disabled = on;
+    draw10Btn.disabled = on;
+  }
+
+  function leaveBatchView() {
+    const batch = $("batch");
+    if (batch) batch.hidden = true;
+    $("stage").hidden = false;
+    state.batchCards = [];
+  }
+
+  function enterBatchView() {
+    $("stage").hidden = true;
+    $("batch").hidden = false;
+  }
+
+  function paintCardFace(card, faceIndex, img, nameEl, typeEl, manaBox, flip, frameEl) {
+    const faces = facesOf(card);
+    if (!faces.length) return 0;
+    const i = faceIndex % faces.length;
+    const face = faces[i];
+    if (nameEl) nameEl.textContent = face.name || card.name || "";
+    if (typeEl) typeEl.textContent = face.type_line || card.type_line || "";
+    if (manaBox) renderMana(face.mana_cost || card.mana_cost || "", manaBox);
+    const url = imageUrl(face.image_uris);
+    if (img) {
+      img.hidden = false;
+      img.alt = face.name || card.name || "Card image";
+      if (frameEl) frameEl.classList.add("loading");
+      img.onload = () => { if (frameEl) frameEl.classList.remove("loading"); };
+      img.onerror = () => { if (frameEl) frameEl.classList.remove("loading"); };
+      if (img.src !== url) img.src = url;
+      else if (frameEl) frameEl.classList.remove("loading");
+    }
+    if (flip) {
+      flip.classList.toggle("show", faces.length > 1);
+      flip.textContent = faces.length > 1
+        ? "Flip to " + (faces[(i + 1) % faces.length].name || "other face")
+        : "Flip";
+    }
+    return i;
+  }
+
+  function fillCardMeta(card, rarityEl, setEl, scry) {
+    const rarity = (card.rarity || "").toLowerCase();
+    if (rarityEl) {
+      rarityEl.textContent = rarity ? rarity.charAt(0).toUpperCase() + rarity.slice(1) : "";
+      rarityEl.className = rarity;
+    }
+    if (setEl) {
+      setEl.textContent = (card.set_name || "") + (card.set ? " (" + String(card.set).toUpperCase() + ")" : "");
+    }
+    if (scry) {
+      scry.href = card.scryfall_uri || "https://scryfall.com";
+      scry.hidden = !card.scryfall_uri;
+    }
+  }
+
+  function buildCardItem(card) {
+    const article = document.createElement("article");
+    article.className = "card-item";
+    if (card.id) article.dataset.id = card.id;
+    article.dataset.name = card.name || "";
+
+    const frameEl = document.createElement("div");
+    frameEl.className = "cardframe";
+    const img = document.createElement("img");
+    img.className = "art";
+    img.alt = "";
+    frameEl.appendChild(img);
+
+    const flip = document.createElement("button");
+    flip.type = "button";
+    flip.className = "flip";
+    flip.textContent = "Flip";
+
+    const metaEl = document.createElement("div");
+    metaEl.className = "meta";
+    const nameRow = document.createElement("div");
+    nameRow.className = "name-row";
+    const nameEl = document.createElement("h2");
+    nameEl.className = "name";
+    const manaBox = document.createElement("div");
+    manaBox.className = "mana";
+    nameRow.appendChild(nameEl);
+    nameRow.appendChild(manaBox);
+    const priceRow = document.createElement("div");
+    priceRow.className = "price-row";
+    const typeEl = document.createElement("p");
+    typeEl.className = "type";
+    const sub = document.createElement("p");
+    sub.className = "sub";
+    const rarityEl = document.createElement("span");
+    const setEl = document.createElement("span");
+    sub.appendChild(rarityEl);
+    sub.appendChild(document.createTextNode(" · "));
+    sub.appendChild(setEl);
+    const tcg = document.createElement("p");
+    tcg.className = "tcg-price";
+    tcg.hidden = true;
+    const links = document.createElement("div");
+    links.className = "buylinks";
+    const scry = document.createElement("a");
+    scry.className = "scry";
+    scry.target = "_blank";
+    scry.rel = "noopener";
+    scry.textContent = "View on Scryfall";
+    const buy = document.createElement("a");
+    buy.className = "ckbuy";
+    buy.target = "_blank";
+    buy.rel = "noopener";
+    buy.textContent = "Buy on Card Kingdom";
+    buy.hidden = true;
+    links.appendChild(scry);
+    links.appendChild(buy);
+    metaEl.appendChild(nameRow);
+    metaEl.appendChild(priceRow);
+    metaEl.appendChild(typeEl);
+    metaEl.appendChild(sub);
+    metaEl.appendChild(tcg);
+    metaEl.appendChild(links);
+
+    article.appendChild(frameEl);
+    article.appendChild(flip);
+    article.appendChild(metaEl);
+
+    let face = 0;
+    paintCardFace(card, face, img, nameEl, typeEl, manaBox, flip, frameEl);
+    fillCardMeta(card, rarityEl, setEl, scry);
+    fillPricesInto(card, priceRow, tcg, buy, article);
+    flip.addEventListener("click", () => {
+      const faces = facesOf(card);
+      if (faces.length < 2) return;
+      face = (face + 1) % faces.length;
+      paintCardFace(card, face, img, nameEl, typeEl, manaBox, flip, frameEl);
+    });
+    return article;
+  }
+
+  function batchTotalHtml(cards) {
+    let total = 0, counted = 0;
+    cards.forEach((c) => {
+      const ck = lookupCk(c);
+      if (ck && ck.nonfoil != null) {
+        total += ck.nonfoil;
+        counted++;
+      }
+    });
+    const short = cards.length < BATCH_SIZE ? "Drew " + cards.length + " of " + BATCH_SIZE : "";
+    if (counted) {
+      let note = "CK total";
+      if (counted !== cards.length) note += " for " + counted + (counted === 1 ? " card" : " cards");
+      if (short) note += " · " + short;
+      return '<span class="amt">' + money(total) + '</span><span class="note">' + note + "</span>";
+    }
+    return '<span class="note">' + (short || (cards.length + " cards")) + ". No Card Kingdom prices in this batch.</span>";
+  }
+
+  function renderBatchList(cards) {
+    const list = $("batch-list");
+    const tot = $("batch-total");
+    list.innerHTML = "";
+    cards.forEach((card) => list.appendChild(buildCardItem(card)));
+    if (cards.length) {
+      tot.hidden = false;
+      tot.innerHTML = batchTotalHtml(cards);
+    } else {
+      tot.hidden = true;
+      tot.innerHTML = "";
+    }
+  }
+
+  async function fetchRandomCard() {
+    const wait = MIN_GAP_MS - (Date.now() - state.lastFetchAt);
+    if (wait > 0) await sleep(wait);
+    const url = "https://api.scryfall.com/cards/random?q=" + encodeURIComponent(buildQuery());
+    state.lastFetchAt = Date.now();
+    const res = await fetch(url, { headers: { Accept: "application/json" } });
+    if (res.status === 404) return { notFound: true, status: 404 };
+    if (!res.ok) return { error: true, status: res.status };
+    return { card: await res.json() };
+  }
+
   async function drawRandom() {
     if (state.loading) return;
-    state.loading = true;
-    drawBtn.disabled = true;
+    setBusy(true);
+    leaveBatchView();
     setStatus("Drawing…");
     frame.classList.add("loading");
 
-    const wait = MIN_GAP_MS - (Date.now() - state.lastFetchAt);
-    if (wait > 0) await sleep(wait);
-
-    const query = buildQuery();
-    const url = "https://api.scryfall.com/cards/random?q=" + encodeURIComponent(query);
-    state.lastFetchAt = Date.now();
-
     try {
-      const res = await fetch(url, { headers: { Accept: "application/json" } });
-      if (res.status === 404) {
+      const result = await fetchRandomCard();
+      if (result.notFound) {
         showPlaceholder("No cards match those filters. Try a different type, mana cost, or color combo.");
         setStatus("No cards match those filters.", "empty");
         return;
       }
-      if (!res.ok) {
+      if (result.error || !result.card) {
         showPlaceholder("Scryfall didn’t return a card. Wait a moment and try again.");
-        setStatus("Couldn’t reach Scryfall (" + res.status + ").", "error");
+        setStatus("Couldn’t reach Scryfall" + (result.status ? " (" + result.status + ")." : "."), "error");
         return;
       }
-      const card = await res.json();
       setStatus("");
-      showCard(card, { addHistory: true });
+      showCard(result.card, { addHistory: true });
     } catch (err) {
       showPlaceholder("Couldn’t reach Scryfall. Check your connection and try again.");
       setStatus("Network error — try again.", "error");
     } finally {
-      state.loading = false;
-      drawBtn.disabled = false;
+      setBusy(false);
       frame.classList.remove("loading");
     }
   }
@@ -984,7 +1195,74 @@ footer a{color:var(--muted)}
     showCard(state.card, { addHistory: false, face: (state.face + 1) % faces.length });
   });
 
+  async function drawBatch() {
+    if (state.loading) return;
+    setBusy(true);
+    enterBatchView();
+    $("batch-list").innerHTML = "";
+    $("batch-total").hidden = true;
+    $("batch-total").innerHTML = "";
+    const seen = {};
+    const cards = [];
+    let tries = 0;
+    let hitEmpty = false;
+
+    try {
+      while (cards.length < BATCH_SIZE && tries < BATCH_MAX_TRIES) {
+        tries += 1;
+        setStatus("Drawing " + (cards.length + 1) + "/" + BATCH_SIZE + "…");
+        const result = await fetchRandomCard();
+        if (result.notFound) {
+          hitEmpty = true;
+          break;
+        }
+        if (result.error || !result.card || !result.card.id) continue;
+        if (seen[result.card.id]) continue;
+        seen[result.card.id] = true;
+        cards.push(result.card);
+        $("batch-list").appendChild(buildCardItem(result.card));
+        pushHistory(result.card);
+      }
+      renderHistory();
+      state.batchCards = cards;
+      if (!cards.length && hitEmpty) {
+        leaveBatchView();
+        showPlaceholder("No cards match those filters. Try a different type, mana cost, or color combo.");
+        setStatus("No cards match those filters.", "empty");
+        return;
+      }
+      if (!cards.length) {
+        leaveBatchView();
+        showPlaceholder("Scryfall didn’t return cards. Wait a moment and try again.");
+        setStatus("Couldn’t reach Scryfall.", "error");
+        return;
+      }
+      const tot = $("batch-total");
+      tot.hidden = false;
+      tot.innerHTML = batchTotalHtml(cards);
+      if (cards.length < BATCH_SIZE) {
+        setStatus("Only " + cards.length + " unique cards matched these filters.", "empty");
+      } else {
+        setStatus("");
+      }
+    } catch (err) {
+      if (!cards.length) {
+        leaveBatchView();
+        showPlaceholder("Couldn’t reach Scryfall. Check your connection and try again.");
+        setStatus("Network error — try again.", "error");
+      } else {
+        $("batch-total").hidden = false;
+        $("batch-total").innerHTML = batchTotalHtml(cards);
+        setStatus("Stopped after " + cards.length + " cards.", "error");
+      }
+    } finally {
+      setBusy(false);
+      frame.classList.remove("loading");
+    }
+  }
+
   drawBtn.addEventListener("click", () => drawRandom());
+  draw10Btn.addEventListener("click", () => drawBatch());
 
   loadSettings();
   syncFilters();
