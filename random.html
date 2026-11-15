@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1c1812">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="description" content="Draw a random rare or mythic legendary Magic card, filtered by color identity.">
+<title>Random Legend</title>
+<style>
+:root{
+  --bg:#1c1812;
+  --bg-2:#241e17;
+  --surface:#2e271e;
+  --surface-2:#3a3126;
+  --border:#534737;
+  --text:#f3ead8;
+  --muted:#b8a894;
+  --gold:#e8b04a;
+  --gold-dim:#c4892a;
+  --shadow:0 10px 28px rgba(0,0,0,.45);
+  --w:#f0e6c0; --w-ink:#2a2414;
+  --u:#0e68ab; --u-ink:#fff;
+  --b:#2a2622; --b-ink:#e8e0d4;
+  --r:#c42b24; --r-ink:#fff;
+  --g:#0d7a42; --g-ink:#fff;
+  --c:#b4aba6; --c-ink:#1c1812;
+  --safe-t:max(12px,env(safe-area-inset-top));
+  --safe-b:max(12px,env(safe-area-inset-bottom));
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+html{-webkit-text-size-adjust:100%}
+html,body{
+  margin:0;min-height:100%;
+  background:var(--bg);
+  color:var(--text);
+  font-family:-apple-system,system-ui,Segoe UI,Roboto,sans-serif;
+}
+body{
+  background:
+    radial-gradient(1200px 500px at 50% -80px, rgba(232,176,74,.14), transparent 60%),
+    var(--bg);
+  padding:var(--safe-t) 14px calc(84px + var(--safe-b));
+}
+button,a{font-family:inherit}
+button{touch-action:manipulation}
+
+.wrap{max-width:430px;margin:0 auto}
+
+header{
+  display:flex;align-items:baseline;justify-content:space-between;
+  gap:12px;margin:2px 0 10px;
+}
+h1{margin:0;font-size:1.25rem;font-weight:750;letter-spacing:-.02em}
+header a{
+  color:var(--muted);text-decoration:none;font-size:.82rem;font-weight:600;
+  border-bottom:1px solid transparent;
+}
+header a:hover{color:var(--gold);border-bottom-color:var(--gold)}
+
+.panel{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:10px;
+  margin-bottom:10px;
+}
+
+.lbl{
+  display:block;font-size:.72rem;font-weight:700;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--muted);margin:0 0 6px;
+}
+
+.seg{display:flex;gap:6px;background:var(--bg-2);padding:4px;border-radius:12px}
+.seg button{
+  flex:1;border:0;background:transparent;color:var(--muted);
+  font-size:.8rem;font-weight:650;padding:8px 4px;border-radius:9px;cursor:pointer;white-space:nowrap;
+}
+.seg button[aria-pressed="true"]{
+  background:var(--surface-2);color:var(--text);
+  box-shadow:0 1px 0 rgba(255,255,255,.06),0 2px 8px rgba(0,0,0,.25);
+}
+
+.colors{display:flex;justify-content:space-between;gap:8px;margin:2px 0 10px}
+.pip{
+  width:44px;height:44px;border-radius:50%;border:3px solid transparent;
+  font-size:1.05rem;font-weight:800;cursor:pointer;
+  display:grid;place-items:center;box-shadow:0 2px 0 rgba(0,0,0,.25);
+}
+.pip[data-color="W"]{background:var(--w);color:var(--w-ink)}
+.pip[data-color="U"]{background:var(--u);color:var(--u-ink)}
+.pip[data-color="B"]{background:var(--b);color:var(--b-ink);box-shadow:inset 0 0 0 1px #5a5248,0 2px 0 rgba(0,0,0,.25)}
+.pip[data-color="R"]{background:var(--r);color:var(--r-ink)}
+.pip[data-color="G"]{background:var(--g);color:var(--g-ink)}
+.pip[data-color="C"]{background:var(--c);color:var(--c-ink)}
+.pip[aria-pressed="true"]{
+  border-color:#fff;
+  box-shadow:0 0 0 3px var(--gold),0 2px 0 rgba(0,0,0,.25);
+  transform:scale(1.06);
+}
+.hint{margin:6px 0 0;font-size:.72rem;color:var(--muted);line-height:1.35}
+
+.drawbar{
+  position:fixed;left:0;right:0;bottom:0;z-index:20;
+  padding:10px 16px var(--safe-b);
+  background:linear-gradient(to top, var(--bg) 70%, transparent);
+}
+.draw{
+  display:block;width:100%;max-width:430px;margin:0 auto;
+  background:linear-gradient(#f0c15c,#d89a28);
+  color:#2a1f0c;border:0;border-radius:16px;
+  font-size:1.15rem;font-weight:800;letter-spacing:.01em;
+  padding:16px 18px;cursor:pointer;
+  box-shadow:0 8px 20px rgba(216,154,40,.35);
+}
+.draw:active{transform:translateY(1px)}
+.draw:disabled{opacity:.55;cursor:wait}
+
+ .status{
+  text-align:center;color:var(--muted);font-size:.88rem;min-height:1.2em;
+  margin:0 0 8px;pointer-events:none;
+}
+.status.error{color:#f0b4a0}
+.status.empty{color:var(--gold)}
+
+.stage{display:flex;flex-direction:column;align-items:center}
+.cardframe{
+  position:relative;width:min(100%,372px);
+  aspect-ratio:5/7;
+  border-radius:4.75% / 3.4%;
+  background:var(--surface);
+  box-shadow:var(--shadow),0 0 0 1px rgba(255,255,255,.06);
+  overflow:hidden;
+}
+.cardframe img.art{
+  width:100%;height:100%;object-fit:cover;display:block;
+  background:#1a1510;
+}
+.cardframe.loading::after{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(100deg, transparent 30%, rgba(243,234,216,.08) 50%, transparent 70%);
+  animation:shine 1.2s ease-in-out infinite;
+}
+@keyframes shine{from{transform:translateX(-60%)}to{transform:translateX(60%)}}
+.flip{
+  display:none;
+  width:min(100%,372px);
+  margin:10px 0 0;
+  border:1px solid var(--border);
+  border-radius:12px;cursor:pointer;
+  background:var(--surface-2);color:var(--text);
+  font-weight:700;font-size:.9rem;padding:10px 12px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.flip.show{display:block}
+
+.meta{width:min(100%,372px);margin-top:12px}
+.name-row{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.name{font-size:1.22rem;font-weight:750;line-height:1.2;margin:0}
+.mana{display:flex;flex-wrap:wrap;gap:3px;justify-content:flex-end;flex-shrink:0;margin-top:3px}
+.mana img{width:22px;height:22px;display:block}
+.type{margin:6px 0 0;color:var(--muted);font-size:.95rem}
+.sub{margin:6px 0 0;font-size:.82rem;color:var(--muted)}
+.sub .mythic{color:#f07828;font-weight:700}
+.sub .rare{color:var(--gold);font-weight:700}
+.sub .uncommon{color:#c5d0dc;font-weight:700}
+.scry{
+  display:inline-block;margin-top:8px;color:var(--gold);
+  font-weight:650;font-size:.9rem;text-decoration:none;
+}
+.scry:hover{text-decoration:underline}
+
+.empty{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  padding:28px;text-align:center;color:var(--muted);font-size:.95rem;line-height:1.45;
+  background:var(--surface);
+}
+.empty strong{color:var(--text)}
+
+.history{margin-top:22px}
+.thumbs{
+  display:flex;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;
+  padding:2px 2px 10px;scrollbar-width:thin;
+}
+.thumbs button{
+  flex:0 0 auto;width:64px;padding:0;border:2px solid transparent;
+  border-radius:8px;background:var(--surface);overflow:hidden;cursor:pointer;
+}
+.thumbs button[aria-current="true"]{border-color:var(--gold)}
+.thumbs img{display:block;width:64px;height:89px;object-fit:cover}
+
+footer{
+  margin:22px 0 8px;text-align:center;color:var(--muted);
+  font-size:.72rem;line-height:1.4;
+}
+footer a{color:var(--muted)}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>Random Legend</h1>
+      <a href="./">Life Counter</a>
+    </header>
+
+    <section class="panel" aria-label="Filters">
+      <span class="lbl">Type</span>
+      <div class="seg" id="type-seg" role="group" aria-label="Card type">
+        <button type="button" data-type="creatures" aria-pressed="true">Legendary creatures</button>
+        <button type="button" data-type="all" aria-pressed="false">All legendary</button>
+      </div>
+
+      <span class="lbl" style="margin-top:14px">Colors</span>
+      <div class="colors" id="colors" role="group" aria-label="Color identity">
+        <button type="button" class="pip" data-color="W" aria-pressed="false" title="White">W</button>
+        <button type="button" class="pip" data-color="U" aria-pressed="false" title="Blue">U</button>
+        <button type="button" class="pip" data-color="B" aria-pressed="false" title="Black">B</button>
+        <button type="button" class="pip" data-color="R" aria-pressed="false" title="Red">R</button>
+        <button type="button" class="pip" data-color="G" aria-pressed="false" title="Green">G</button>
+        <button type="button" class="pip" data-color="C" aria-pressed="false" title="Colorless">C</button>
+      </div>
+
+      <span class="lbl">Color mode</span>
+      <div class="seg" id="mode-seg" role="group" aria-label="Color mode">
+        <button type="button" data-mode="exact" aria-pressed="true">Exactly these</button>
+        <button type="button" data-mode="includes" aria-pressed="false">Includes these</button>
+        <button type="button" data-mode="within" aria-pressed="false">Within these</button>
+      </div>
+      <p class="hint" id="mode-hint"></p>
+    </section>
+
+    <p class="status" id="status" role="status"></p>
+
+    <div class="stage">
+      <div class="cardframe" id="frame" aria-live="polite">
+        <div class="empty" id="placeholder">Tap <strong>Random card</strong> to draw a rare or mythic legend.</div>
+        <img class="art" id="art" alt="" hidden>
+      </div>
+      <button type="button" class="flip" id="flip">Flip</button>
+      <div class="meta" id="meta" hidden>
+        <div class="name-row">
+          <h2 class="name" id="name"></h2>
+          <div class="mana" id="mana"></div>
+        </div>
+        <p class="type" id="type"></p>
+        <p class="sub"><span id="rarity"></span> · <span id="set"></span></p>
+        <a class="scry" id="scry" target="_blank" rel="noopener">View on Scryfall</a>
+      </div>
+    </div>
+
+    <section class="history" id="history-wrap" hidden>
+      <span class="lbl">Recent draws</span>
+      <div class="thumbs" id="thumbs"></div>
+    </section>
+
+    <footer>Card data and images from <a href="https://scryfall.com" target="_blank" rel="noopener">Scryfall</a>.</footer>
+  </div>
+
+  <div class="drawbar">
+    <button type="button" class="draw" id="draw">Random card</button>
+  </div>
+
+<script>
+(function () {
+  const LS_KEY = "mtg-random-legend-v1";
+  const MIN_GAP_MS = 150;
+  const HISTORY_MAX = 10;
+  const COLOR_ORDER = ["W", "U", "B", "R", "G"];
+
+  const MODE_HINTS = {
+    exact: "Only cards whose color identity is exactly the colors you pick. A good way to browse three-color legends.",
+    includes: "Cards that include at least these colors, and may have more.",
+    within: "Cards you could play in a deck of this identity, including fewer colors and colorless."
+  };
+
+  const state = {
+    type: "creatures",
+    colors: [],
+    colorless: false,
+    mode: "exact",
+    history: [],
+    card: null,
+    face: 0,
+    loading: false,
+    lastFetchAt: 0,
+    queryPatch: null
+  };
+
+  const $ = (id) => document.getElementById(id);
+  const statusEl = $("status");
+  const frame = $("frame");
+  const art = $("art");
+  const flipBtn = $("flip");
+  const placeholder = $("placeholder");
+  const meta = $("meta");
+  const drawBtn = $("draw");
+
+  function loadSettings() {
+    try {
+      const raw = localStorage.getItem(LS_KEY);
+      if (!raw) return;
+      const saved = JSON.parse(raw);
+      if (saved.type === "creatures" || saved.type === "all") state.type = saved.type;
+      if (saved.mode === "exact" || saved.mode === "includes" || saved.mode === "within") state.mode = saved.mode;
+      if (Array.isArray(saved.colors)) {
+        state.colors = COLOR_ORDER.filter((c) => saved.colors.includes(c));
+      }
+      state.colorless = !!saved.colorless && state.colors.length === 0;
+      if (Array.isArray(saved.history)) state.history = saved.history.slice(0, HISTORY_MAX);
+    } catch (e) { /* ignore bad storage */ }
+  }
+
+  function saveSettings() {
+    try {
+      localStorage.setItem(LS_KEY, JSON.stringify({
+        type: state.type,
+        colors: state.colors,
+        colorless: state.colorless,
+        mode: state.mode,
+        history: state.history
+      }));
+    } catch (e) { /* private mode / quota */ }
+  }
+
+  function syncFilters() {
+    document.querySelectorAll("#type-seg button").forEach((btn) => {
+      btn.setAttribute("aria-pressed", String(btn.dataset.type === state.type));
+    });
+    document.querySelectorAll("#mode-seg button").forEach((btn) => {
+      btn.setAttribute("aria-pressed", String(btn.dataset.mode === state.mode));
+    });
+    document.querySelectorAll("#colors .pip").forEach((btn) => {
+      const c = btn.dataset.color;
+      const on = c === "C" ? state.colorless : state.colors.includes(c);
+      btn.setAttribute("aria-pressed", String(on));
+    });
+    $("mode-hint").textContent = hintText();
+  }
+
+  function hintText() {
+    if (state.colorless) return "Colorless only — cards with no colored identity, like Eldrazi legends.";
+    if (!state.colors.length) return "No colors selected, so any identity can appear. Tap WUBRG to filter — three-color combos work great.";
+    return MODE_HINTS[state.mode];
+  }
+
+  function selectedId() {
+    return state.colors.join("");
+  }
+
+  function buildQuery() {
+    let q = "is:legendary (r:rare OR r:mythic) -is:digital game:paper";
+    if (state.type === "creatures") q += " t:legendary t:creature";
+    if (state.colorless) {
+      q += " id:C";
+    } else if (state.colors.length) {
+      const op = state.mode === "exact" ? "=" : state.mode === "includes" ? ">=" : "<=";
+      q += " id" + op + selectedId();
+    }
+    if (typeof state.queryPatch === "function") q = state.queryPatch(q);
+    return q;
+  }
+
+  function sleep(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  function setStatus(text, kind) {
+    statusEl.textContent = text || "";
+    statusEl.className = "status" + (kind ? " " + kind : "");
+  }
+
+  function facesOf(card) {
+    const faced = (card.card_faces || []).filter((f) => f && f.image_uris);
+    if (faced.length) return faced;
+    if (card.image_uris) {
+      return [{
+        name: card.name,
+        mana_cost: card.mana_cost,
+        type_line: card.type_line,
+        image_uris: card.image_uris
+      }];
+    }
+    return [];
+  }
+
+  function imageUrl(uris) {
+    if (!uris) return "";
+    return uris.png || uris.large || uris.normal || uris.border_crop || uris.small || "";
+  }
+
+  function thumbUrl(card) {
+    const faces = facesOf(card);
+    const uris = (faces[0] && faces[0].image_uris) || card.image_uris || {};
+    return uris.small || uris.normal || imageUrl(uris);
+  }
+
+  function renderMana(cost) {
+    const box = $("mana");
+    box.innerHTML = "";
+    if (!cost) return;
+    const re = /\{([^}]+)\}/g;
+    let m;
+    while ((m = re.exec(cost))) {
+      const code = m[1].replace(/\//g, "").toUpperCase();
+      const img = document.createElement("img");
+      img.src = "https://svgs.scryfall.io/card-symbols/" + encodeURIComponent(code) + ".svg";
+      img.alt = m[0];
+      box.appendChild(img);
+    }
+  }
+
+  function slimCard(card) {
+    return {
+      id: card.id,
+      name: card.name,
+      mana_cost: card.mana_cost,
+      type_line: card.type_line,
+      rarity: card.rarity,
+      set: card.set,
+      set_name: card.set_name,
+      scryfall_uri: card.scryfall_uri,
+      color_identity: card.color_identity,
+      layout: card.layout,
+      image_uris: card.image_uris,
+      card_faces: (card.card_faces || []).map((f) => ({
+        name: f.name,
+        mana_cost: f.mana_cost,
+        type_line: f.type_line,
+        image_uris: f.image_uris
+      }))
+    };
+  }
+
+  function showPlaceholder(html) {
+    art.hidden = true;
+    art.removeAttribute("src");
+    flipBtn.classList.remove("show");
+    meta.hidden = true;
+    placeholder.hidden = false;
+    placeholder.innerHTML = html;
+    frame.classList.remove("loading");
+  }
+
+  function showCard(card, opts) {
+    const options = opts || {};
+    state.card = card;
+    state.face = options.face || 0;
+    const faces = facesOf(card);
+    if (!faces.length) {
+      showPlaceholder("This card has no image available. Try another draw.");
+      return;
+    }
+    if (state.face >= faces.length) state.face = 0;
+    const face = faces[state.face];
+    placeholder.hidden = true;
+    meta.hidden = false;
+    $("name").textContent = face.name || card.name || "";
+    $("type").textContent = face.type_line || card.type_line || "";
+    renderMana(face.mana_cost || card.mana_cost || "");
+    const rarity = (card.rarity || "").toLowerCase();
+    const rarityEl = $("rarity");
+    rarityEl.textContent = rarity ? rarity.charAt(0).toUpperCase() + rarity.slice(1) : "";
+    rarityEl.className = rarity;
+    $("set").textContent = (card.set_name || "") + (card.set ? " (" + String(card.set).toUpperCase() + ")" : "");
+    const link = $("scry");
+    link.href = card.scryfall_uri || "https://scryfall.com";
+    link.hidden = !card.scryfall_uri;
+
+    const url = imageUrl(face.image_uris);
+    frame.classList.add("loading");
+    art.hidden = false;
+    art.alt = face.name || card.name || "Card image";
+    if (art.src !== url) {
+      art.onload = () => frame.classList.remove("loading");
+      art.onerror = () => {
+        frame.classList.remove("loading");
+        setStatus("The card image failed to load.", "error");
+      };
+      art.src = url;
+    } else {
+      frame.classList.remove("loading");
+    }
+
+    flipBtn.classList.toggle("show", faces.length > 1);
+    flipBtn.textContent = faces.length > 1
+      ? "Flip to " + (faces[(state.face + 1) % faces.length].name || "other face")
+      : "Flip";
+
+    if (options.addHistory) pushHistory(card);
+    renderHistory();
+  }
+
+  function pushHistory(card) {
+    const slim = slimCard(card);
+    state.history = state.history.filter((c) => c.id !== slim.id);
+    state.history.unshift(slim);
+    if (state.history.length > HISTORY_MAX) state.history.pop();
+    saveSettings();
+  }
+
+  function renderHistory() {
+    const wrap = $("history-wrap");
+    const thumbs = $("thumbs");
+    thumbs.innerHTML = "";
+    if (!state.history.length) {
+      wrap.hidden = true;
+      return;
+    }
+    wrap.hidden = false;
+    state.history.forEach((card) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.title = card.name;
+      if (state.card && state.card.id === card.id) btn.setAttribute("aria-current", "true");
+      const img = document.createElement("img");
+      img.src = thumbUrl(card);
+      img.alt = card.name;
+      btn.appendChild(img);
+      btn.addEventListener("click", () => {
+        setStatus("");
+        showCard(card, { addHistory: false, face: 0 });
+      });
+      thumbs.appendChild(btn);
+    });
+  }
+
+  async function drawRandom() {
+    if (state.loading) return;
+    state.loading = true;
+    drawBtn.disabled = true;
+    setStatus("Drawing…");
+    frame.classList.add("loading");
+
+    const wait = MIN_GAP_MS - (Date.now() - state.lastFetchAt);
+    if (wait > 0) await sleep(wait);
+
+    const query = buildQuery();
+    const url = "https://api.scryfall.com/cards/random?q=" + encodeURIComponent(query);
+    state.lastFetchAt = Date.now();
+
+    try {
+      const res = await fetch(url, { headers: { Accept: "application/json" } });
+      if (res.status === 404) {
+        showPlaceholder("No cards match those filters. Try a different color combo, switch the color mode, or include all legendary types.");
+        setStatus("No cards match those filters.", "empty");
+        return;
+      }
+      if (!res.ok) {
+        showPlaceholder("Scryfall didn’t return a card. Wait a moment and try again.");
+        setStatus("Couldn’t reach Scryfall (" + res.status + ").", "error");
+        return;
+      }
+      const card = await res.json();
+      setStatus("");
+      showCard(card, { addHistory: true });
+    } catch (err) {
+      showPlaceholder("Couldn’t reach Scryfall. Check your connection and try again.");
+      setStatus("Network error — try again.", "error");
+    } finally {
+      state.loading = false;
+      drawBtn.disabled = false;
+      frame.classList.remove("loading");
+    }
+  }
+
+  document.querySelectorAll("#type-seg button").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      state.type = btn.dataset.type;
+      saveSettings();
+      syncFilters();
+    });
+  });
+
+  document.querySelectorAll("#mode-seg button").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      state.mode = btn.dataset.mode;
+      saveSettings();
+      syncFilters();
+    });
+  });
+
+  document.querySelectorAll("#colors .pip").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const c = btn.dataset.color;
+      if (c === "C") {
+        state.colorless = !state.colorless;
+        if (state.colorless) state.colors = [];
+      } else {
+        state.colorless = false;
+        if (state.colors.includes(c)) state.colors = state.colors.filter((x) => x !== c);
+        else state.colors = COLOR_ORDER.filter((x) => x === c || state.colors.includes(x));
+      }
+      saveSettings();
+      syncFilters();
+    });
+  });
+
+  flipBtn.addEventListener("click", () => {
+    if (!state.card) return;
+    const faces = facesOf(state.card);
+    if (faces.length < 2) return;
+    showCard(state.card, { addHistory: false, face: (state.face + 1) % faces.length });
+  });
+
+  drawBtn.addEventListener("click", () => drawRandom());
+
+  loadSettings();
+  syncFilters();
+  if (state.history.length) {
+    showCard(state.history[0], { addHistory: false });
+  } else {
+    renderHistory();
+  }
+
+  window.__legend = {
+    getState: () => state,
+    buildQuery,
+    showCard,
+    drawRandom,
+    setQueryPatch: (fn) => { state.queryPatch = fn; },
+    facesOf
+  };
+})();
+</script>
+</body>
+</html>
