@@ -211,11 +211,23 @@ header a:hover{color:var(--gold);border-bottom-color:var(--gold)}
 .sub .mythic{color:#f07828;font-weight:700}
 .sub .rare{color:var(--gold);font-weight:700}
 .sub .uncommon{color:#c5d0dc;font-weight:700}
-.scry{
+.scry,.ckbuy{
   display:inline-block;margin-top:8px;color:var(--gold);
   font-weight:650;font-size:.9rem;text-decoration:none;
 }
-.scry:hover{text-decoration:underline}
+.scry:hover,.ckbuy:hover{text-decoration:underline}
+.buylinks{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center}
+
+.price-row{
+  margin:8px 0 0;display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 12px;
+}
+.ck-amt{font-size:1.2rem;font-weight:800;color:var(--gold);letter-spacing:-.01em}
+.ck-foil{font-size:.92rem;font-weight:700;color:#e8d3a0}
+.ck-note{font-size:.72rem;color:var(--muted);font-weight:600}
+.ck-none{font-size:.85rem;color:var(--muted);font-weight:600}
+.tcg-price{margin:4px 0 0;font-size:.8rem;color:var(--muted)}
+
+.thumb-price{display:block;font-size:.62rem;font-weight:700;color:var(--gold);padding:2px 0 3px;text-align:center}
 
 .empty{
   position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
@@ -335,9 +347,14 @@ footer a{color:var(--muted)}
           <h2 class="name" id="name"></h2>
           <div class="mana" id="mana"></div>
         </div>
+        <div class="price-row" id="ck-prices" hidden></div>
         <p class="type" id="type"></p>
         <p class="sub"><span id="rarity"></span> · <span id="set"></span></p>
-        <a class="scry" id="scry" target="_blank" rel="noopener">View on Scryfall</a>
+        <p class="tcg-price" id="tcg-price" hidden></p>
+        <div class="buylinks">
+          <a class="scry" id="scry" target="_blank" rel="noopener">View on Scryfall</a>
+          <a class="ckbuy" id="ck-buy" target="_blank" rel="noopener" hidden>Buy on Card Kingdom</a>
+        </div>
       </div>
     </div>
 
@@ -346,7 +363,10 @@ footer a{color:var(--muted)}
       <div class="thumbs" id="thumbs"></div>
     </section>
 
-    <footer>Card data and images from <a href="https://scryfall.com" target="_blank" rel="noopener">Scryfall</a>.</footer>
+    <footer>
+      Card data and images from <a href="https://scryfall.com" target="_blank" rel="noopener">Scryfall</a>.
+      <span id="ck-asof"></span>
+    </footer>
   </div>
 
   <div class="drawbar">
@@ -357,6 +377,7 @@ footer a{color:var(--muted)}
 (function () {
   const LS_KEY = "mtg-random-rare-v2";
   const LS_OLD = "mtg-random-legend-v1";
+  const PRICE_URL = "cardkingdom_prices.json";
   const MIN_GAP_MS = 150;
   const HISTORY_MAX = 10;
   const COLOR_ORDER = ["W", "U", "B", "R", "G"];
@@ -387,7 +408,8 @@ footer a{color:var(--muted)}
     card: null,
     face: 0,
     loading: false,
-    lastFetchAt: 0
+    lastFetchAt: 0,
+    prices: null
   };
 
   const $ = (id) => document.getElementById(id);
@@ -608,6 +630,8 @@ footer a{color:var(--muted)}
       set: card.set,
       set_name: card.set_name,
       scryfall_uri: card.scryfall_uri,
+      purchase_uris: card.purchase_uris,
+      prices: card.prices,
       colors: card.colors,
       cmc: card.cmc,
       layout: card.layout,
@@ -629,6 +653,123 @@ footer a{color:var(--muted)}
     placeholder.hidden = false;
     placeholder.innerHTML = "<span>" + html + "</span>";
     frame.classList.remove("loading");
+  }
+
+  function money(n) {
+    return "$" + n.toFixed(2);
+  }
+
+  function hyphenless(id) {
+    return String(id || "").replace(/-/g, "").toLowerCase();
+  }
+
+  function unpackPrices(packed) {
+    if (!packed || !packed.length) return null;
+    const nf = packed[0] > 0 ? packed[0] / 100 : null;
+    const foil = packed.length > 1 && packed[1] > 0 ? packed[1] / 100 : null;
+    if (nf == null && foil == null) return null;
+    return { nonfoil: nf, foil: foil };
+  }
+
+  function lookupCk(card) {
+    const data = state.prices;
+    if (!data) return null;
+    const ids = data.i || {};
+    const names = data.n || {};
+    if (card && card.id && ids[hyphenless(card.id)]) {
+      const got = unpackPrices(ids[hyphenless(card.id)]);
+      if (got) return Object.assign({ source: "id" }, got);
+    }
+    const name = card && card.name ? String(card.name).toLowerCase() : "";
+    if (name && names[name]) {
+      const got = unpackPrices(names[name]);
+      if (got) return Object.assign({ source: "name" }, got);
+    }
+    return null;
+  }
+
+  async function loadPrices() {
+    const asof = $("ck-asof");
+    try {
+      const res = await fetch(PRICE_URL);
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      state.prices = await res.json();
+      const label = state.prices.as_of_label || state.prices.as_of;
+      asof.textContent = label ? "CK prices as of " + label + "." : "";
+    } catch (err) {
+      state.prices = { i: {}, n: {} };
+      asof.textContent = "CK prices unavailable.";
+    }
+    if (state.card) renderPrices(state.card);
+    if (state.history.length) renderHistory();
+  }
+
+  function renderPrices(card) {
+    const row = $("ck-prices");
+    const tcg = $("tcg-price");
+    const buy = $("ck-buy");
+    row.innerHTML = "";
+    row.hidden = true;
+    tcg.hidden = true;
+    tcg.textContent = "";
+    buy.hidden = true;
+    delete meta.dataset.ckNf;
+    delete meta.dataset.ckFoil;
+    delete meta.dataset.ckSource;
+    delete meta.dataset.tcg;
+    if (!card) return;
+
+    const ck = lookupCk(card);
+    if (ck && (ck.nonfoil != null || ck.foil != null)) {
+      row.hidden = false;
+      if (ck.nonfoil != null) {
+        const amt = document.createElement("span");
+        amt.className = "ck-amt";
+        amt.textContent = money(ck.nonfoil);
+        row.appendChild(amt);
+        meta.dataset.ckNf = String(ck.nonfoil);
+      }
+      if (ck.foil != null) {
+        const foil = document.createElement("span");
+        foil.className = "ck-foil";
+        foil.textContent = "foil " + money(ck.foil);
+        row.appendChild(foil);
+        meta.dataset.ckFoil = String(ck.foil);
+      }
+      const note = document.createElement("span");
+      note.className = "ck-note";
+      if (ck.source === "name") note.textContent = "CK, cheapest printing";
+      else note.textContent = "Card Kingdom";
+      row.appendChild(note);
+      meta.dataset.ckSource = ck.source;
+    } else if (state.prices) {
+      row.hidden = false;
+      const none = document.createElement("span");
+      none.className = "ck-none";
+      none.textContent = "No Card Kingdom price";
+      row.appendChild(none);
+      meta.dataset.ckSource = "none";
+    }
+
+    const usd = card.prices && card.prices.usd ? parseFloat(card.prices.usd) : NaN;
+    const usdFoil = card.prices && card.prices.usd_foil ? parseFloat(card.prices.usd_foil) : NaN;
+    const tcgParts = [];
+    if (!isNaN(usd)) tcgParts.push(money(usd));
+    if (!isNaN(usdFoil)) tcgParts.push("foil " + money(usdFoil));
+    if (tcgParts.length) {
+      tcg.hidden = false;
+      tcg.textContent = "TCGplayer (via Scryfall) " + tcgParts.join(" · ");
+      if (!isNaN(usd)) meta.dataset.tcg = String(usd);
+    }
+
+    const purchase = (card.purchase_uris || {}).cardkingdom;
+    if (purchase) {
+      buy.href = purchase;
+      buy.hidden = false;
+    } else if (card.name) {
+      buy.href = "https://www.cardkingdom.com/catalog/search?search=" + encodeURIComponent(card.name);
+      buy.hidden = false;
+    }
   }
 
   function showCard(card, opts) {
@@ -659,6 +800,7 @@ footer a{color:var(--muted)}
     meta.dataset.colors = (card.colors || []).join("");
     meta.dataset.typeLine = card.type_line || "";
     meta.dataset.legendary = /legendary/i.test(card.type_line || "") ? "1" : "0";
+    renderPrices(card);
 
     const url = imageUrl(face.image_uris);
     frame.classList.add("loading");
@@ -710,6 +852,14 @@ footer a{color:var(--muted)}
       img.src = thumbUrl(card);
       img.alt = card.name;
       btn.appendChild(img);
+      const ck = lookupCk(card);
+      if (ck && ck.nonfoil != null) {
+        const tag = document.createElement("span");
+        tag.className = "thumb-price";
+        tag.textContent = money(ck.nonfoil);
+        btn.appendChild(tag);
+        btn.title = card.name + " · " + money(ck.nonfoil);
+      }
       btn.addEventListener("click", () => {
         setStatus("");
         showCard(card, { addHistory: false, face: 0 });
@@ -843,6 +993,7 @@ footer a{color:var(--muted)}
   } else {
     renderHistory();
   }
+  loadPrices();
 })();
 </script>
 </body>
