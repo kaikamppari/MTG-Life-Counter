@@ -371,7 +371,23 @@ header a:hover{color:var(--gold);border-bottom-color:var(--gold)}
 .tag-menu{
   margin-top:6px;background:var(--surface);
   border:1px solid var(--border);border-radius:12px;padding:8px;
+  max-height:min(52vh, 360px);overflow:auto;-webkit-overflow-scrolling:touch;
 }
+.tag-search{
+  position:sticky;top:0;z-index:1;
+  width:100%;margin:0 0 6px;
+  background:var(--bg-2);
+  border:1px solid var(--border);
+  color:var(--text);
+  border-radius:10px;
+  padding:8px 10px;
+  font-size:16px;
+  font-family:inherit;
+}
+.tag-search:focus{outline:none;border-color:var(--gold)}
+.tag-search::placeholder{color:var(--muted);opacity:.85}
+.tag-empty{margin:8px 4px;font-size:.82rem;color:var(--muted)}
+.tag-menu-count{margin:0 0 4px;font-size:.7rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
 .tag-menu label{
   display:flex;gap:8px;align-items:flex-start;
   padding:7px 4px;font-size:.88rem;line-height:1.3;cursor:pointer;
@@ -596,6 +612,43 @@ footer a{color:var(--muted)}
   const LS_KEY = "mtg-random-rare-v2";
   const LS_OLD = "mtg-random-legend-v1";
   const PRICE_URL = "cardkingdom_prices.json";
+  /* CHOOSER_COMMANDERS_START */
+  // Names from the Life Counter deck chooser (COMMANDERS in index.html).
+  // Refresh after that list changes: python3 extract_commanders.py
+  const CHOOSER_COMMANDERS = [
+    "Otrimi, the Ever-Playful",
+    "Kalamax, the Stormsire",
+    "Sisay, Weatherlight Captain",
+    "Hakbal of the Surging Soul",
+    "Quintorius, History Chaser",
+    "The Fantastic Four",
+    "Doctor Doom, King of Latveria",
+    "Ms. Bumbleflower",
+    "Arcades, the Strategist",
+    "Mirko, Obsessive Theorist",
+    "Sauron, Lord of the Rings",
+    "Brago, King Eternal",
+    "Commodore Guff",
+    "Dihada, Binder of Wills",
+    "Ellivere of the Wild Court",
+    "Ezuri, Claw of Progress",
+    "Frodo, Adventurous Hobbit",
+    "Hearthhull, the Worldseed",
+    "Jean-Luc Picard, Luminary",
+    "Kadena, Slinking Sorcerer",
+    "Magda, Brazen Outlaw",
+    "Morophon, the Boundless",
+    "Morska, Undersea Sleuth",
+    "Narset, Enlightened Exile",
+    "Pantlaza, Sun-Favored",
+    "Perrie, the Pulverizer",
+    "Satya, Aetherflux Genius",
+    "Teval, the Balanced Scale",
+    "The Ur-Dragon",
+    "Ulalek, Fused Atrocity",
+    "Y'shtola, Night's Blessed",
+  ];
+  /* CHOOSER_COMMANDERS_END */
   const MIN_GAP_MS = 150;
   const HISTORY_MAX = 20;
   const BATCH_SIZE = 10;
@@ -1467,12 +1520,41 @@ footer a{color:var(--muted)}
     } catch (e) { /* ignore */ }
   }
 
-  function allKnownDecks() {
+  function taggedDeckNames() {
     const tagged = [];
     state.saved.forEach((c) => {
       (c.decks || []).forEach((d) => tagged.push(d));
     });
-    return uniqueNames((state.lifeDecks || []).concat(tagged));
+    return tagged;
+  }
+
+  function sortDeckNames(names) {
+    return uniqueNames(names).sort((a, b) => a.localeCompare(b, "en", { sensitivity: "base" }));
+  }
+
+  function allChooserDecks() {
+    return sortDeckNames((CHOOSER_COMMANDERS || []).concat(state.lifeDecks || []).concat(taggedDeckNames()));
+  }
+
+  function filterDeckNames() {
+    /* Chips: picked / archived / already tagged — not the full 31, which would crowd the phone. */
+    return sortDeckNames((state.lifeDecks || []).concat(taggedDeckNames()));
+  }
+
+  function allKnownDecks() {
+    return allChooserDecks();
+  }
+
+  function normDeckQuery(s) {
+    return String(s || "").toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").replace(/['’]/g, "").trim();
+  }
+
+  function deckMatchesQuery(name, q) {
+    if (!q) return true;
+    const n = normDeckQuery(name);
+    const compact = n.replace(/ /g, "");
+    const qc = q.replace(/ /g, "");
+    return n.includes(q) || compact.includes(qc);
   }
 
   function setSavedStatus(text, kind) {
@@ -1491,8 +1573,7 @@ footer a{color:var(--muted)}
     if (!container) return;
     container.innerHTML = "";
     if (!card || !card.id) return;
-    const known = allKnownDecks();
-    const lc = state.lifeDecks || [];
+    const known = allChooserDecks();
     const current = decksOf(card);
     const toggle = document.createElement("button");
     toggle.type = "button";
@@ -1506,48 +1587,91 @@ footer a{color:var(--muted)}
     const menu = document.createElement("div");
     menu.className = "tag-menu";
     menu.hidden = true;
-    if (!lc.length && !state.lifeDecksFound) {
-      const hint = document.createElement("p");
-      hint.className = "hint";
-      hint.id = "";
-      hint.textContent = "No decks in the Life Counter yet. Pick a commander in the Life Counter deck chooser, then come back here to tag cards.";
-      menu.appendChild(hint);
-    } else if (!known.length) {
-      const hint = document.createElement("p");
-      hint.className = "hint";
-      hint.textContent = "No commanders are selected in the Life Counter yet. Open the deck chooser there, pick a commander, then come back.";
-      menu.appendChild(hint);
-    } else {
-      known.forEach((name) => {
-        const lab = document.createElement("label");
-        const box = document.createElement("input");
-        box.type = "checkbox";
-        box.value = name;
-        box.checked = current.some((d) => d.toLowerCase() === name.toLowerCase());
-        box.addEventListener("change", () => {
-          if (!isSaved(card.id) && box.checked) saveCard(card, { quiet: true });
-          if (!savedEntry(card.id) && box.checked) return;
-          tagCardToDeck(card.id, name, box.checked, { quiet: true });
-          const now = decksOf(card);
-          toggle.textContent = now.length ? (now.length === 1 ? ("Tagged: " + now[0]) : ("Tagged to " + now.length + " decks")) : "Tag to deck";
-          paintTagChips(chips, now);
-          if (state.tab === "saved") {
-            /* Keep the open menu; only refresh totals and filter chips. */
-            renderSavedFilter();
-            const filter = state.savedFilter || "";
-            const items = state.saved.filter((c) => !filter || (c.decks || []).some((d) => d.toLowerCase() === filter.toLowerCase()));
-            const tot = $("saved-total");
-            if (tot && items.length) {
-              tot.hidden = false;
-              tot.innerHTML = savedTotalHtml(items, filter);
-            }
-          }
-        });
-        lab.appendChild(box);
-        lab.appendChild(document.createTextNode(name));
-        menu.appendChild(lab);
+    menu.dataset.commanderCount = String(known.length);
+
+    const search = document.createElement("input");
+    search.type = "search";
+    search.className = "tag-search";
+    search.placeholder = "Search commanders";
+    search.setAttribute("autocomplete", "off");
+    search.setAttribute("autocorrect", "off");
+    search.setAttribute("spellcheck", "false");
+    search.setAttribute("aria-label", "Search commanders");
+
+    const countEl = document.createElement("p");
+    countEl.className = "tag-menu-count";
+
+    const empty = document.createElement("p");
+    empty.className = "tag-empty";
+    empty.hidden = true;
+    empty.textContent = "No commanders match.";
+
+    const list = document.createElement("div");
+    list.className = "tag-options";
+
+    function applySearch() {
+      const q = normDeckQuery(search.value);
+      let shown = 0;
+      list.querySelectorAll("label").forEach((lab) => {
+        const name = lab.dataset.name || "";
+        const checked = !!(lab.querySelector("input") && lab.querySelector("input").checked);
+        const match = deckMatchesQuery(name, q) || checked;
+        lab.hidden = !match;
+        if (match) shown++;
       });
+      empty.hidden = shown > 0;
+      countEl.textContent = q
+        ? (shown + " of " + known.length + " commanders")
+        : (known.length + " commanders");
     }
+
+    known.forEach((name) => {
+      const lab = document.createElement("label");
+      lab.dataset.name = name;
+      const box = document.createElement("input");
+      box.type = "checkbox";
+      box.value = name;
+      box.checked = current.some((d) => d.toLowerCase() === name.toLowerCase());
+      box.addEventListener("change", () => {
+        if (!isSaved(card.id) && box.checked) saveCard(card, { quiet: true });
+        if (!savedEntry(card.id) && box.checked) return;
+        tagCardToDeck(card.id, name, box.checked, { quiet: true });
+        const now = decksOf(card);
+        toggle.textContent = now.length ? (now.length === 1 ? ("Tagged: " + now[0]) : ("Tagged to " + now.length + " decks")) : "Tag to deck";
+        paintTagChips(chips, now);
+        applySearch();
+        if (state.tab === "saved") {
+          /* Keep the open menu; only refresh totals and filter chips. */
+          renderSavedFilter();
+          const filter = state.savedFilter || "";
+          const items = state.saved.filter((c) => !filter || (c.decks || []).some((d) => d.toLowerCase() === filter.toLowerCase()));
+          const tot = $("saved-total");
+          if (tot && items.length) {
+            tot.hidden = false;
+            tot.innerHTML = savedTotalHtml(items, filter);
+          }
+        }
+      });
+      lab.appendChild(box);
+      lab.appendChild(document.createTextNode(name));
+      list.appendChild(lab);
+    });
+
+    search.addEventListener("input", applySearch);
+    search.addEventListener("keydown", (ev) => {
+      if (ev.key === "Escape") {
+        ev.preventDefault();
+        search.value = "";
+        applySearch();
+      }
+    });
+
+    menu.appendChild(search);
+    menu.appendChild(countEl);
+    menu.appendChild(empty);
+    menu.appendChild(list);
+    applySearch();
+
     const chips = document.createElement("div");
     chips.className = "tag-chips";
     paintTagChips(chips, current);
@@ -1555,6 +1679,11 @@ footer a{color:var(--muted)}
       const open = menu.hidden;
       document.querySelectorAll(".tag-menu").forEach((el) => { el.hidden = true; });
       menu.hidden = !open;
+      if (!menu.hidden) {
+        search.value = "";
+        applySearch();
+        try { search.focus(); } catch (e) {}
+      }
     });
     container.appendChild(toggle);
     container.appendChild(menu);
@@ -1629,7 +1758,7 @@ footer a{color:var(--muted)}
     const hint = $("saved-hint");
     if (!wrap) return;
     wrap.innerHTML = "";
-    const decks = allKnownDecks();
+    const decks = filterDeckNames();
     const filters = [{ name: "", label: "All" }].concat(decks.map((d) => ({ name: d, label: d })));
     if (state.savedFilter && !decks.some((d) => d.toLowerCase() === state.savedFilter.toLowerCase())) {
       state.savedFilter = "";
@@ -1648,13 +1777,9 @@ footer a{color:var(--muted)}
       });
       wrap.appendChild(btn);
     });
-    const lc = state.lifeDecks || [];
-    if (!lc.length && !state.lifeDecksFound) {
+    if (!decks.length) {
       hint.hidden = false;
-      hint.textContent = "No decks in the Life Counter yet. Pick a commander in the Life Counter deck chooser, then come back here to tag cards.";
-    } else if (!lc.length) {
-      hint.hidden = false;
-      hint.textContent = "No commanders are selected in the Life Counter right now. Open the deck chooser there to pick one.";
+      hint.textContent = "Tag a card to any commander from the Life Counter chooser to filter this list by deck.";
     } else {
       hint.hidden = true;
       hint.textContent = "";
