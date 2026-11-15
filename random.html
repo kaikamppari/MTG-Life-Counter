@@ -444,6 +444,27 @@ footer{
   font-size:.72rem;line-height:1.4;
 }
 footer a{color:var(--muted)}
+
+.max-price-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.max-price-input-wrap{
+  display:flex;align-items:center;gap:2px;
+  flex:0 0 7.6rem;
+  background:var(--bg-2);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:0 10px;
+}
+.max-price-input-wrap:focus-within{border-color:var(--gold)}
+.max-price-prefix{color:var(--muted);font-weight:700;font-size:.95rem}
+.max-price-input-wrap input{
+  flex:1;min-width:0;width:100%;
+  border:0;background:transparent;color:var(--text);
+  font-size:16px;padding:9px 0 9px 2px;font-family:inherit;
+}
+.max-price-input-wrap input:focus{outline:none}
+.max-price-input-wrap input::placeholder{color:var(--muted);opacity:.85}
+.max-price-row .chips{flex:1;min-width:200px}
+.hidden-over{display:block;margin-top:4px;font-size:.78rem;color:var(--muted)}
 </style>
 </head>
 <body>
@@ -529,6 +550,22 @@ footer a{color:var(--muted)}
         <button type="button" data-mode="within" aria-pressed="false">Within these</button>
       </div>
       <p class="hint" id="mode-hint"></p>
+
+      <span class="lbl sp">Max price</span>
+      <div class="max-price-row" data-max-price-ui>
+        <label class="max-price-input-wrap">
+          <span class="max-price-prefix">$</span>
+          <input class="max-price-input" type="number" inputmode="decimal" min="0" step="0.01" placeholder="No limit" aria-label="Max price in dollars">
+        </label>
+        <div class="chips max-price-chips" role="group" aria-label="Max price shortcuts">
+          <button type="button" class="chip" data-maxprice="1">$1</button>
+          <button type="button" class="chip" data-maxprice="5">$5</button>
+          <button type="button" class="chip" data-maxprice="10">$10</button>
+          <button type="button" class="chip" data-maxprice="20">$20</button>
+          <button type="button" class="chip" data-maxprice="">Any</button>
+        </div>
+      </div>
+      <p class="hint max-price-hint"></p>
     </section>
 
     <p class="status" id="status" role="status"></p>
@@ -583,6 +620,21 @@ footer a{color:var(--muted)}
           <button type="button" class="list-btn" id="list-clear">Clear list</button>
         </div>
         <p class="hint">Quantities like 2 or 2x are fine. Set codes in parentheses are ignored.</p>
+      <span class="lbl sp">Max price</span>
+      <div class="max-price-row" data-max-price-ui>
+        <label class="max-price-input-wrap">
+          <span class="max-price-prefix">$</span>
+          <input class="max-price-input" type="number" inputmode="decimal" min="0" step="0.01" placeholder="No limit" aria-label="Max price in dollars">
+        </label>
+        <div class="chips max-price-chips" role="group" aria-label="Max price shortcuts">
+          <button type="button" class="chip" data-maxprice="1">$1</button>
+          <button type="button" class="chip" data-maxprice="5">$5</button>
+          <button type="button" class="chip" data-maxprice="10">$10</button>
+          <button type="button" class="chip" data-maxprice="20">$20</button>
+          <button type="button" class="chip" data-maxprice="">Any</button>
+        </div>
+      </div>
+      <p class="hint max-price-hint"></p>
       </section>
       <p class="status" id="list-status" role="status"></p>
       <div class="list-missing" id="list-missing" hidden></div>
@@ -595,6 +647,21 @@ footer a{color:var(--muted)}
         <span class="lbl">Filter by deck</span>
         <div class="chips" id="saved-filter" role="group" aria-label="Saved deck filter"></div>
         <p class="hint" id="saved-hint" hidden></p>
+      <span class="lbl sp">Max price</span>
+      <div class="max-price-row" data-max-price-ui>
+        <label class="max-price-input-wrap">
+          <span class="max-price-prefix">$</span>
+          <input class="max-price-input" type="number" inputmode="decimal" min="0" step="0.01" placeholder="No limit" aria-label="Max price in dollars">
+        </label>
+        <div class="chips max-price-chips" role="group" aria-label="Max price shortcuts">
+          <button type="button" class="chip" data-maxprice="1">$1</button>
+          <button type="button" class="chip" data-maxprice="5">$5</button>
+          <button type="button" class="chip" data-maxprice="10">$10</button>
+          <button type="button" class="chip" data-maxprice="20">$20</button>
+          <button type="button" class="chip" data-maxprice="">Any</button>
+        </div>
+      </div>
+      <p class="hint max-price-hint"></p>
       </section>
       <p class="status" id="saved-status" role="status"></p>
       <div class="batch-total" id="saved-total" hidden></div>
@@ -661,6 +728,9 @@ footer a{color:var(--muted)}
   const HISTORY_MAX = 20;
   const BATCH_SIZE = 10;
   const BATCH_MAX_TRIES = 18;
+  const MAX_PRICE_TRIES = 20;
+  const BATCH_PRICE_TRIES = 48;
+  const PRICE_CHIPS = [1, 5, 10, 20];
   const COLOR_ORDER = ["W", "U", "B", "R", "G"];
   const TYPE_ORDER = ["creature", "instant", "sorcery", "enchantment", "artifact", "planeswalker", "land", "battle"];
   const MV_ORDER = ["0", "1", "2", "3", "4", "5", "6", "7+"];
@@ -698,6 +768,7 @@ footer a{color:var(--muted)}
     listMissing: [],
     saved: [],
     savedFilter: "",
+    maxPrice: null,
     lifeDecks: [],
     lifeDecksFound: false
   };
@@ -739,6 +810,11 @@ footer a{color:var(--muted)}
       if (saved.tab === "list" || saved.tab === "draw" || saved.tab === "saved") state.tab = saved.tab;
       if (Array.isArray(saved.saved)) state.saved = normalizeSavedList(saved.saved);
       if (typeof saved.savedFilter === "string") state.savedFilter = saved.savedFilter;
+      if (saved.maxPrice == null || saved.maxPrice === "") state.maxPrice = null;
+      else {
+        const cap = parseFloat(saved.maxPrice);
+        state.maxPrice = (isFinite(cap) && cap >= 0) ? cap : null;
+      }
     } catch (e) { /* ignore bad storage */ }
   }
 
@@ -757,7 +833,8 @@ footer a{color:var(--muted)}
         myList: state.myList,
         tab: state.tab,
         saved: state.saved,
-        savedFilter: state.savedFilter
+        savedFilter: state.savedFilter,
+        maxPrice: state.maxPrice
       }));
     } catch (e) { /* private mode / quota */ }
   }
@@ -787,6 +864,7 @@ footer a{color:var(--muted)}
       btn.setAttribute("aria-pressed", String(on));
     });
     $("mode-hint").textContent = hintText();
+    syncMaxPriceUI();
     const mvHint = $("mv-hint");
     const land = state.types.includes("land");
     const mvExcludesZero = state.mvs.length > 0 && !state.mvs.includes("0");
@@ -987,6 +1065,113 @@ footer a{color:var(--muted)}
     return null;
   }
 
+  function formatCap(n) {
+    if (n == null || !isFinite(n)) return "";
+    return money(n);
+  }
+
+  function effectivePrice(card) {
+    const ck = lookupCk(card);
+    if (ck && ck.nonfoil != null) return { amount: ck.nonfoil, source: "ck" };
+    const usd = card && card.prices && card.prices.usd ? parseFloat(card.prices.usd) : NaN;
+    if (!isNaN(usd)) return { amount: usd, source: "tcg" };
+    return { amount: null, source: "none" };
+  }
+
+  function cardPassesMaxPrice(card) {
+    if (state.maxPrice == null || !isFinite(state.maxPrice)) return true;
+    const p = effectivePrice(card);
+    if (p.amount == null) return true;
+    return p.amount <= state.maxPrice + 1e-9;
+  }
+
+  function hiddenOverCap(items, getCard) {
+    if (state.maxPrice == null || !isFinite(state.maxPrice)) return 0;
+    let n = 0;
+    (items || []).forEach((it) => {
+      const c = getCard ? getCard(it) : it;
+      if (c && !cardPassesMaxPrice(c)) n++;
+    });
+    return n;
+  }
+
+  function hiddenOverNote(n) {
+    if (!n || state.maxPrice == null) return "";
+    return n + " hidden over " + formatCap(state.maxPrice);
+  }
+
+  function parseMaxPriceInput(raw) {
+    const s = String(raw == null ? "" : raw).trim().replace(/^\$/, "");
+    if (!s) return null;
+    const n = parseFloat(s);
+    if (!isFinite(n) || n < 0) return null;
+    return n;
+  }
+
+  function capHintText() {
+    if (state.maxPrice == null) return "No price cap. Tap a chip or type a dollar amount. Cards with no price stay visible when a cap is set.";
+    return "Hide cards over " + formatCap(state.maxPrice) + " in My list and Saved, and skip them when drawing. Cards with no price stay visible.";
+  }
+
+  function syncMaxPriceUI() {
+    const cap = state.maxPrice;
+    const capStr = (cap == null) ? "" : (Math.round(cap * 100) / 100).toString();
+    document.querySelectorAll("[data-max-price-ui]").forEach((row) => {
+      const input = row.querySelector(".max-price-input");
+      if (input && document.activeElement !== input) {
+        input.value = capStr;
+      }
+      row.querySelectorAll("[data-maxprice]").forEach((btn) => {
+        const raw = btn.getAttribute("data-maxprice");
+        let on = false;
+        if (raw === "" || raw == null) on = cap == null;
+        else on = cap != null && Math.abs(cap - parseFloat(raw)) < 1e-9;
+        btn.setAttribute("aria-pressed", String(on));
+      });
+    });
+    document.querySelectorAll(".max-price-hint").forEach((el) => {
+      el.textContent = capHintText();
+    });
+  }
+
+  function applyMaxPrice(value, opts) {
+    const options = opts || {};
+    const next = (value == null || value === "") ? null : parseMaxPriceInput(value);
+    const prev = state.maxPrice;
+    state.maxPrice = next;
+    if (!options.silent) saveSettings();
+    syncMaxPriceUI();
+    if (prev === next || (prev == null && next == null)) {
+      if (!options.force) return;
+    }
+    if (state.listItems && state.listItems.length) {
+      renderListResults(state.listItems, state.listMissing);
+      setListStatus(listStatusText(state.listItems, state.listMissing));
+    }
+    if (state.tab === "saved" || (state.saved && state.saved.length)) {
+      if (state.tab === "saved") renderSavedView();
+    }
+  }
+
+  function wireMaxPriceControls() {
+    document.querySelectorAll("[data-max-price-ui]").forEach((row) => {
+      const input = row.querySelector(".max-price-input");
+      if (input && !input.dataset.wired) {
+        input.dataset.wired = "1";
+        input.addEventListener("input", () => applyMaxPrice(input.value));
+        input.addEventListener("change", () => applyMaxPrice(input.value));
+      }
+      row.querySelectorAll("[data-maxprice]").forEach((btn) => {
+        if (btn.dataset.wired) return;
+        btn.dataset.wired = "1";
+        btn.addEventListener("click", () => {
+          const raw = btn.getAttribute("data-maxprice");
+          applyMaxPrice(raw === "" || raw == null ? null : raw, { force: true });
+        });
+      });
+    });
+  }
+
   async function loadPrices() {
     const asof = $("ck-asof");
     try {
@@ -1072,6 +1257,18 @@ footer a{color:var(--muted)}
     } else if (card.name) {
       buy.href = "https://www.cardkingdom.com/catalog/search?search=" + encodeURIComponent(card.name);
       buy.hidden = false;
+    }
+
+    if (state.maxPrice != null && effectivePrice(card).amount == null) {
+      row.hidden = false;
+      const none = row.querySelector(".ck-none");
+      if (none) none.textContent = "No price";
+      else {
+        const tag = document.createElement("span");
+        tag.className = "ck-none no-price";
+        tag.textContent = "No price";
+        row.appendChild(tag);
+      }
     }
   }
 
@@ -1859,16 +2056,21 @@ footer a{color:var(--muted)}
       if (!filter) return true;
       return (c.decks || []).some((d) => d.toLowerCase() === filter.toLowerCase());
     });
+    const visible = items.filter((c) => cardPassesMaxPrice(c));
+    const hidden = items.length - visible.length;
     list.innerHTML = "";
-    items.forEach((card) => {
+    visible.forEach((card) => {
       list.appendChild(buildCardItem(card, { showAdd: true, showSave: true, showRemove: true, showTag: true }));
     });
     if (state.saved.length && items.length) {
       tot.hidden = false;
-      tot.innerHTML = savedTotalHtml(items, filter);
+      let html = visible.length ? savedTotalHtml(visible, filter) : '<span class="note">No saved cards at or under ' + formatCap(state.maxPrice) + ".</span>";
+      if (hidden) html += '<span class="hidden-over">' + hiddenOverNote(hidden) + "</span>";
+      tot.innerHTML = html;
       empty.hidden = true;
-      if (filter) setSavedStatus(items.length + (items.length === 1 ? " card" : " cards") + " tagged to " + filter + ".");
-      else setSavedStatus(state.saved.length + (state.saved.length === 1 ? " saved card." : " saved cards."));
+      const hidNote = hidden ? ", " + hiddenOverNote(hidden) : "";
+      if (filter) setSavedStatus(visible.length + (visible.length === 1 ? " card" : " cards") + " tagged to " + filter + hidNote + ".", hidden ? "empty" : "");
+      else setSavedStatus(visible.length + (visible.length === 1 ? " saved card" : " saved cards") + hidNote + ".", hidden ? "empty" : "");
     } else if (state.saved.length && !items.length) {
       tot.hidden = false;
       tot.innerHTML = savedTotalHtml([], filter);
@@ -2146,12 +2348,33 @@ footer a{color:var(--muted)}
     return '<span class="note">' + items.length + " " + cardWord + qtyNote + ". No Card Kingdom prices.</span>";
   }
 
+  function listStatusText(items, missing) {
+    const all = items || [];
+    const visible = all.filter((item) => cardPassesMaxPrice(item.card));
+    const hidden = all.length - visible.length;
+    const hidNote = hiddenOverNote(hidden);
+    if (!all.length) {
+      return missing && missing.length ? "None of those names were found." : "Paste at least one card name.";
+    }
+    let text = "Showing " + visible.length + (visible.length === 1 ? " card" : " cards");
+    const bits = [];
+    if (hidNote) bits.push(hidNote);
+    if (missing && missing.length) bits.push(missing.length + " not found");
+    if (bits.length) text += ", " + bits.join(", ");
+    else if (visible.length !== 1) text += ".";
+    else text = "Showing 1 card.";
+    return text;
+  }
+
   function renderListResults(items, missing) {
     const list = $("list-cards");
     const tot = $("list-total");
     const miss = $("list-missing");
     list.innerHTML = "";
-    (items || []).forEach((item) => {
+    const all = items || [];
+    const visible = all.filter((item) => cardPassesMaxPrice(item.card));
+    const hidden = all.length - visible.length;
+    visible.forEach((item) => {
       try {
         list.appendChild(buildCardItem(item.card, { qty: item.qty, fuzzyFrom: item.fuzzyFrom, showAdd: false }));
       } catch (err) {
@@ -2162,9 +2385,11 @@ footer a{color:var(--muted)}
         list.appendChild(fallback);
       }
     });
-    if (items && items.length) {
+    if (visible.length || hidden) {
       tot.hidden = false;
-      tot.innerHTML = listTotalHtml(items);
+      let html = visible.length ? listTotalHtml(visible) : '<span class="note">No cards at or under ' + formatCap(state.maxPrice) + ".</span>";
+      if (hidden) html += '<span class="hidden-over">' + hiddenOverNote(hidden) + "</span>";
+      tot.innerHTML = html;
     } else {
       tot.hidden = true;
       tot.innerHTML = "";
@@ -2278,13 +2503,10 @@ footer a{color:var(--muted)}
       state.listItems = items;
       state.listMissing = missing;
       renderListResults(items, missing);
-      if (!items.length) {
-        setListStatus("None of those names were found.", "empty");
-      } else if (missing.length) {
-        setListStatus("Showing " + items.length + (items.length === 1 ? " card" : " cards") + ", " + missing.length + " not found.", "empty");
-      } else {
-        setListStatus("Showing " + items.length + (items.length === 1 ? " card." : " cards."));
-      }
+      const visible = items.filter((item) => cardPassesMaxPrice(item.card));
+      const hidden = items.length - visible.length;
+      const kind = (!items.length || missing.length || hidden) ? "empty" : "";
+      setListStatus(listStatusText(items, missing), kind);
     } catch (err) {
       setListStatus("Couldn\u2019t reach Scryfall. Try again.", "error");
     } finally {
@@ -2677,19 +2899,34 @@ footer a{color:var(--muted)}
     frame.classList.add("loading");
 
     try {
-      const result = await fetchRandomCard();
-      if (result.notFound) {
-        showPlaceholder("No cards match those filters. Try a different type, mana cost, or color combo.");
-        setStatus("No cards match those filters.", "empty");
-        return;
+      const maxTries = state.maxPrice != null ? MAX_PRICE_TRIES : 1;
+      let last = null;
+      let skipped = 0;
+      for (let attempt = 0; attempt < maxTries; attempt++) {
+        if (attempt) setStatus("Drawing\u2026 under " + formatCap(state.maxPrice) + " (" + (attempt + 1) + "/" + maxTries + ")");
+        const result = await fetchRandomCard();
+        last = result;
+        if (result.notFound) {
+          showPlaceholder("No cards match those filters. Try a different type, mana cost, or color combo.");
+          setStatus("No cards match those filters.", "empty");
+          return;
+        }
+        if (result.error || !result.card) {
+          if (attempt < maxTries - 1) continue;
+          showPlaceholder("Scryfall didn’t return a card. Wait a moment and try again.");
+          setStatus("Couldn’t reach Scryfall" + (result.status ? " (" + result.status + ")." : "."), "error");
+          return;
+        }
+        if (cardPassesMaxPrice(result.card)) {
+          setStatus("");
+          showCard(result.card, { addHistory: true });
+          return;
+        }
+        skipped += 1;
       }
-      if (result.error || !result.card) {
-        showPlaceholder("Scryfall didn’t return a card. Wait a moment and try again.");
-        setStatus("Couldn’t reach Scryfall" + (result.status ? " (" + result.status + ")." : "."), "error");
-        return;
-      }
-      setStatus("");
-      showCard(result.card, { addHistory: true });
+      const cap = formatCap(state.maxPrice);
+      showPlaceholder("Couldn’t find a card at or under " + cap + ". Try a higher cap or different filters.");
+      setStatus("No card at or under " + cap + " after " + maxTries + " draws.", "empty");
     } catch (err) {
       showPlaceholder("Couldn’t reach Scryfall. Check your connection and try again.");
       setStatus("Network error — try again.", "error");
@@ -2787,9 +3024,11 @@ footer a{color:var(--muted)}
     const cards = [];
     let tries = 0;
     let hitEmpty = false;
+    let skippedPrice = 0;
+    const tryLimit = state.maxPrice != null ? BATCH_PRICE_TRIES : BATCH_MAX_TRIES;
 
     try {
-      while (cards.length < BATCH_SIZE && tries < BATCH_MAX_TRIES) {
+      while (cards.length < BATCH_SIZE && tries < tryLimit) {
         tries += 1;
         setStatus("Drawing " + (cards.length + 1) + "/" + BATCH_SIZE + "…");
         const result = await fetchRandomCard();
@@ -2800,6 +3039,10 @@ footer a{color:var(--muted)}
         if (result.error || !result.card || !result.card.id) continue;
         if (seen[result.card.id]) continue;
         seen[result.card.id] = true;
+        if (!cardPassesMaxPrice(result.card)) {
+          skippedPrice += 1;
+          continue;
+        }
         cards.push(result.card);
         $("batch-list").appendChild(buildCardItem(result.card));
         pushHistory(result.card);
@@ -2814,15 +3057,22 @@ footer a{color:var(--muted)}
       }
       if (!cards.length) {
         leaveBatchView();
-        showPlaceholder("Scryfall didn’t return cards. Wait a moment and try again.");
-        setStatus("Couldn’t reach Scryfall.", "error");
+        if (skippedPrice) {
+          const cap = formatCap(state.maxPrice);
+          showPlaceholder("Couldn’t find cards at or under " + cap + ". Try a higher cap or different filters.");
+          setStatus("No cards at or under " + cap + " after " + tries + " draws.", "empty");
+        } else {
+          showPlaceholder("Scryfall didn’t return cards. Wait a moment and try again.");
+          setStatus("Couldn’t reach Scryfall.", "error");
+        }
         return;
       }
       const tot = $("batch-total");
       tot.hidden = false;
       tot.innerHTML = batchTotalHtml(cards);
       if (cards.length < BATCH_SIZE) {
-        setStatus("Only " + cards.length + " unique cards matched these filters.", "empty");
+        const capBit = (state.maxPrice != null) ? (" at or under " + formatCap(state.maxPrice)) : "";
+        setStatus("Only " + cards.length + " unique cards" + capBit + " matched these filters.", "empty");
       } else {
         setStatus("");
       }
@@ -2902,6 +3152,7 @@ footer a{color:var(--muted)}
   });
 
   loadSettings();
+  wireMaxPriceControls();
   syncFilters();
   syncListInput();
   syncSavedCount();
