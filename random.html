@@ -44,6 +44,7 @@ body{
     var(--bg);
   padding:var(--safe-t) 14px calc(84px + var(--safe-b));
 }
+body.list-mode{padding-bottom:calc(18px + var(--safe-b))}
 button,a{font-family:inherit}
 button{touch-action:manipulation}
 
@@ -248,6 +249,152 @@ header a:hover{color:var(--gold);border-bottom-color:var(--gold)}
 
 .thumb-price{display:block;font-size:.62rem;font-weight:700;color:var(--gold);padding:2px 0 3px;text-align:center}
 
+.tabs{
+  display:flex;gap:6px;background:var(--bg-2);padding:4px;border-radius:12px;
+  margin:0 0 12px;
+}
+.tabs button{
+  flex:1;border:0;background:transparent;color:var(--muted);
+  font-size:.88rem;font-weight:700;padding:9px 6px;border-radius:9px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+}
+.tabs button[aria-selected="true"]{
+  background:var(--surface-2);color:var(--text);
+  box-shadow:0 1px 0 rgba(255,255,255,.06),0 2px 8px rgba(0,0,0,.25);
+}
+.tab-count{
+  display:inline-block;min-width:1.35em;padding:1px 6px;border-radius:999px;
+  background:var(--gold);color:#2a1f0c;font-size:.7rem;font-weight:800;
+  line-height:1.35;text-align:center;
+}
+.tab-count[hidden]{display:none!important}
+.tabs button{min-width:0}
+.tabs button .tab-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+.listfield{
+  width:100%;min-height:11em;resize:vertical;
+  background:var(--bg-2);
+  border:1px solid var(--border);
+  color:var(--text);
+  border-radius:12px;
+  padding:10px 12px;
+  font-size:16px;
+  font-family:inherit;
+  line-height:1.4;
+}
+.listfield:focus{outline:none;border-color:var(--gold)}
+.listfield::placeholder{color:var(--muted);opacity:.85}
+.list-actions{display:flex;gap:8px;margin-top:10px}
+.list-actions .draw{box-shadow:0 6px 16px rgba(216,154,40,.28);padding:13px 10px}
+.list-btn{
+  flex:1;border:1px solid var(--border);
+  background:var(--bg-2);color:var(--text);
+  font-weight:700;font-size:.85rem;
+  padding:10px 12px;border-radius:12px;cursor:pointer;
+}
+.list-btn:disabled,.list-show:disabled{opacity:.55;cursor:wait}
+.list-missing{
+  width:min(100%,372px);margin:0 auto 16px;
+  background:var(--surface);border:1px solid #7a4030;
+  border-radius:14px;padding:12px 14px;
+  color:#f0b4a0;font-size:.88rem;line-height:1.4;
+}
+.list-missing strong{color:var(--text);font-weight:700}
+.list-missing ul{margin:6px 0 0;padding-left:1.2em}
+.list-fuzzy{
+  margin:2px 0 0;font-size:.75rem;color:var(--muted);font-weight:600;
+}
+.qty{
+  flex:0 0 auto;margin-top:2px;
+  background:var(--gold);color:#2a1f0c;
+  font-size:.78rem;font-weight:800;
+  padding:2px 8px;border-radius:999px;letter-spacing:.02em;
+}
+
+.add-list{
+  display:inline-block;margin-top:10px;
+  border:1px solid var(--border);
+  background:var(--bg-2);color:var(--gold);
+  font-weight:700;font-size:.85rem;
+  padding:8px 12px;border-radius:12px;cursor:pointer;
+}
+.add-list:disabled{opacity:.55}
+.add-list.added{color:var(--text);border-color:var(--gold)}
+
+.thumbs .thumb{
+  position:relative;flex:0 0 auto;width:64px;
+}
+.thumbs button.thumb-open{
+  display:block;width:64px;padding:0;border:2px solid transparent;
+  border-radius:8px;background:var(--surface);overflow:hidden;cursor:pointer;
+}
+.thumbs .thumb[aria-current="true"] button.thumb-open{border-color:var(--gold)}
+.thumbs button.add-thumb{
+  position:absolute;right:-4px;top:-4px;z-index:2;
+  width:22px;height:22px;padding:0;border:0;border-radius:50%;
+  background:var(--gold);color:#2a1f0c;
+  font-size:16px;font-weight:800;line-height:22px;cursor:pointer;
+  box-shadow:0 1px 4px rgba(0,0,0,.4);
+}
+.thumbs button.add-thumb.added{background:var(--surface-2);color:var(--gold);box-shadow:0 0 0 1px var(--gold)}
+.thumbs button.save-thumb{
+  position:absolute;left:-4px;top:-4px;z-index:2;
+  width:22px;height:22px;padding:0;border:0;border-radius:50%;
+  background:var(--surface-2);color:var(--muted);
+  font-size:13px;font-weight:800;line-height:22px;cursor:pointer;
+  box-shadow:0 1px 4px rgba(0,0,0,.4);
+}
+.thumbs button.save-thumb.on{background:#5a2020;color:#ff9a9a;box-shadow:0 0 0 1px #ff9a9a}
+
+.card-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px;width:min(100%,372px)}
+.card-actions .add-list,.card-actions .save-btn,.card-actions .remove-saved{margin-top:0}
+
+.save-btn,.remove-saved{
+  display:inline-flex;align-items:center;gap:6px;
+  margin-top:10px;
+  border:1px solid var(--border);
+  background:var(--bg-2);color:var(--muted);
+  font-weight:700;font-size:.85rem;
+  padding:8px 12px;border-radius:12px;cursor:pointer;
+}
+.save-btn.on{color:#ff9a9a;border-color:#c45a5a;background:#3a2220}
+.remove-saved{color:#f0b4a0;border-color:#7a4030}
+
+.tagbox{width:min(100%,372px);margin-top:8px;position:relative}
+.tag-toggle{
+  display:block;width:100%;text-align:left;
+  border:1px solid var(--border);
+  background:var(--bg-2);color:var(--text);
+  font-weight:700;font-size:.85rem;
+  padding:8px 12px;border-radius:12px;cursor:pointer;
+}
+.tag-menu{
+  margin-top:6px;background:var(--surface);
+  border:1px solid var(--border);border-radius:12px;padding:8px;
+}
+.tag-menu label{
+  display:flex;gap:8px;align-items:flex-start;
+  padding:7px 4px;font-size:.88rem;line-height:1.3;cursor:pointer;
+}
+.tag-menu input{margin-top:2px;accent-color:var(--gold);flex:0 0 auto}
+.tag-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.tag-chip{
+  font-size:.72rem;font-weight:700;
+  background:var(--surface-2);border:1px solid var(--gold);
+  border-radius:999px;padding:2px 8px;color:var(--text);
+}
+.deck-totals{list-style:none;margin:8px 0 0;padding:0;text-align:left}
+.deck-totals li{
+  display:flex;justify-content:space-between;gap:10px;
+  font-size:.8rem;font-weight:600;color:var(--muted);
+  padding:3px 0;border-top:1px solid var(--border);
+}
+.deck-totals .dname{color:var(--text)}
+.deck-totals .damt{color:var(--gold);font-variant-numeric:tabular-nums}
+.saved-empty{text-align:center;color:var(--muted);line-height:1.45;padding:18px 8px}
+#saved-filter{margin-bottom:4px}
+#saved-hint{margin-top:8px}
+
 .empty{
   position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
   padding:28px;text-align:center;color:var(--muted);font-size:.95rem;line-height:1.45;
@@ -282,6 +429,13 @@ footer a{color:var(--muted)}
       <a href="./">Life Counter</a>
     </header>
 
+    <div class="tabs" id="tabs" role="tablist" aria-label="Random Rare views">
+      <button type="button" class="tab" id="tab-draw" role="tab" aria-selected="true" aria-controls="draw-pane"><span class="tab-label">Draw</span></button>
+      <button type="button" class="tab" id="tab-list" role="tab" aria-selected="false" aria-controls="list-pane"><span class="tab-label">My list</span> <span class="tab-count" id="list-count" hidden>0</span></button>
+      <button type="button" class="tab" id="tab-saved" role="tab" aria-selected="false" aria-controls="saved-pane"><span class="tab-label">Saved</span> <span class="tab-count" id="saved-count" hidden>0</span></button>
+    </div>
+
+    <div id="draw-pane">
     <section class="panel" aria-label="Filters">
       <button type="button" class="toggle" id="legendary" aria-pressed="false">Legendary only</button>
 
@@ -374,6 +528,11 @@ footer a{color:var(--muted)}
           <a class="scry" id="scry" target="_blank" rel="noopener">View on Scryfall</a>
           <a class="ckbuy" id="ck-buy" target="_blank" rel="noopener" hidden>Buy on Card Kingdom</a>
         </div>
+        <div class="card-actions" id="card-actions">
+          <button type="button" class="save-btn" id="save-btn" aria-pressed="false">&#9825; Save</button>
+          <button type="button" class="add-list" id="add-list">+ Add to my list</button>
+        </div>
+        <div class="tagbox" id="tagbox"></div>
       </div>
     </div>
 
@@ -386,6 +545,38 @@ footer a{color:var(--muted)}
       <span class="lbl">Recent draws</span>
       <div class="thumbs" id="thumbs"></div>
     </section>
+    </div>
+
+    <div id="list-pane" hidden>
+      <section class="panel" aria-label="My list">
+        <span class="lbl">Card names</span>
+        <textarea class="listfield" id="list-input" rows="8" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="One card per line, for example:&#10;2 Rhystic Study&#10;Sol Ring (C21)&#10;Jeweled Lotus"></textarea>
+        <div class="list-actions">
+          <button type="button" class="draw" id="list-show">Show cards</button>
+        </div>
+        <div class="list-actions">
+          <button type="button" class="list-btn" id="list-copy">Copy list</button>
+          <button type="button" class="list-btn" id="list-clear">Clear list</button>
+        </div>
+        <p class="hint">Quantities like 2 or 2x are fine. Set codes in parentheses are ignored.</p>
+      </section>
+      <p class="status" id="list-status" role="status"></p>
+      <div class="list-missing" id="list-missing" hidden></div>
+      <div class="batch-total" id="list-total" hidden></div>
+      <div class="batch-list" id="list-cards"></div>
+    </div>
+
+    <div id="saved-pane" hidden>
+      <section class="panel" aria-label="Saved cards">
+        <span class="lbl">Filter by deck</span>
+        <div class="chips" id="saved-filter" role="group" aria-label="Saved deck filter"></div>
+        <p class="hint" id="saved-hint" hidden></p>
+      </section>
+      <p class="status" id="saved-status" role="status"></p>
+      <div class="batch-total" id="saved-total" hidden></div>
+      <div class="batch-list" id="saved-cards"></div>
+      <p class="saved-empty" id="saved-empty" hidden>No saved cards yet. Tap the heart on a card you like.</p>
+    </div>
 
     <footer>
       Card data and images from <a href="https://scryfall.com" target="_blank" rel="noopener">Scryfall</a>.
@@ -393,7 +584,7 @@ footer a{color:var(--muted)}
     </footer>
   </div>
 
-  <div class="drawbar">
+  <div class="drawbar" id="drawbar">
     <div class="drawrow">
       <button type="button" class="draw" id="draw">Random card</button>
       <button type="button" class="draw draw-ten" id="draw10">Draw 10</button>
@@ -439,7 +630,15 @@ footer a{color:var(--muted)}
     loading: false,
     lastFetchAt: 0,
     prices: null,
-    batchCards: []
+    batchCards: [],
+    tab: "draw",
+    myList: "",
+    listItems: [],
+    listMissing: [],
+    saved: [],
+    savedFilter: "",
+    lifeDecks: [],
+    lifeDecksFound: false
   };
 
   const $ = (id) => document.getElementById(id);
@@ -475,6 +674,10 @@ footer a{color:var(--muted)}
         if (typeof saved.creatureTypes === "string") state.creatureTypes = saved.creatureTypes.slice(0, 80);
         if (Array.isArray(saved.mvs)) state.mvs = MV_ORDER.filter((v) => saved.mvs.includes(v));
       }
+      if (typeof saved.myList === "string") state.myList = saved.myList;
+      if (saved.tab === "list" || saved.tab === "draw" || saved.tab === "saved") state.tab = saved.tab;
+      if (Array.isArray(saved.saved)) state.saved = normalizeSavedList(saved.saved);
+      if (typeof saved.savedFilter === "string") state.savedFilter = saved.savedFilter;
     } catch (e) { /* ignore bad storage */ }
   }
 
@@ -489,7 +692,11 @@ footer a{color:var(--muted)}
         colors: state.colors,
         colorless: state.colorless,
         mode: state.mode,
-        history: state.history
+        history: state.history,
+        myList: state.myList,
+        tab: state.tab,
+        saved: state.saved,
+        savedFilter: state.savedFilter
       }));
     } catch (e) { /* private mode / quota */ }
   }
@@ -734,6 +941,11 @@ footer a{color:var(--muted)}
     if (state.card && $("stage") && !$("stage").hidden) renderPrices(state.card);
     if (state.batchCards.length && $("batch") && !$("batch").hidden) renderBatchList(state.batchCards);
     if (state.history.length) renderHistory();
+    if (state.listItems.length) renderListResults(state.listItems, state.listMissing);
+    if (state.tab === "saved" || state.saved.length) {
+      syncSaveButtons();
+      if (state.tab === "saved") renderSavedView();
+    }
   }
 
   function fillPricesInto(card, row, tcg, buy, datasetEl) {
@@ -806,6 +1018,839 @@ footer a{color:var(--muted)}
     fillPricesInto(card, $("ck-prices"), $("tcg-price"), $("ck-buy"), meta);
   }
 
+  function setListStatus(text, kind) {
+    const el = $("list-status");
+    if (!el) return;
+    el.textContent = text || "";
+    el.className = "status" + (kind ? " " + kind : "");
+  }
+
+  function parseListLine(raw) {
+    let line = String(raw || "").replace(/\u00a0/g, " ").trim();
+    if (!line) return null;
+    if (line.charAt(0) === "#" || line.slice(0, 2) === "//") return null;
+    let qty = 1;
+    let name = line;
+    let m = name.match(/^(\d+)\s*[xX\u00d7]\s+(.+)$/);
+    if (m) {
+      qty = parseInt(m[1], 10);
+      name = m[2];
+    } else {
+      m = name.match(/^(\d+)[xX\u00d7](.+)$/);
+      if (m) {
+        qty = parseInt(m[1], 10);
+        name = m[2];
+      } else {
+        m = name.match(/^(\d+)\s+(.+)$/);
+        if (m) {
+          qty = parseInt(m[1], 10);
+          name = m[2];
+        }
+      }
+    }
+    name = name.trim();
+    m = name.match(/^(.+?)\s+[xX\u00d7]\s*(\d+)$/);
+    if (m) {
+      name = m[1].trim();
+      qty = qty > 1 ? qty : parseInt(m[2], 10);
+    }
+    let strippedSet = false;
+    const afterSet = name.replace(/\s*[(\[][A-Za-z0-9]{2,6}[)\]]\s*(\d{1,4}[a-zA-Z]?)?\s*$/, "");
+    if (afterSet !== name) {
+      name = afterSet.trim();
+      strippedSet = true;
+    }
+    if (strippedSet) name = name.replace(/\s+\d{1,4}[a-zA-Z]?$/, "").trim();
+    name = name.replace(/\s+/g, " ").trim();
+    if (!name) return null;
+    if (!isFinite(qty) || qty < 1) qty = 1;
+    return { qty: qty, name: name };
+  }
+
+  function parseListText(text) {
+    return String(text || "").split(/\r?\n/).map(parseListLine).filter(Boolean);
+  }
+
+  function combineByName(entries) {
+    const map = new Map();
+    entries.forEach((e) => {
+      const key = e.name.toLowerCase();
+      if (map.has(key)) map.get(key).qty += e.qty;
+      else map.set(key, { qty: e.qty, name: e.name });
+    });
+    return Array.from(map.values());
+  }
+
+  function listQtyTotal() {
+    return parseListText(state.myList).reduce((sum, e) => sum + e.qty, 0);
+  }
+
+  function qtyOfName(name) {
+    const key = String(name || "").toLowerCase();
+    let n = 0;
+    parseListText(state.myList).forEach((e) => {
+      if (e.name.toLowerCase() === key) n += e.qty;
+    });
+    return n;
+  }
+
+  function formatListLine(qty, name) {
+    return qty > 1 ? (qty + " " + name) : name;
+  }
+
+  function syncListCount() {
+    const el = $("list-count");
+    const n = listQtyTotal();
+    if (!el) return;
+    if (n) {
+      el.hidden = false;
+      el.textContent = String(n);
+    } else {
+      el.hidden = true;
+      el.textContent = "0";
+    }
+  }
+
+  function syncListInput() {
+    const input = $("list-input");
+    if (input && input.value !== state.myList) input.value = state.myList;
+    syncListCount();
+    syncAddButtons();
+  }
+
+  function addNameToList(name, qty) {
+    const add = qty && qty > 0 ? qty : 1;
+    const clean = String(name || "").replace(/\s+/g, " ").trim();
+    if (!clean) return 0;
+    const key = clean.toLowerCase();
+    const raw = state.myList || "";
+    const lines = raw.split(/\r?\n/);
+    let found = false;
+    const next = lines.map((line) => {
+      const parsed = parseListLine(line);
+      if (!found && parsed && parsed.name.toLowerCase() === key) {
+        found = true;
+        return formatListLine(parsed.qty + add, parsed.name);
+      }
+      return line;
+    });
+    if (found) {
+      state.myList = next.join("\n");
+    } else {
+      const addition = formatListLine(add, clean);
+      const trimmed = raw.replace(/\s+$/, "");
+      state.myList = trimmed ? (trimmed + "\n" + addition + "\n") : (addition + "\n");
+    }
+    saveSettings();
+    syncListInput();
+    return qtyOfName(clean);
+  }
+
+  function addButtonLabel(name) {
+    const n = qtyOfName(name);
+    if (n) return "In my list \u00b7 +1";
+    return "+ Add to my list";
+  }
+
+  function wireAddButton(btn, name) {
+    if (!btn) return;
+    btn.disabled = !name;
+    btn.dataset.name = name || "";
+    btn.classList.toggle("added", !!(name && qtyOfName(name)));
+    btn.textContent = name ? addButtonLabel(name) : "+ Add to my list";
+  }
+
+  function syncAddButtons() {
+    wireAddButton($("add-list"), state.card && state.card.name);
+    document.querySelectorAll(".card-item .add-list, .thumbs .add-thumb").forEach((btn) => {
+      const name = btn.dataset.name;
+      if (!name) return;
+      const n = qtyOfName(name);
+      if (btn.classList.contains("add-thumb")) {
+        btn.classList.toggle("added", n > 0);
+        btn.title = n ? (name + " is in my list (" + n + "). Tap to add another.") : ("Add " + name + " to my list");
+        btn.setAttribute("aria-label", btn.title);
+      } else {
+        btn.classList.toggle("added", n > 0);
+        btn.textContent = addButtonLabel(name);
+      }
+    });
+  }
+
+  function handleAddClick(name, btn) {
+    if (!name) return;
+    const n = addNameToList(name, 1);
+    if (btn) {
+      if (btn.classList.contains("add-thumb")) {
+        btn.classList.add("added");
+        btn.title = name + " is in my list (" + n + "). Tap to add another.";
+        btn.setAttribute("aria-label", btn.title);
+      } else {
+        btn.classList.add("added");
+        btn.textContent = "Added \u00d7" + n;
+        setTimeout(() => { if (btn.dataset.name === name) wireAddButton(btn, name); }, 1200);
+      }
+    }
+    const note = n > 1 ? (n + "\u00d7 " + name + " in my list.") : (name + " added to my list.");
+    if (state.tab === "list") setListStatus(note);
+    else setStatus(note);
+  }
+
+  function setTab(tab) {
+    state.tab = (tab === "list" || tab === "saved") ? tab : "draw";
+    const isDraw = state.tab === "draw";
+    $("tab-draw").setAttribute("aria-selected", String(state.tab === "draw"));
+    $("tab-list").setAttribute("aria-selected", String(state.tab === "list"));
+    const savedTab = $("tab-saved");
+    if (savedTab) savedTab.setAttribute("aria-selected", String(state.tab === "saved"));
+    $("draw-pane").hidden = !isDraw;
+    $("list-pane").hidden = state.tab !== "list";
+    const savedPane = $("saved-pane");
+    if (savedPane) savedPane.hidden = state.tab !== "saved";
+    const bar = $("drawbar");
+    if (bar) bar.hidden = !isDraw;
+    document.body.classList.toggle("list-mode", !isDraw);
+    if (state.tab === "saved") {
+      refreshLifeDecks();
+      renderSavedView();
+    }
+    saveSettings();
+  }
+
+  function normalizeSavedList(list) {
+    if (!Array.isArray(list)) return [];
+    const out = [];
+    const seen = {};
+    list.forEach((c) => {
+      if (!c || !c.id || !c.name) return;
+      if (seen[c.id]) return;
+      seen[c.id] = true;
+      const decks = Array.isArray(c.decks)
+        ? c.decks.map((d) => String(d || "").trim()).filter(Boolean)
+        : [];
+      out.push(Object.assign({}, c, { decks: uniqueNames(decks), savedAt: c.savedAt || 0 }));
+    });
+    return out;
+  }
+
+  function uniqueNames(names) {
+    const seen = {};
+    const out = [];
+    (names || []).forEach((n) => {
+      const key = String(n || "").toLowerCase();
+      if (!key || seen[key]) return;
+      seen[key] = true;
+      out.push(n);
+    });
+    return out;
+  }
+
+  function isSaved(id) {
+    return !!(id && state.saved.some((c) => c.id === id));
+  }
+
+  function savedEntry(id) {
+    return state.saved.find((c) => c.id === id) || null;
+  }
+
+  function syncSavedCount() {
+    const el = $("saved-count");
+    if (!el) return;
+    const n = state.saved.length;
+    if (n) {
+      el.hidden = false;
+      el.textContent = String(n);
+    } else {
+      el.hidden = true;
+      el.textContent = "0";
+    }
+  }
+
+  function saveCard(card, opts) {
+    if (!card || !card.id) return null;
+    const options = opts || {};
+    const slim = slimCard(card);
+    const existing = savedEntry(slim.id);
+    if (existing) {
+      const decks = existing.decks || [];
+      const savedAt = existing.savedAt || Date.now();
+      Object.assign(existing, slim, { decks: decks, savedAt: savedAt });
+    } else {
+      state.saved.unshift(Object.assign(slim, { savedAt: Date.now(), decks: [] }));
+    }
+    if (options.deck) tagCardToDeck(slim.id, options.deck, true, { silent: true });
+    saveSettings();
+    syncSavedCount();
+    if (options.quiet) {
+      syncHeartButtons();
+      return savedEntry(slim.id);
+    }
+    syncSaveButtons();
+    if (state.tab === "saved") renderSavedView();
+    else syncTagBoxes();
+    return savedEntry(slim.id);
+  }
+
+  function unsaveCard(id) {
+    if (!id) return;
+    state.saved = state.saved.filter((c) => c.id !== id);
+    saveSettings();
+    syncSaveButtons();
+    syncSavedCount();
+    if (state.tab === "saved") renderSavedView();
+    else syncTagBoxes();
+  }
+
+  function toggleSave(card, btn) {
+    if (!card || !card.id) return;
+    if (isSaved(card.id)) {
+      const entry = savedEntry(card.id);
+      if (entry && entry.decks && entry.decks.length) {
+        if (!window.confirm("Remove from Saved? Deck tags on this card will be cleared.")) return;
+      }
+      unsaveCard(card.id);
+      if (btn && btn.classList.contains("save-btn")) wireSaveButton(btn, card);
+    } else {
+      saveCard(card);
+      if (btn && btn.classList.contains("save-btn")) {
+        wireSaveButton(btn, card);
+        const label = btn.querySelector(".save-label");
+        if (label) label.textContent = "Saved";
+        setTimeout(() => { if (isSaved(card.id)) wireSaveButton(btn, card); }, 1200);
+      }
+    }
+  }
+
+  function tagCardToDeck(id, deckName, on, opts) {
+    const options = opts || {};
+    const entry = savedEntry(id);
+    if (!entry || !deckName) return;
+    const key = String(deckName).toLowerCase();
+    const decks = entry.decks || [];
+    const has = decks.some((d) => d.toLowerCase() === key);
+    if (on && !has) entry.decks = decks.concat([deckName]);
+    if (!on && has) entry.decks = decks.filter((d) => d.toLowerCase() !== key);
+    if (!options.silent && !options.quiet) {
+      saveSettings();
+      if (state.tab === "saved") renderSavedView();
+      else syncTagBoxes();
+    } else if (options.quiet) {
+      saveSettings();
+      syncHeartButtons();
+      syncSavedCount();
+    }
+  }
+
+  function wireSaveButton(btn, card) {
+    if (!btn) return;
+    const on = !!(card && card.id && isSaved(card.id));
+    btn.disabled = !(card && card.id);
+    btn.classList.toggle("on", on);
+    btn.setAttribute("aria-pressed", String(on));
+    btn.dataset.id = (card && card.id) || "";
+    if (btn.classList.contains("save-thumb")) {
+      btn.textContent = on ? "\u2665" : "\u2661";
+      btn.title = on ? "Remove from Saved" : "Save this card";
+      btn.setAttribute("aria-label", btn.title);
+    } else {
+      btn.innerHTML = (on ? "\u2665" : "\u2661") + ' <span class="save-label">' + (on ? "Saved" : "Save") + "</span>";
+    }
+  }
+
+  function cardForId(id) {
+    if (!id) return null;
+    if (state.card && state.card.id === id) return state.card;
+    const saved = savedEntry(id);
+    if (saved) return saved;
+    const hist = state.history.find((c) => c.id === id);
+    if (hist) return hist;
+    const batch = (state.batchCards || []).find((c) => c.id === id);
+    if (batch) return batch;
+    const listed = (state.listItems || []).map((i) => i.card).find((c) => c && c.id === id);
+    return listed || null;
+  }
+
+  function syncHeartButtons() {
+    wireSaveButton($("save-btn"), state.card);
+    document.querySelectorAll(".card-item .save-btn, .thumbs .save-thumb").forEach((btn) => {
+      const id = btn.dataset.id;
+      wireSaveButton(btn, cardForId(id) || { id: id });
+    });
+  }
+
+  function syncSaveButtons() {
+    syncHeartButtons();
+    syncTagBoxes();
+  }
+
+  function readLifeCounterDecksSync() {
+    const names = [];
+    function add(name) {
+      const n = String(name || "").trim();
+      if (n) names.push(n);
+    }
+    try {
+      const raw = localStorage.getItem("mtg_life_v2") || localStorage.getItem("mtg_life_v1");
+      if (raw) {
+        const d = JSON.parse(raw);
+        const commanders = d && d.cfg && Array.isArray(d.cfg.commanders) ? d.cfg.commanders : [];
+        commanders.forEach(add);
+        // A configured commander list counts as "found" even if currently empty.
+        state.lifeDecksFound = true;
+      } else {
+        state.lifeDecksFound = false;
+      }
+    } catch (e) {
+      state.lifeDecksFound = false;
+    }
+    try {
+      const raw = localStorage.getItem("mtg_archive_games");
+      const games = raw ? JSON.parse(raw) : [];
+      if (Array.isArray(games) && games.length) {
+        state.lifeDecksFound = true;
+        games.forEach((g) => {
+          (g.players || []).forEach((p) => add(p && p.commander));
+        });
+      }
+    } catch (e) { /* ignore */ }
+    state.lifeDecks = uniqueNames(names);
+    return state.lifeDecks;
+  }
+
+  function refreshLifeDecks() {
+    readLifeCounterDecksSync();
+    loadLifeDecksFromIdb();
+    return state.lifeDecks;
+  }
+
+  function loadLifeDecksFromIdb() {
+    try {
+      if (!window.indexedDB) return;
+      const req = window.indexedDB.open("mtg_cmd_archive", 1);
+      req.onupgradeneeded = function (ev) {
+        try { ev.target.transaction.abort(); } catch (e) {}
+      };
+      req.onsuccess = function () {
+        const db = req.result;
+        try {
+          if (!db.objectStoreNames.contains("games")) {
+            db.close();
+            return;
+          }
+          const tx = db.transaction("games", "readonly");
+          const getAll = tx.objectStore("games").getAll();
+          getAll.onsuccess = function () {
+            const games = getAll.result || [];
+            const extra = [];
+            games.forEach((g) => {
+              (g.players || []).forEach((p) => {
+                const n = p && p.commander ? String(p.commander).trim() : "";
+                if (n) extra.push(n);
+              });
+            });
+            if (extra.length) {
+              state.lifeDecksFound = true;
+              const before = state.lifeDecks.join("\n");
+              state.lifeDecks = uniqueNames(state.lifeDecks.concat(extra));
+              if (state.lifeDecks.join("\n") !== before) {
+                if (state.tab === "saved") renderSavedView();
+                else syncTagBoxes();
+              }
+            }
+            try { db.close(); } catch (e) {}
+          };
+          getAll.onerror = function () { try { db.close(); } catch (e) {} };
+        } catch (e) {
+          try { db.close(); } catch (err) {}
+        }
+      };
+    } catch (e) { /* ignore */ }
+  }
+
+  function allKnownDecks() {
+    const tagged = [];
+    state.saved.forEach((c) => {
+      (c.decks || []).forEach((d) => tagged.push(d));
+    });
+    return uniqueNames((state.lifeDecks || []).concat(tagged));
+  }
+
+  function setSavedStatus(text, kind) {
+    const el = $("saved-status");
+    if (!el) return;
+    el.textContent = text || "";
+    el.className = "status" + (kind ? " " + kind : "");
+  }
+
+  function decksOf(card) {
+    const entry = card && card.id ? savedEntry(card.id) : null;
+    return (entry && entry.decks) || [];
+  }
+
+  function fillTagBox(container, card) {
+    if (!container) return;
+    container.innerHTML = "";
+    if (!card || !card.id) return;
+    const known = allKnownDecks();
+    const lc = state.lifeDecks || [];
+    const current = decksOf(card);
+    const toggle = document.createElement("button");
+    toggle.type = "button";
+    toggle.className = "tag-toggle";
+    toggle.dataset.id = card.id;
+    if (current.length) {
+      toggle.textContent = current.length === 1 ? ("Tagged: " + current[0]) : ("Tagged to " + current.length + " decks");
+    } else {
+      toggle.textContent = "Tag to deck";
+    }
+    const menu = document.createElement("div");
+    menu.className = "tag-menu";
+    menu.hidden = true;
+    if (!lc.length && !state.lifeDecksFound) {
+      const hint = document.createElement("p");
+      hint.className = "hint";
+      hint.id = "";
+      hint.textContent = "No decks in the Life Counter yet. Pick a commander in the Life Counter deck chooser, then come back here to tag cards.";
+      menu.appendChild(hint);
+    } else if (!known.length) {
+      const hint = document.createElement("p");
+      hint.className = "hint";
+      hint.textContent = "No commanders are selected in the Life Counter yet. Open the deck chooser there, pick a commander, then come back.";
+      menu.appendChild(hint);
+    } else {
+      known.forEach((name) => {
+        const lab = document.createElement("label");
+        const box = document.createElement("input");
+        box.type = "checkbox";
+        box.value = name;
+        box.checked = current.some((d) => d.toLowerCase() === name.toLowerCase());
+        box.addEventListener("change", () => {
+          if (!isSaved(card.id) && box.checked) saveCard(card, { quiet: true });
+          if (!savedEntry(card.id) && box.checked) return;
+          tagCardToDeck(card.id, name, box.checked, { quiet: true });
+          const now = decksOf(card);
+          toggle.textContent = now.length ? (now.length === 1 ? ("Tagged: " + now[0]) : ("Tagged to " + now.length + " decks")) : "Tag to deck";
+          paintTagChips(chips, now);
+          if (state.tab === "saved") {
+            /* Keep the open menu; only refresh totals and filter chips. */
+            renderSavedFilter();
+            const filter = state.savedFilter || "";
+            const items = state.saved.filter((c) => !filter || (c.decks || []).some((d) => d.toLowerCase() === filter.toLowerCase()));
+            const tot = $("saved-total");
+            if (tot && items.length) {
+              tot.hidden = false;
+              tot.innerHTML = savedTotalHtml(items, filter);
+            }
+          }
+        });
+        lab.appendChild(box);
+        lab.appendChild(document.createTextNode(name));
+        menu.appendChild(lab);
+      });
+    }
+    const chips = document.createElement("div");
+    chips.className = "tag-chips";
+    paintTagChips(chips, current);
+    toggle.addEventListener("click", () => {
+      const open = menu.hidden;
+      document.querySelectorAll(".tag-menu").forEach((el) => { el.hidden = true; });
+      menu.hidden = !open;
+    });
+    container.appendChild(toggle);
+    container.appendChild(menu);
+    container.appendChild(chips);
+  }
+
+  function paintTagChips(wrap, decks) {
+    if (!wrap) return;
+    wrap.innerHTML = "";
+    (decks || []).forEach((d) => {
+      const chip = document.createElement("span");
+      chip.className = "tag-chip";
+      chip.textContent = d;
+      wrap.appendChild(chip);
+    });
+    wrap.hidden = !(decks && decks.length);
+  }
+
+  function syncTagBoxes() {
+    if ($("tagbox") && state.card) fillTagBox($("tagbox"), state.card);
+    document.querySelectorAll(".card-item .tagbox").forEach((box) => {
+      const article = box.closest(".card-item");
+      const id = article && article.dataset.id;
+      if (!id) return;
+      const card = savedEntry(id) || (state.batchCards || []).find((c) => c.id === id) || ((state.listItems || []).map((i) => i.card).find((c) => c && c.id === id)) || { id: id, name: article.dataset.name };
+      fillTagBox(box, card);
+    });
+  }
+
+  function savedTotalHtml(items, filterName) {
+    let total = 0, priced = 0;
+    items.forEach((c) => {
+      const ck = lookupCk(c);
+      if (ck && ck.nonfoil != null) {
+        total += ck.nonfoil;
+        priced++;
+      }
+    });
+    const word = items.length === 1 ? "card" : "cards";
+    const scope = filterName ? (" in " + filterName) : "";
+    let html = "";
+    if (priced) {
+      let note = "CK total for " + items.length + " " + word + scope;
+      if (priced !== items.length) note += " \u00b7 " + (items.length - priced) + " without a CK price";
+      html = '<span class="amt">' + money(total) + '</span><span class="note">' + note + "</span>";
+    } else {
+      html = '<span class="note">' + (items.length ? (items.length + " " + word + scope + ". No Card Kingdom prices.") : "No saved cards in this filter.") + "</span>";
+    }
+    if (!filterName && state.saved.length) {
+      const rows = [];
+      allKnownDecks().forEach((name) => {
+        const cards = state.saved.filter((c) => (c.decks || []).some((d) => d.toLowerCase() === name.toLowerCase()));
+        if (!cards.length) return;
+        let dTotal = 0, dPriced = 0;
+        cards.forEach((c) => {
+          const ck = lookupCk(c);
+          if (ck && ck.nonfoil != null) {
+            dTotal += ck.nonfoil;
+            dPriced++;
+          }
+        });
+        const amt = dPriced ? money(dTotal) : "\u2014";
+        rows.push("<li><span class=\"dname\">" + escapeHtml(name) + " \u00b7 " + cards.length + (cards.length === 1 ? " card" : " cards") + "</span><span class=\"damt\">" + amt + "</span></li>");
+      });
+      if (rows.length) html += '<ul class="deck-totals">' + rows.join("") + "</ul>";
+    }
+    return html;
+  }
+
+  function renderSavedFilter() {
+    const wrap = $("saved-filter");
+    const hint = $("saved-hint");
+    if (!wrap) return;
+    wrap.innerHTML = "";
+    const decks = allKnownDecks();
+    const filters = [{ name: "", label: "All" }].concat(decks.map((d) => ({ name: d, label: d })));
+    if (state.savedFilter && !decks.some((d) => d.toLowerCase() === state.savedFilter.toLowerCase())) {
+      state.savedFilter = "";
+    }
+    filters.forEach((f) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "chip";
+      btn.textContent = f.label;
+      const on = (f.name || "") === (state.savedFilter || "");
+      btn.setAttribute("aria-pressed", String(on));
+      btn.addEventListener("click", () => {
+        state.savedFilter = f.name;
+        saveSettings();
+        renderSavedView();
+      });
+      wrap.appendChild(btn);
+    });
+    const lc = state.lifeDecks || [];
+    if (!lc.length && !state.lifeDecksFound) {
+      hint.hidden = false;
+      hint.textContent = "No decks in the Life Counter yet. Pick a commander in the Life Counter deck chooser, then come back here to tag cards.";
+    } else if (!lc.length) {
+      hint.hidden = false;
+      hint.textContent = "No commanders are selected in the Life Counter right now. Open the deck chooser there to pick one.";
+    } else {
+      hint.hidden = true;
+      hint.textContent = "";
+    }
+  }
+
+  function renderSavedView() {
+    refreshLifeDecks();
+    renderSavedFilter();
+    syncSavedCount();
+    const list = $("saved-cards");
+    const tot = $("saved-total");
+    const empty = $("saved-empty");
+    const filter = state.savedFilter || "";
+    const items = state.saved.filter((c) => {
+      if (!filter) return true;
+      return (c.decks || []).some((d) => d.toLowerCase() === filter.toLowerCase());
+    });
+    list.innerHTML = "";
+    items.forEach((card) => {
+      list.appendChild(buildCardItem(card, { showAdd: true, showSave: true, showRemove: true, showTag: true }));
+    });
+    if (state.saved.length && items.length) {
+      tot.hidden = false;
+      tot.innerHTML = savedTotalHtml(items, filter);
+      empty.hidden = true;
+      if (filter) setSavedStatus(items.length + (items.length === 1 ? " card" : " cards") + " tagged to " + filter + ".");
+      else setSavedStatus(state.saved.length + (state.saved.length === 1 ? " saved card." : " saved cards."));
+    } else if (state.saved.length && !items.length) {
+      tot.hidden = false;
+      tot.innerHTML = savedTotalHtml([], filter);
+      empty.hidden = true;
+      setSavedStatus("No saved cards are tagged to " + filter + ".", "empty");
+    } else {
+      tot.hidden = true;
+      tot.innerHTML = "";
+      empty.hidden = false;
+      setSavedStatus("");
+    }
+  }
+
+  async function scryfallRequest(url, opts) {
+    const wait = MIN_GAP_MS - (Date.now() - state.lastFetchAt);
+    if (wait > 0) await sleep(wait);
+    state.lastFetchAt = Date.now();
+    const headers = Object.assign({ Accept: "application/json" }, (opts && opts.headers) || {});
+    return fetch(url, Object.assign({}, opts || {}, { headers: headers }));
+  }
+
+  async function fetchCollectionByName(names) {
+    const found = [];
+    const missing = [];
+    for (let i = 0; i < names.length; i += 75) {
+      const chunk = names.slice(i, i + 75);
+      const res = await scryfallRequest("https://api.scryfall.com/cards/collection", {
+        method: "POST",
+        headers: { Accept: "application/json", "Content-Type": "application/json" },
+        body: JSON.stringify({ identifiers: chunk.map((n) => ({ name: n })) })
+      });
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      const json = await res.json();
+      (json.data || []).forEach((c) => found.push(c));
+      (json.not_found || []).forEach((id) => missing.push(id && id.name ? id.name : ""));
+    }
+    return { found: found, missing: missing.filter(Boolean) };
+  }
+
+  async function fetchNamedFuzzy(name) {
+    const url = "https://api.scryfall.com/cards/named?fuzzy=" + encodeURIComponent(name);
+    const res = await scryfallRequest(url);
+    if (res.status === 404 || res.status === 400) return null;
+    if (!res.ok) return null;
+    return res.json();
+  }
+
+  function listTotalHtml(items) {
+    let total = 0, pricedQty = 0, allQty = 0;
+    items.forEach((item) => {
+      const q = item.qty || 1;
+      allQty += q;
+      const ck = lookupCk(item.card);
+      if (ck && ck.nonfoil != null) {
+        total += ck.nonfoil * q;
+        pricedQty += q;
+      }
+    });
+    const cardWord = items.length === 1 ? "card" : "cards";
+    const qtyNote = allQty !== items.length ? ", " + allQty + " copies" : "";
+    if (pricedQty) {
+      let note = "CK total for " + items.length + " " + cardWord + qtyNote;
+      if (pricedQty !== allQty) note += " \u00b7 " + (allQty - pricedQty) + " without a CK price";
+      return '<span class="amt">' + money(total) + '</span><span class="note">' + note + "</span>";
+    }
+    return '<span class="note">' + items.length + " " + cardWord + qtyNote + ". No Card Kingdom prices.</span>";
+  }
+
+  function renderListResults(items, missing) {
+    const list = $("list-cards");
+    const tot = $("list-total");
+    const miss = $("list-missing");
+    list.innerHTML = "";
+    items.forEach((item) => list.appendChild(buildCardItem(item.card, { qty: item.qty, fuzzyFrom: item.fuzzyFrom, showAdd: false })));
+    if (items.length) {
+      tot.hidden = false;
+      tot.innerHTML = listTotalHtml(items);
+    } else {
+      tot.hidden = true;
+      tot.innerHTML = "";
+    }
+    if (missing && missing.length) {
+      miss.hidden = false;
+      const names = missing.map((n) => "<li>" + escapeHtml(n) + "</li>").join("");
+      const label = missing.length === 1 ? "Couldn't find this name:" : "Couldn't find these names:";
+      miss.innerHTML = "<strong>" + label + "</strong><ul>" + names + "</ul>";
+    } else {
+      miss.hidden = true;
+      miss.innerHTML = "";
+    }
+  }
+
+  function escapeHtml(s) {
+    return String(s || "").replace(/[&<>"']/g, (ch) => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+    }[ch]));
+  }
+
+  async function showListCards() {
+    if (state.loading) return;
+    const input = $("list-input");
+    state.myList = input ? input.value : state.myList;
+    saveSettings();
+    syncListCount();
+    const combined = combineByName(parseListText(state.myList));
+    if (!combined.length) {
+      state.listItems = [];
+      state.listMissing = [];
+      renderListResults([], []);
+      setListStatus("Paste at least one card name.", "empty");
+      return;
+    }
+    setBusy(true);
+    setListStatus("Looking up " + combined.length + (combined.length === 1 ? " card" : " cards") + "\u2026");
+    try {
+      const names = combined.map((e) => e.name);
+      const col = await fetchCollectionByName(names);
+      const byLower = {};
+      col.found.forEach((c) => {
+        if (c && c.name) byLower[c.name.toLowerCase()] = { card: c };
+      });
+      const missing = [];
+      const fuzzyNeeded = col.missing.slice();
+      for (let i = 0; i < fuzzyNeeded.length; i++) {
+        const qname = fuzzyNeeded[i];
+        setListStatus("Checking “" + qname + "” (" + (i + 1) + "/" + fuzzyNeeded.length + ")…");
+        const card = await fetchNamedFuzzy(qname);
+        if (card && card.name) {
+          byLower[qname.toLowerCase()] = { card: card, fuzzyFrom: qname };
+        } else {
+          missing.push(qname);
+        }
+      }
+      const items = [];
+      const byId = {};
+      combined.forEach((e) => {
+        const hit = byLower[e.name.toLowerCase()];
+        if (hit && hit.card) {
+          const id = hit.card.id || e.name.toLowerCase();
+          if (byId[id]) {
+            byId[id].qty += e.qty;
+            if (hit.fuzzyFrom && !byId[id].fuzzyFrom) byId[id].fuzzyFrom = hit.fuzzyFrom;
+          } else {
+            const item = { card: hit.card, qty: e.qty, fuzzyFrom: hit.fuzzyFrom || "", asked: e.name };
+            byId[id] = item;
+            items.push(item);
+          }
+        } else if (!missing.some((n) => n.toLowerCase() === e.name.toLowerCase())) {
+          missing.push(e.name);
+        }
+      });
+      state.listItems = items;
+      state.listMissing = missing;
+      renderListResults(items, missing);
+      if (!items.length) {
+        setListStatus("None of those names were found.", "empty");
+      } else if (missing.length) {
+        setListStatus("Showing " + items.length + (items.length === 1 ? " card" : " cards") + ", " + missing.length + " not found.", "empty");
+      } else {
+        setListStatus("Showing " + items.length + (items.length === 1 ? " card." : " cards."));
+      }
+    } catch (err) {
+      setListStatus("Couldn\u2019t reach Scryfall. Try again.", "error");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   function showCard(card, opts) {
     const options = opts || {};
     leaveBatchView();
@@ -859,6 +1904,9 @@ footer a{color:var(--muted)}
 
     if (options.addHistory) pushHistory(card);
     renderHistory();
+    wireAddButton($("add-list"), card && card.name);
+    wireSaveButton($("save-btn"), card);
+    fillTagBox($("tagbox"), card);
   }
 
   function pushHistory(card) {
@@ -879,10 +1927,13 @@ footer a{color:var(--muted)}
     }
     wrap.hidden = false;
     state.history.forEach((card) => {
+      const wrapEl = document.createElement("div");
+      wrapEl.className = "thumb";
+      if (state.card && state.card.id === card.id) wrapEl.setAttribute("aria-current", "true");
       const btn = document.createElement("button");
       btn.type = "button";
+      btn.className = "thumb-open";
       btn.title = card.name;
-      if (state.card && state.card.id === card.id) btn.setAttribute("aria-current", "true");
       const img = document.createElement("img");
       img.src = thumbUrl(card);
       img.alt = card.name;
@@ -893,13 +1944,40 @@ footer a{color:var(--muted)}
         tag.className = "thumb-price";
         tag.textContent = money(ck.nonfoil);
         btn.appendChild(tag);
-        btn.title = card.name + " · " + money(ck.nonfoil);
+        btn.title = card.name + " \u00b7 " + money(ck.nonfoil);
       }
       btn.addEventListener("click", () => {
         setStatus("");
         showCard(card, { addHistory: false, face: 0 });
       });
-      thumbs.appendChild(btn);
+      const add = document.createElement("button");
+      add.type = "button";
+      add.className = "add-thumb";
+      add.textContent = "+";
+      add.dataset.name = card.name || "";
+      const n = qtyOfName(card.name);
+      add.classList.toggle("added", n > 0);
+      add.title = n ? (card.name + " is in my list (" + n + "). Tap to add another.") : ("Add " + card.name + " to my list");
+      add.setAttribute("aria-label", add.title);
+      add.addEventListener("click", (ev) => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        handleAddClick(card.name, add);
+      });
+      const heart = document.createElement("button");
+      heart.type = "button";
+      heart.className = "save-thumb";
+      heart.dataset.id = card.id || "";
+      wireSaveButton(heart, card);
+      heart.addEventListener("click", (ev) => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        toggleSave(card, heart);
+      });
+      wrapEl.appendChild(btn);
+      wrapEl.appendChild(heart);
+      wrapEl.appendChild(add);
+      thumbs.appendChild(wrapEl);
     });
   }
 
@@ -907,6 +1985,12 @@ footer a{color:var(--muted)}
     state.loading = on;
     drawBtn.disabled = on;
     draw10Btn.disabled = on;
+    const show = $("list-show");
+    if (show) show.disabled = on;
+    const copy = $("list-copy");
+    if (copy) copy.disabled = on;
+    const clear = $("list-clear");
+    if (clear) clear.disabled = on;
   }
 
   function leaveBatchView() {
@@ -963,11 +2047,16 @@ footer a{color:var(--muted)}
     }
   }
 
-  function buildCardItem(card) {
+  function buildCardItem(card, opts) {
+    const options = opts || {};
     const article = document.createElement("article");
     article.className = "card-item";
     if (card.id) article.dataset.id = card.id;
     article.dataset.name = card.name || "";
+    if (options.qty) article.dataset.qty = String(options.qty);
+    if (options.fuzzyFrom) article.dataset.fuzzyFrom = options.fuzzyFrom;
+    const tagged = (card.decks || (card.id && (state.saved.find((c) => c.id === card.id) || {}).decks) || []);
+    if (tagged && tagged.length) article.dataset.decks = tagged.join("|");
 
     const frameEl = document.createElement("div");
     frameEl.className = "cardframe";
@@ -990,6 +2079,12 @@ footer a{color:var(--muted)}
     const manaBox = document.createElement("div");
     manaBox.className = "mana";
     nameRow.appendChild(nameEl);
+    if (options.qty) {
+      const qtyEl = document.createElement("span");
+      qtyEl.className = "qty";
+      qtyEl.textContent = "\u00d7" + options.qty;
+      nameRow.appendChild(qtyEl);
+    }
     nameRow.appendChild(manaBox);
     const priceRow = document.createElement("div");
     priceRow.className = "price-row";
@@ -1026,6 +2121,47 @@ footer a{color:var(--muted)}
     metaEl.appendChild(sub);
     metaEl.appendChild(tcg);
     metaEl.appendChild(links);
+    if (options.fuzzyFrom) {
+      const fuzzy = document.createElement("p");
+      fuzzy.className = "list-fuzzy";
+      fuzzy.textContent = "Matched from \u201c" + options.fuzzyFrom + "\u201d";
+      metaEl.appendChild(fuzzy);
+    }
+    const actions = document.createElement("div");
+    actions.className = "card-actions";
+    if (options.showSave !== false) {
+      const heart = document.createElement("button");
+      heart.type = "button";
+      heart.className = "save-btn";
+      heart.dataset.id = card.id || "";
+      wireSaveButton(heart, card);
+      heart.addEventListener("click", () => toggleSave(card, heart));
+      actions.appendChild(heart);
+    }
+    if (options.showAdd !== false) {
+      const add = document.createElement("button");
+      add.type = "button";
+      add.className = "add-list";
+      add.dataset.name = card.name || "";
+      wireAddButton(add, card.name);
+      add.addEventListener("click", () => handleAddClick(card.name, add));
+      actions.appendChild(add);
+    }
+    if (options.showRemove) {
+      const rem = document.createElement("button");
+      rem.type = "button";
+      rem.className = "remove-saved";
+      rem.textContent = "Remove";
+      rem.addEventListener("click", () => toggleSave(card, rem));
+      actions.appendChild(rem);
+    }
+    if (actions.childNodes.length) metaEl.appendChild(actions);
+    if (options.showTag !== false) {
+      const tagbox = document.createElement("div");
+      tagbox.className = "tagbox";
+      fillTagBox(tagbox, card);
+      metaEl.appendChild(tagbox);
+    }
 
     article.appendChild(frameEl);
     article.appendChild(flip);
@@ -1264,8 +2400,68 @@ footer a{color:var(--muted)}
   drawBtn.addEventListener("click", () => drawRandom());
   draw10Btn.addEventListener("click", () => drawBatch());
 
+  $("tab-draw").addEventListener("click", () => setTab("draw"));
+  $("tab-list").addEventListener("click", () => setTab("list"));
+  $("tab-saved").addEventListener("click", () => setTab("saved"));
+
+  $("add-list").addEventListener("click", () => {
+    if (state.card && state.card.name) handleAddClick(state.card.name, $("add-list"));
+  });
+  $("save-btn").addEventListener("click", () => {
+    if (state.card) toggleSave(state.card, $("save-btn"));
+  });
+  document.addEventListener("click", (ev) => {
+    if (ev.target.closest(".tagbox")) return;
+    document.querySelectorAll(".tag-menu").forEach((el) => { el.hidden = true; });
+  });
+
+  $("list-input").addEventListener("input", () => {
+    state.myList = $("list-input").value;
+    saveSettings();
+    syncListCount();
+  });
+
+  $("list-show").addEventListener("click", () => showListCards());
+
+  $("list-copy").addEventListener("click", async () => {
+    const text = $("list-input").value;
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(text);
+      } else {
+        $("list-input").focus();
+        $("list-input").select();
+        document.execCommand("copy");
+      }
+      setListStatus(text.trim() ? "List copied." : "Nothing to copy.", text.trim() ? "" : "empty");
+    } catch (err) {
+      setListStatus("Couldn\u2019t copy the list.", "error");
+    }
+  });
+
+  $("list-clear").addEventListener("click", () => {
+    if (!(state.myList || "").trim() && !state.listItems.length) {
+      setListStatus("List is already empty.", "empty");
+      return;
+    }
+    if (!window.confirm("Clear your card list?")) return;
+    state.myList = "";
+    state.listItems = [];
+    state.listMissing = [];
+    $("list-input").value = "";
+    saveSettings();
+    syncListCount();
+    syncAddButtons();
+    renderListResults([], []);
+    setListStatus("List cleared.", "empty");
+  });
+
   loadSettings();
   syncFilters();
+  syncListInput();
+  syncSavedCount();
+  refreshLifeDecks();
+  setTab(state.tab);
   if (state.history.length) {
     showCard(state.history[0], { addHistory: false });
   } else {
