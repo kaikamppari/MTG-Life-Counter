@@ -189,8 +189,23 @@ header a:hover{color:var(--gold);border-bottom-color:var(--gold)}
 }
 
 .status{
-  text-align:center;color:var(--muted);font-size:.88rem;min-height:1.2em;
-  margin:0 0 8px;pointer-events:none;
+  display:block;
+  position:static;
+  inset:auto;
+  height:auto;
+  min-height:0;
+  max-height:none;
+  aspect-ratio:auto;
+  flex:none;
+  align-self:auto;
+  background:transparent;
+  text-align:center;
+  color:var(--muted);
+  font-size:.88rem;
+  line-height:1.35;
+  margin:0 0 8px;
+  padding:0;
+  pointer-events:none;
 }
 .status.error{color:#f0b4a0}
 .status.empty{color:var(--gold)}
@@ -419,13 +434,13 @@ header a:hover{color:var(--gold);border-bottom-color:var(--gold)}
 #saved-filter{margin-bottom:4px}
 #saved-hint{margin-top:8px}
 
-.empty{
+#placeholder, .cardframe .empty{
   position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
   padding:28px;text-align:center;color:var(--muted);font-size:.95rem;line-height:1.45;
   background:var(--surface);
 }
-.empty span{max-width:18em}
-.empty strong{color:var(--text)}
+#placeholder span, .cardframe .empty span{max-width:18em}
+#placeholder strong, .cardframe .empty strong{color:var(--text)}
 
 .history{margin-top:22px}
 .thumbs{
@@ -464,7 +479,6 @@ footer a{color:var(--muted)}
 .max-price-input-wrap input:focus{outline:none}
 .max-price-input-wrap input::placeholder{color:var(--muted);opacity:.85}
 .max-price-row .chips{flex:1;min-width:200px}
-.hidden-over{display:block;margin-top:4px;font-size:.78rem;color:var(--muted)}
 </style>
 </head>
 <body>
@@ -2064,9 +2078,7 @@ footer a{color:var(--muted)}
     });
     if (state.saved.length && items.length) {
       tot.hidden = false;
-      let html = visible.length ? savedTotalHtml(visible, filter) : '<span class="note">No saved cards at or under ' + formatCap(state.maxPrice) + ".</span>";
-      if (hidden) html += '<span class="hidden-over">' + hiddenOverNote(hidden) + "</span>";
-      tot.innerHTML = html;
+      tot.innerHTML = visible.length ? savedTotalHtml(visible, filter) : '<span class="note">No saved cards at or under ' + formatCap(state.maxPrice) + ".</span>";
       empty.hidden = true;
       const hidNote = hidden ? ", " + hiddenOverNote(hidden) : "";
       if (filter) setSavedStatus(visible.length + (visible.length === 1 ? " card" : " cards") + " tagged to " + filter + hidNote + ".", hidden ? "empty" : "");
@@ -2387,9 +2399,7 @@ footer a{color:var(--muted)}
     });
     if (visible.length || hidden) {
       tot.hidden = false;
-      let html = visible.length ? listTotalHtml(visible) : '<span class="note">No cards at or under ' + formatCap(state.maxPrice) + ".</span>";
-      if (hidden) html += '<span class="hidden-over">' + hiddenOverNote(hidden) + "</span>";
-      tot.innerHTML = html;
+      tot.innerHTML = visible.length ? listTotalHtml(visible) : '<span class="note">No cards at or under ' + formatCap(state.maxPrice) + ".</span>";
     } else {
       tot.hidden = true;
       tot.innerHTML = "";
