@@ -6,8 +6,8 @@
 <meta name="theme-color" content="#1c1812">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="description" content="Draw a random rare or mythic legendary Magic card, filtered by color identity.">
-<title>Random Legend</title>
+<meta name="description" content="Draw a random rare or mythic Magic card, filtered by type, mana cost, and color.">
+<title>Random Rare</title>
 <style>
 :root{
   --bg:#1c1812;
@@ -72,6 +72,7 @@ header a:hover{color:var(--gold);border-bottom-color:var(--gold)}
   display:block;font-size:.72rem;font-weight:700;letter-spacing:.08em;
   text-transform:uppercase;color:var(--muted);margin:0 0 6px;
 }
+.lbl.sp{margin-top:10px}
 
 .seg{display:flex;gap:6px;background:var(--bg-2);padding:4px;border-radius:12px}
 .seg button{
@@ -81,6 +82,37 @@ header a:hover{color:var(--gold);border-bottom-color:var(--gold)}
 .seg button[aria-pressed="true"]{
   background:var(--surface-2);color:var(--text);
   box-shadow:0 1px 0 rgba(255,255,255,.06),0 2px 8px rgba(0,0,0,.25);
+}
+
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{
+  border:1px solid var(--border);
+  background:var(--bg-2);
+  color:var(--muted);
+  font-size:.75rem;font-weight:650;
+  padding:6px 9px;border-radius:999px;cursor:pointer;
+}
+.chip[aria-pressed="true"]{
+  background:var(--surface-2);color:var(--text);
+  border-color:var(--gold);
+  box-shadow:0 0 0 1px var(--gold);
+}
+.mvchips{display:flex;gap:5px;margin:0}
+.mvchips .chip{
+  flex:1;text-align:center;padding:6px 0;min-width:0;font-variant-numeric:tabular-nums;
+}
+
+.toggle{
+  border:1px solid var(--border);
+  background:var(--bg-2);
+  color:var(--muted);
+  font-size:.8rem;font-weight:700;
+  padding:8px 12px;border-radius:12px;cursor:pointer;
+}
+.toggle[aria-pressed="true"]{
+  background:var(--surface-2);color:var(--text);
+  border-color:var(--gold);
+  box-shadow:0 0 0 1px var(--gold);
 }
 
 .colors{display:flex;justify-content:space-between;gap:8px;margin:2px 0 10px}
@@ -102,6 +134,19 @@ header a:hover{color:var(--gold);border-bottom-color:var(--gold)}
 }
 .hint{margin:6px 0 0;font-size:.72rem;color:var(--muted);line-height:1.35}
 
+.typefield{
+  width:100%;
+  background:var(--bg-2);
+  border:1px solid var(--border);
+  color:var(--text);
+  border-radius:12px;
+  padding:9px 12px;
+  font-size:16px; /* avoid iOS zoom */
+  font-family:inherit;
+}
+.typefield:focus{outline:none;border-color:var(--gold)}
+.typefield::placeholder{color:var(--muted);opacity:.85}
+
 .drawbar{
   position:fixed;left:0;right:0;bottom:0;z-index:20;
   padding:10px 16px var(--safe-b);
@@ -118,7 +163,7 @@ header a:hover{color:var(--gold);border-bottom-color:var(--gold)}
 .draw:active{transform:translateY(1px)}
 .draw:disabled{opacity:.55;cursor:wait}
 
- .status{
+.status{
   text-align:center;color:var(--muted);font-size:.88rem;min-height:1.2em;
   margin:0 0 8px;pointer-events:none;
 }
@@ -177,6 +222,7 @@ header a:hover{color:var(--gold);border-bottom-color:var(--gold)}
   padding:28px;text-align:center;color:var(--muted);font-size:.95rem;line-height:1.45;
   background:var(--surface);
 }
+.empty span{max-width:18em}
 .empty strong{color:var(--text)}
 
 .history{margin-top:22px}
@@ -201,19 +247,64 @@ footer a{color:var(--muted)}
 <body>
   <div class="wrap">
     <header>
-      <h1>Random Legend</h1>
+      <h1>Random Rare</h1>
       <a href="./">Life Counter</a>
     </header>
 
     <section class="panel" aria-label="Filters">
-      <span class="lbl">Type</span>
-      <div class="seg" id="type-seg" role="group" aria-label="Card type">
-        <button type="button" data-type="creatures" aria-pressed="true">Legendary creatures</button>
-        <button type="button" data-type="all" aria-pressed="false">All legendary</button>
+      <button type="button" class="toggle" id="legendary" aria-pressed="false">Legendary only</button>
+
+      <span class="lbl sp">Type</span>
+      <div class="chips" id="types" role="group" aria-label="Card type">
+        <button type="button" class="chip" data-type="creature" aria-pressed="false">Creature</button>
+        <button type="button" class="chip" data-type="instant" aria-pressed="false">Instant</button>
+        <button type="button" class="chip" data-type="sorcery" aria-pressed="false">Sorcery</button>
+        <button type="button" class="chip" data-type="enchantment" aria-pressed="false">Enchantment</button>
+        <button type="button" class="chip" data-type="artifact" aria-pressed="false">Artifact</button>
+        <button type="button" class="chip" data-type="planeswalker" aria-pressed="false">Planeswalker</button>
+        <button type="button" class="chip" data-type="land" aria-pressed="false">Land</button>
+        <button type="button" class="chip" data-type="battle" aria-pressed="false">Battle</button>
       </div>
 
-      <span class="lbl" style="margin-top:14px">Colors</span>
-      <div class="colors" id="colors" role="group" aria-label="Color identity">
+      <div id="sub-enchantment" hidden>
+        <span class="lbl sp">Enchantment type</span>
+        <div class="chips" id="subtypes-enchantment" role="group" aria-label="Enchantment subtype">
+          <button type="button" class="chip" data-subtype="aura" aria-pressed="false">Aura</button>
+          <button type="button" class="chip" data-subtype="saga" aria-pressed="false">Saga</button>
+          <button type="button" class="chip" data-subtype="class" aria-pressed="false">Class</button>
+          <button type="button" class="chip" data-subtype="shrine" aria-pressed="false">Shrine</button>
+          <button type="button" class="chip" data-subtype="background" aria-pressed="false">Background</button>
+          <button type="button" class="chip" data-subtype="room" aria-pressed="false">Room</button>
+          <button type="button" class="chip" data-subtype="case" aria-pressed="false">Case</button>
+        </div>
+      </div>
+      <div id="sub-artifact" hidden>
+        <span class="lbl sp">Artifact type</span>
+        <div class="chips" id="subtypes-artifact" role="group" aria-label="Artifact subtype">
+          <button type="button" class="chip" data-subtype="equipment" aria-pressed="false">Equipment</button>
+          <button type="button" class="chip" data-subtype="vehicle" aria-pressed="false">Vehicle</button>
+        </div>
+      </div>
+      <div id="sub-creature" hidden>
+        <span class="lbl sp">Creature type</span>
+        <input class="typefield" id="creature-type" type="text" inputmode="text" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="done" placeholder="Dragon, Elf, Time Lord…">
+      </div>
+
+      <span class="lbl sp">Mana value</span>
+      <div class="mvchips" id="mvs" role="group" aria-label="Mana value">
+        <button type="button" class="chip" data-mv="0" aria-pressed="false">0</button>
+        <button type="button" class="chip" data-mv="1" aria-pressed="false">1</button>
+        <button type="button" class="chip" data-mv="2" aria-pressed="false">2</button>
+        <button type="button" class="chip" data-mv="3" aria-pressed="false">3</button>
+        <button type="button" class="chip" data-mv="4" aria-pressed="false">4</button>
+        <button type="button" class="chip" data-mv="5" aria-pressed="false">5</button>
+        <button type="button" class="chip" data-mv="6" aria-pressed="false">6</button>
+        <button type="button" class="chip" data-mv="7+" aria-pressed="false">7+</button>
+      </div>
+      <p class="hint" id="mv-hint" hidden></p>
+
+      <span class="lbl sp">Colors</span>
+      <div class="colors" id="colors" role="group" aria-label="Card colors">
         <button type="button" class="pip" data-color="W" aria-pressed="false" title="White">W</button>
         <button type="button" class="pip" data-color="U" aria-pressed="false" title="Blue">U</button>
         <button type="button" class="pip" data-color="B" aria-pressed="false" title="Black">B</button>
@@ -235,7 +326,7 @@ footer a{color:var(--muted)}
 
     <div class="stage">
       <div class="cardframe" id="frame" aria-live="polite">
-        <div class="empty" id="placeholder">Tap <strong>Random card</strong> to draw a rare or mythic legend.</div>
+        <div class="empty" id="placeholder"><span>Tap <strong>Random card</strong> to draw a rare or mythic.</span></div>
         <img class="art" id="art" alt="" hidden>
       </div>
       <button type="button" class="flip" id="flip">Flip</button>
@@ -264,19 +355,31 @@ footer a{color:var(--muted)}
 
 <script>
 (function () {
-  const LS_KEY = "mtg-random-legend-v1";
+  const LS_KEY = "mtg-random-rare-v2";
+  const LS_OLD = "mtg-random-legend-v1";
   const MIN_GAP_MS = 150;
   const HISTORY_MAX = 10;
   const COLOR_ORDER = ["W", "U", "B", "R", "G"];
+  const TYPE_ORDER = ["creature", "instant", "sorcery", "enchantment", "artifact", "planeswalker", "land", "battle"];
+  const MV_ORDER = ["0", "1", "2", "3", "4", "5", "6", "7+"];
+  const SUBTYPES = {
+    enchantment: ["aura", "saga", "class", "shrine", "background", "room", "case"],
+    artifact: ["equipment", "vehicle"]
+  };
+  const ALL_SUBTYPES = SUBTYPES.enchantment.concat(SUBTYPES.artifact);
 
   const MODE_HINTS = {
-    exact: "Only cards whose color identity is exactly the colors you pick. A good way to browse three-color legends.",
-    includes: "Cards that include at least these colors, and may have more.",
-    within: "Cards you could play in a deck of this identity, including fewer colors and colorless."
+    exact: "Only cards printed as exactly these colors (the ink on the card, not commander identity).",
+    includes: "Cards that have at least these colors, and may have more.",
+    within: "Cards whose colors stay within this set, including fewer colors and colorless."
   };
 
   const state = {
-    type: "creatures",
+    legendary: false,
+    types: [],
+    subtypes: [],
+    creatureTypes: "",
+    mvs: [],
     colors: [],
     colorless: false,
     mode: "exact",
@@ -284,8 +387,7 @@ footer a{color:var(--muted)}
     card: null,
     face: 0,
     loading: false,
-    lastFetchAt: 0,
-    queryPatch: null
+    lastFetchAt: 0
   };
 
   const $ = (id) => document.getElementById(id);
@@ -299,23 +401,38 @@ footer a{color:var(--muted)}
 
   function loadSettings() {
     try {
-      const raw = localStorage.getItem(LS_KEY);
+      let raw = localStorage.getItem(LS_KEY);
+      let migrated = false;
+      if (!raw) {
+        raw = localStorage.getItem(LS_OLD);
+        migrated = !!raw;
+      }
       if (!raw) return;
       const saved = JSON.parse(raw);
-      if (saved.type === "creatures" || saved.type === "all") state.type = saved.type;
       if (saved.mode === "exact" || saved.mode === "includes" || saved.mode === "within") state.mode = saved.mode;
       if (Array.isArray(saved.colors)) {
         state.colors = COLOR_ORDER.filter((c) => saved.colors.includes(c));
       }
       state.colorless = !!saved.colorless && state.colors.length === 0;
       if (Array.isArray(saved.history)) state.history = saved.history.slice(0, HISTORY_MAX);
+      if (!migrated) {
+        state.legendary = !!saved.legendary;
+        if (Array.isArray(saved.types)) state.types = TYPE_ORDER.filter((t) => saved.types.includes(t));
+        if (Array.isArray(saved.subtypes)) state.subtypes = ALL_SUBTYPES.filter((s) => saved.subtypes.includes(s));
+        if (typeof saved.creatureTypes === "string") state.creatureTypes = saved.creatureTypes.slice(0, 80);
+        if (Array.isArray(saved.mvs)) state.mvs = MV_ORDER.filter((v) => saved.mvs.includes(v));
+      }
     } catch (e) { /* ignore bad storage */ }
   }
 
   function saveSettings() {
     try {
       localStorage.setItem(LS_KEY, JSON.stringify({
-        type: state.type,
+        legendary: state.legendary,
+        types: state.types,
+        subtypes: state.subtypes,
+        creatureTypes: state.creatureTypes,
+        mvs: state.mvs,
         colors: state.colors,
         colorless: state.colorless,
         mode: state.mode,
@@ -325,8 +442,20 @@ footer a{color:var(--muted)}
   }
 
   function syncFilters() {
-    document.querySelectorAll("#type-seg button").forEach((btn) => {
-      btn.setAttribute("aria-pressed", String(btn.dataset.type === state.type));
+    $("legendary").setAttribute("aria-pressed", String(state.legendary));
+    document.querySelectorAll("#types .chip").forEach((btn) => {
+      btn.setAttribute("aria-pressed", String(state.types.includes(btn.dataset.type)));
+    });
+    $("sub-enchantment").hidden = !state.types.includes("enchantment");
+    $("sub-artifact").hidden = !state.types.includes("artifact");
+    $("sub-creature").hidden = !state.types.includes("creature");
+    document.querySelectorAll("[data-subtype]").forEach((btn) => {
+      btn.setAttribute("aria-pressed", String(state.subtypes.includes(btn.dataset.subtype)));
+    });
+    const ct = $("creature-type");
+    if (ct && ct.value !== state.creatureTypes) ct.value = state.creatureTypes;
+    document.querySelectorAll("#mvs .chip").forEach((btn) => {
+      btn.setAttribute("aria-pressed", String(state.mvs.includes(btn.dataset.mv)));
     });
     document.querySelectorAll("#mode-seg button").forEach((btn) => {
       btn.setAttribute("aria-pressed", String(btn.dataset.mode === state.mode));
@@ -337,28 +466,86 @@ footer a{color:var(--muted)}
       btn.setAttribute("aria-pressed", String(on));
     });
     $("mode-hint").textContent = hintText();
+    const mvHint = $("mv-hint");
+    const land = state.types.includes("land");
+    const mvExcludesZero = state.mvs.length > 0 && !state.mvs.includes("0");
+    if (land && mvExcludesZero) {
+      mvHint.hidden = false;
+      mvHint.textContent = "Most lands have mana value 0, so they won’t match unless you also tap 0. Double-faced cards with a land on one face can be higher.";
+    } else if (land) {
+      mvHint.hidden = false;
+      mvHint.textContent = "Most lands have mana value 0. A double-faced land can be higher if its other face is a spell.";
+    } else {
+      mvHint.hidden = true;
+      mvHint.textContent = "";
+    }
   }
 
   function hintText() {
-    if (state.colorless) return "Colorless only — cards with no colored identity, like Eldrazi legends.";
-    if (!state.colors.length) return "No colors selected, so any identity can appear. Tap WUBRG to filter — three-color combos work great.";
+    if (state.colorless) return "Colorless only — cards with no colored mana, like many artifacts and Eldrazi. This uses the card’s colors, not commander identity.";
+    if (!state.colors.length) return "No colors selected, so any color can appear. Filters use the card’s colors, not commander identity.";
     return MODE_HINTS[state.mode];
   }
 
-  function selectedId() {
-    return state.colors.join("");
+  function orClause(parts) {
+    if (!parts.length) return "";
+    if (parts.length === 1) return " " + parts[0];
+    return " (" + parts.join(" OR ") + ")";
+  }
+
+  function queryGroup(terms, op) {
+    if (!terms.length) return "";
+    if (terms.length === 1) return terms[0];
+    return "(" + terms.join(" " + op + " ") + ")";
+  }
+
+  function parseCreatureTypes(raw) {
+    return String(raw || "").split(",").map(function (part) {
+      return part.trim().replace(/\s+/g, " ").replace(/[^a-z0-9 '’-]/gi, "");
+    }).filter(Boolean).slice(0, 6);
+  }
+
+  function typeTerm(name) {
+    const clean = String(name).trim();
+    if (!clean) return "";
+    return /\s/.test(clean) ? 't:"' + clean.toLowerCase() + '"' : "t:" + clean.toLowerCase();
+  }
+
+  function typeAndSubtypeClause() {
+    const parts = [];
+    TYPE_ORDER.forEach((typ) => {
+      if (!state.types.includes(typ)) return;
+      const subTerms = [];
+      if (typ === "creature") {
+        parseCreatureTypes(state.creatureTypes).forEach((ct) => {
+          const term = typeTerm(ct);
+          if (term) subTerms.push(term);
+        });
+      } else {
+        (SUBTYPES[typ] || []).forEach((s) => {
+          if (state.subtypes.includes(s)) subTerms.push("t:" + s);
+        });
+      }
+      if (subTerms.length) parts.push("(" + ["t:" + typ, queryGroup(subTerms, "OR")].join(" ") + ")");
+      else parts.push("t:" + typ);
+    });
+    if (!parts.length) return "";
+    return " " + queryGroup(parts, "OR");
   }
 
   function buildQuery() {
-    let q = "is:legendary (r:rare OR r:mythic) -is:digital game:paper";
-    if (state.type === "creatures") q += " t:legendary t:creature";
+    let q = "(r:rare OR r:mythic) -is:digital game:paper";
+    if (state.legendary) q += " t:legendary";
+    q += typeAndSubtypeClause();
+    if (state.mvs.length) {
+      q += orClause(state.mvs.map((v) => v === "7+" ? "mv>=7" : "mv=" + v));
+    }
     if (state.colorless) {
-      q += " id:C";
+      q += " c:c";
     } else if (state.colors.length) {
       const op = state.mode === "exact" ? "=" : state.mode === "includes" ? ">=" : "<=";
-      q += " id" + op + selectedId();
+      q += " c" + op + state.colors.join("");
     }
-    if (typeof state.queryPatch === "function") q = state.queryPatch(q);
     return q;
   }
 
@@ -421,7 +608,8 @@ footer a{color:var(--muted)}
       set: card.set,
       set_name: card.set_name,
       scryfall_uri: card.scryfall_uri,
-      color_identity: card.color_identity,
+      colors: card.colors,
+      cmc: card.cmc,
       layout: card.layout,
       image_uris: card.image_uris,
       card_faces: (card.card_faces || []).map((f) => ({
@@ -439,7 +627,7 @@ footer a{color:var(--muted)}
     flipBtn.classList.remove("show");
     meta.hidden = true;
     placeholder.hidden = false;
-    placeholder.innerHTML = html;
+    placeholder.innerHTML = "<span>" + html + "</span>";
     frame.classList.remove("loading");
   }
 
@@ -467,6 +655,10 @@ footer a{color:var(--muted)}
     const link = $("scry");
     link.href = card.scryfall_uri || "https://scryfall.com";
     link.hidden = !card.scryfall_uri;
+    meta.dataset.mv = card.cmc == null ? "" : String(card.cmc);
+    meta.dataset.colors = (card.colors || []).join("");
+    meta.dataset.typeLine = card.type_line || "";
+    meta.dataset.legendary = /legendary/i.test(card.type_line || "") ? "1" : "0";
 
     const url = imageUrl(face.image_uris);
     frame.classList.add("loading");
@@ -543,7 +735,7 @@ footer a{color:var(--muted)}
     try {
       const res = await fetch(url, { headers: { Accept: "application/json" } });
       if (res.status === 404) {
-        showPlaceholder("No cards match those filters. Try a different color combo, switch the color mode, or include all legendary types.");
+        showPlaceholder("No cards match those filters. Try a different type, mana cost, or color combo.");
         setStatus("No cards match those filters.", "empty");
         return;
       }
@@ -565,9 +757,47 @@ footer a{color:var(--muted)}
     }
   }
 
-  document.querySelectorAll("#type-seg button").forEach((btn) => {
+  $("legendary").addEventListener("click", () => {
+    state.legendary = !state.legendary;
+    saveSettings();
+    syncFilters();
+  });
+
+  document.querySelectorAll("#types .chip").forEach((btn) => {
     btn.addEventListener("click", () => {
-      state.type = btn.dataset.type;
+      const t = btn.dataset.type;
+      if (state.types.includes(t)) state.types = state.types.filter((x) => x !== t);
+      else state.types = TYPE_ORDER.filter((x) => x === t || state.types.includes(x));
+      const allowed = [];
+      state.types.forEach((typ) => {
+        (SUBTYPES[typ] || []).forEach((s) => allowed.push(s));
+      });
+      state.subtypes = state.subtypes.filter((s) => allowed.includes(s));
+      saveSettings();
+      syncFilters();
+    });
+  });
+
+  document.querySelectorAll("[data-subtype]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const s = btn.dataset.subtype;
+      if (state.subtypes.includes(s)) state.subtypes = state.subtypes.filter((x) => x !== s);
+      else state.subtypes = ALL_SUBTYPES.filter((x) => x === s || state.subtypes.includes(x));
+      saveSettings();
+      syncFilters();
+    });
+  });
+
+  $("creature-type").addEventListener("input", () => {
+    state.creatureTypes = $("creature-type").value.slice(0, 80);
+    saveSettings();
+  });
+
+  document.querySelectorAll("#mvs .chip").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const v = btn.dataset.mv;
+      if (state.mvs.includes(v)) state.mvs = state.mvs.filter((x) => x !== v);
+      else state.mvs = MV_ORDER.filter((x) => x === v || state.mvs.includes(x));
       saveSettings();
       syncFilters();
     });
@@ -613,15 +843,6 @@ footer a{color:var(--muted)}
   } else {
     renderHistory();
   }
-
-  window.__legend = {
-    getState: () => state,
-    buildQuery,
-    showCard,
-    drawRandom,
-    setQueryPatch: (fn) => { state.queryPatch = fn; },
-    facesOf
-  };
 })();
 </script>
 </body>
