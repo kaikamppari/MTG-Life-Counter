@@ -736,6 +736,8 @@ footer a{color:var(--muted)}
     "The Ur-Dragon",
     "Ulalek, Fused Atrocity",
     "Y'shtola, Night's Blessed",
+    "Ivy, Gleeful Spellthief",
+    "Kinnan, Bonder Prodigy",
   ];
   /* CHOOSER_COMMANDERS_END */
   const MIN_GAP_MS = 100;
@@ -1800,7 +1802,7 @@ footer a{color:var(--muted)}
   }
 
   function filterDeckNames() {
-    /* Chips: picked / archived / already tagged — not the full 31, which would crowd the phone. */
+    /* Chips: picked / archived / already tagged — not the full 33, which would crowd the phone. */
     return sortDeckNames((state.lifeDecks || []).concat(taggedDeckNames()));
   }
 
