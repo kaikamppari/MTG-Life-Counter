@@ -1,0 +1,4 @@
+zoneheat_state/
+discovery/
+*.tmp
+__pycache__/

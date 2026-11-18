@@ -1,0 +1,129 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "zoneheat/1",
+  "title": "Zone Heat data.json",
+  "description": "Written by logger_to_json.py, read by index.html. All map positions are pixels (u = right, v = down, origin top-left) on the map image whose size is map.width x map.height. Times are Unix seconds.",
+  "type": "object",
+  "required": ["schema", "generated", "map", "conflicts", "groups"],
+  "properties": {
+    "schema": { "const": "zoneheat/1" },
+    "generated": { "type": "number", "description": "when the file was written (Unix seconds)" },
+    "setup": { "type": "string", "description": "mod setup name, e.g. Main or Unchained" },
+    "sample": { "type": "boolean", "description": "true only for the page's built-in sample data" },
+    "map": {
+      "type": "object",
+      "required": ["width", "height"],
+      "properties": {
+        "width": { "type": "number", "exclusiveMinimum": 0, "description": "pixel width of the map image the coordinates refer to" },
+        "height": { "type": "number", "exclusiveMinimum": 0 },
+        "calibrated": { "type": "boolean", "description": "true when 3+ calibration points exist (world positions can be placed)" },
+        "pixels_per_meter": { "type": ["number", "null"] },
+        "labels": {
+          "type": "object", "description": "place name -> [u, v]; drawn on the placeholder map",
+          "additionalProperties": { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2 }
+        }
+      }
+    },
+    "conflicts": {
+      "type": "array", "description": "placed fight/death events -> heat layer",
+      "items": {
+        "type": "object",
+        "required": ["t", "u", "v"],
+        "properties": {
+          "t": { "type": "number" },
+          "u": { "type": "number" },
+          "v": { "type": "number" },
+          "w": { "type": "number", "minimum": 0, "description": "heat weight before time decay (deaths count, fights 0.5)" },
+          "kind": { "enum": ["death", "fight", "chronicle", "death_seen"], "description": "death_seen = observed by ZoneSensor" },
+          "factions": { "type": "array", "items": { "type": "string" } },
+          "location": { "type": ["string", "null"] },
+          "dead": { "type": "integer", "minimum": 0 },
+          "text": { "type": "string" },
+          "source": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "groups": {
+      "type": "array", "description": "clusters of NPCs/mutants from the latest ZoneSensor snapshot",
+      "items": {
+        "type": "object",
+        "required": ["u", "v", "n", "faction"],
+        "properties": {
+          "t": { "type": ["number", "null"] },
+          "u": { "type": "number" },
+          "v": { "type": "number" },
+          "r": { "type": "number", "minimum": 0, "description": "radius in map pixels" },
+          "n": { "type": "integer", "minimum": 1 },
+          "faction": { "type": "string", "description": "faction name, or Mutants / Unknown" },
+          "mutant": { "type": "boolean" },
+          "combat": { "type": "boolean" },
+          "classes": {
+            "type": "array", "description": "[[class name, count], ...] top 3",
+            "items": { "type": "array", "prefixItems": [{ "type": "string" }, { "type": "integer" }], "minItems": 2, "maxItems": 2 }
+          }
+        }
+      }
+    },
+    "groups_t": { "type": ["number", "null"], "description": "time of the snapshot the groups come from" },
+    "actors": {
+      "type": "array", "description": "individual live characters from the latest snapshot",
+      "items": {
+        "type": "object",
+        "required": ["u", "v", "faction"],
+        "properties": {
+          "u": { "type": "number" }, "v": { "type": "number" },
+          "faction": { "type": "string" },
+          "kind": { "enum": ["human", "mutant", "other"] },
+          "cls": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "fronts": {
+      "type": "array", "description": "DLFR hottest fronts; u/v null when the place name has no position yet",
+      "items": {
+        "type": "object",
+        "required": ["rank", "name"],
+        "properties": {
+          "rank": { "type": "integer", "minimum": 1 },
+          "name": { "type": "string" },
+          "u": { "type": ["number", "null"] }, "v": { "type": ["number", "null"] },
+          "factions": { "type": "array", "items": { "type": "string" } },
+          "heat": { "type": ["number", "null"] }
+        }
+      }
+    },
+    "wars": {
+      "type": "array", "description": "per faction pair totals over the logger's keep_hours (the page recomputes for its own time window)",
+      "items": {
+        "type": "object",
+        "required": ["pair", "dead", "events"],
+        "properties": {
+          "pair": { "type": "string", "description": "\"Duty vs Freedom\"" },
+          "dead": { "type": "integer" }, "events": { "type": "integer" }, "last": { "type": "number" }
+        }
+      }
+    },
+    "player": {
+      "type": ["object", "null"],
+      "properties": { "u": { "type": "number" }, "v": { "type": "number" }, "t": { "type": ["number", "null"] } },
+      "required": ["u", "v"]
+    },
+    "trail": {
+      "type": "array", "description": "recent player positions, oldest first",
+      "items": { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2 }
+    },
+    "unplaced": {
+      "type": "array", "description": "events without a position yet (newest first); same fields as conflicts minus u/v/w",
+      "items": {
+        "type": "object",
+        "required": ["t"],
+        "properties": {
+          "t": { "type": "number" }, "kind": { "type": "string" },
+          "factions": { "type": "array", "items": { "type": "string" } },
+          "location": { "type": ["string", "null"] }, "dead": { "type": "integer" },
+          "text": { "type": "string" }, "source": { "type": ["string", "null"] }
+        }
+      }
+    }
+  }
+}

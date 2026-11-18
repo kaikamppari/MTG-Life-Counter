@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Zone Heat">
+<meta name="theme-color" content="#0e100d">
+<title>Zone Heat · S.T.A.L.K.E.R. 2</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="anonymous">
+<style>
+:root {
+  --bg: #0e100d; --panel: rgba(20, 23, 18, 0.94); --line: #2c3127; --text: #e4e2d6; --muted: #9a9a88;
+  --accent: #d9a441; --danger: #e2553f; --ok: #7fb56a;
+  --safe-b: env(safe-area-inset-bottom, 0px); --safe-t: env(safe-area-inset-top, 0px);
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text);
+  font: 15px/1.35 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; overflow: hidden; overscroll-behavior: none; }
+#map { position: fixed; inset: 0; background: var(--bg); }
+.leaflet-container { background: var(--bg); }
+.leaflet-control-attribution, .leaflet-control-zoom { display: none; }
+
+#topbar { position: fixed; top: calc(8px + var(--safe-t)); left: 10px; right: 10px; z-index: 800;
+  display: flex; align-items: center; justify-content: space-between; gap: 8px; pointer-events: none; }
+.brand { font: 700 15px/1 var(--mono); letter-spacing: .18em; background: var(--panel); padding: 9px 12px;
+  border: 1px solid var(--line); border-radius: 10px; pointer-events: auto; white-space: nowrap; }
+.brand span { color: var(--accent); margin-left: .35em; }
+.pill { font: 12px/1 var(--mono); background: var(--panel); border: 1px solid var(--line); border-radius: 999px;
+  padding: 8px 11px; pointer-events: auto; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pill.live { color: var(--ok); border-color: #3f5a34; }
+.pill.stale { color: var(--accent); border-color: #6e5420; }
+.pill.sample { color: #9fc3e8; border-color: #2f4a66; }
+
+#banner { position: fixed; top: calc(54px + var(--safe-t)); left: 10px; right: 10px; z-index: 790;
+  background: rgba(40, 52, 66, .95); border: 1px solid #2f4a66; color: #d6e6f5; border-radius: 10px;
+  padding: 9px 12px; font-size: 13px; }
+#banner button { float: right; background: none; border: 0; color: inherit; font-size: 16px; padding: 0 0 0 8px; }
+
+#fabs { position: fixed; right: 10px; bottom: calc(126px + var(--safe-b)); z-index: 800; display: flex; flex-direction: column; gap: 10px; }
+.fab { width: 46px; height: 46px; border-radius: 50%; border: 1px solid var(--line); background: var(--panel);
+  color: var(--text); font-size: 21px; line-height: 1; padding: 0; }
+.fab.on { background: var(--accent); color: #1a1406; border-color: var(--accent); }
+
+#legend { position: fixed; left: 10px; bottom: calc(126px + var(--safe-b)); z-index: 790; background: var(--panel);
+  border: 1px solid var(--line); border-radius: 10px; padding: 7px 9px; font-size: 11px; color: var(--muted); }
+.lg-row { display: flex; align-items: center; gap: 7px; margin: 2px 0; }
+.lg-heat { width: 34px; height: 8px; border-radius: 4px; background: linear-gradient(90deg, #3b0f70, #8c2981, #de4968, #fe9f6d, #fcfdbf); }
+.lg-ring { width: 13px; height: 13px; border-radius: 50%; border: 2px solid var(--text); margin: 0 10px; }
+.lg-ring.dashed { border-style: dashed; border-color: #ff7043; }
+
+#sheet { position: fixed; left: 0; right: 0; bottom: 0; z-index: 900; background: var(--panel);
+  border-top: 1px solid var(--line); border-radius: 16px 16px 0 0; max-height: 64vh;
+  padding: 0 14px calc(10px + var(--safe-b)); transition: transform .25s ease; display: flex; flex-direction: column; }
+#sheet.collapsed { transform: translateY(calc(100% - 112px - var(--safe-b))); }
+#sheet-handle { padding: 9px 0 4px; display: flex; justify-content: center; cursor: pointer; }
+#sheet-handle span { width: 40px; height: 5px; border-radius: 3px; background: #555a4c; }
+#quick { display: flex; align-items: center; gap: 10px; padding: 2px 0 8px; }
+#quick label { font: 12px var(--mono); color: var(--muted); white-space: nowrap; min-width: 66px; }
+#quick input { flex: 1; }
+#tabs { display: flex; gap: 6px; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
+#tabs button { flex: 1; background: transparent; color: var(--muted); border: 1px solid transparent; border-radius: 8px;
+  padding: 9px 4px; font-size: 14px; }
+#tabs button.on { color: var(--text); background: #232820; border-color: var(--line); }
+#tabs b { color: var(--accent); font-weight: 600; font-size: 12px; }
+.tab { overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 8px 0 4px; }
+.row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 9px 0; border-bottom: 1px solid #20241d; }
+.row:last-child { border-bottom: 0; }
+input[type=checkbox] { width: 22px; height: 22px; accent-color: var(--accent); }
+input[type=range] { accent-color: var(--accent); height: 28px; }
+.row input[type=range] { width: 50%; }
+select, input[type=text] { background: #1b1f18; color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 8px 9px; font-size: 16px; }
+button { font: inherit; }
+.btn { background: #2a3024; color: var(--text); border: 1px solid #3a4233; border-radius: 9px; padding: 10px 12px; font-size: 15px; }
+.hint { color: var(--muted); font-size: 13px; margin: 6px 0; }
+h4 { margin: 10px 0 6px; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+#chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--line); border-radius: 999px;
+  padding: 7px 12px; background: #1b1f18; color: var(--text); font-size: 14px; }
+.chip i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.chip.off { opacity: .35; text-decoration: line-through; }
+.war { display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; padding: 7px 0; border-bottom: 1px solid #20241d; }
+.war .n { font: 600 14px var(--mono); color: var(--danger); text-align: right; }
+.war small { color: var(--muted); grid-column: 1 / -1; }
+.ev { padding: 7px 0; border-bottom: 1px solid #20241d; font-size: 13px; }
+.ev time { font: 11px var(--mono); color: var(--muted); margin-right: 6px; }
+.ev .k { font: 11px var(--mono); color: var(--accent); margin-right: 6px; text-transform: uppercase; }
+
+#pickpanel { position: fixed; left: 10px; right: 10px; top: calc(54px + var(--safe-t)); z-index: 950; background: var(--panel);
+  border: 1px solid var(--accent); border-radius: 12px; padding: 10px; display: grid; gap: 8px; }
+#pickpanel[hidden] { display: none; }
+#pickpanel { grid-template-columns: minmax(0, 1fr); }
+#pickpanel > * { min-width: 0; }
+.pp-head { display: flex; align-items: center; gap: 8px; }
+.pp-head span { font: 13px var(--mono); color: var(--accent); flex: 1; }
+#pp-close { background: transparent; border: 0; color: var(--muted); font-size: 18px; padding: 2px 6px; }
+.cmd { display: flex; gap: 6px; align-items: stretch; }
+.cmd code { flex: 1; min-width: 0; font: 11px/1.3 var(--mono); background: #12150f; border: 1px solid var(--line); border-radius: 8px;
+  padding: 7px 8px; overflow-x: auto; white-space: nowrap; user-select: all; -webkit-user-select: all; }
+#pp-msg { font-size: 12px; color: var(--muted); }
+
+.grp-label { font: 600 11px/1 var(--mono); color: #fff; text-shadow: 0 0 3px #000, 0 0 6px #000; white-space: nowrap; }
+.front-ico { position: relative; }
+.front-ico .ring { width: 34px; height: 34px; border-radius: 50%; border: 2px solid var(--danger); position: absolute; left: -17px; top: -17px;
+  animation: pulse 1.8s ease-out infinite; }
+.front-ico .lbl { position: absolute; left: 14px; top: -24px; font: 600 12px var(--mono); color: #ffd7cf; white-space: nowrap;
+  text-shadow: 0 0 3px #000, 0 0 6px #000; }
+.me-ico .dot { width: 16px; height: 16px; border-radius: 50%; background: #4fc3f7; border: 3px solid #fff;
+  box-shadow: 0 0 0 6px rgba(79,195,247,.25); position: absolute; left: -8px; top: -8px; }
+.pick-ico .x { width: 22px; height: 22px; position: absolute; left: -11px; top: -11px; border: 2px solid var(--accent); border-radius: 50%; }
+@keyframes pulse { 0% { transform: scale(.6); opacity: 1; } 100% { transform: scale(1.6); opacity: 0; } }
+.leaflet-div-icon { background: none; border: 0; }
+.leaflet-popup-content-wrapper, .leaflet-popup-tip { background: var(--panel); color: var(--text); border: 1px solid var(--line); }
+.leaflet-popup-content { margin: 10px 12px; font-size: 13px; }
+.leaflet-container a.leaflet-popup-close-button { color: var(--muted); }
+</style>
+</head>
+<body>
+<div id="map"></div>
+
+<header id="topbar">
+  <div class="brand">ZONE<span>HEAT</span></div>
+  <div id="status" class="pill">loading…</div>
+</header>
+<div id="banner" hidden></div>
+
+<div id="fabs">
+  <button id="btn-player" class="fab" aria-label="Center on me" title="Center on me">◎</button>
+  <button id="btn-fit" class="fab" aria-label="Whole map" title="Whole map">⤢</button>
+  <button id="btn-pick" class="fab" aria-label="Pick coordinates" title="Pick coordinates">✛</button>
+</div>
+
+<div id="legend">
+  <div class="lg-row"><span class="lg-heat"></span><span>fights &amp; deaths</span></div>
+  <div class="lg-row"><span class="lg-ring"></span><span>group (count)</span></div>
+  <div class="lg-row"><span class="lg-ring dashed"></span><span>mutant pack</span></div>
+</div>
+
+<section id="sheet" class="collapsed">
+  <div id="sheet-handle"><span></span></div>
+  <div id="quick">
+    <label for="window">Last <b id="window-label">6 h</b></label>
+    <input type="range" id="window" min="0" max="10" step="1" value="5" aria-label="Time window">
+  </div>
+  <nav id="tabs">
+    <button data-tab="layers" class="on">Layers</button>
+    <button data-tab="factions">Factions</button>
+    <button data-tab="wars">Wars <b id="war-count"></b></button>
+    <button data-tab="data">Data</button>
+  </nav>
+
+  <div class="tab" id="tab-layers">
+    <label class="row"><span>Conflict heat</span><input type="checkbox" data-layer="heat" checked></label>
+    <label class="row"><span>Enemy groups</span><input type="checkbox" data-layer="groups" checked></label>
+    <label class="row"><span>Single NPCs</span><input type="checkbox" data-layer="actors"></label>
+    <label class="row"><span>Hottest fronts</span><input type="checkbox" data-layer="fronts" checked></label>
+    <label class="row"><span>Me + my trail</span><input type="checkbox" data-layer="player" checked></label>
+    <div class="row"><span>Heat fades (half-life)</span>
+      <select id="halflife">
+        <option value="5">5 min</option><option value="20">20 min</option><option value="60" selected>1 h</option>
+        <option value="240">4 h</option><option value="0">never</option>
+      </select></div>
+    <div class="row"><span>Heat strength</span><input type="range" id="gain" min="0.2" max="4" step="0.1" value="1"></div>
+  </div>
+
+  <div class="tab" id="tab-factions" hidden>
+    <p class="hint">Tap a faction to hide or show it on every layer.</p>
+    <div id="chips"></div>
+    <p><button class="btn" id="chips-all">Show all</button></p>
+  </div>
+
+  <div class="tab" id="tab-wars" hidden>
+    <h4>Bloodiest pairs in window</h4>
+    <div id="wars"></div>
+    <h4>Recent events</h4>
+    <div id="ticker"></div>
+  </div>
+
+  <div class="tab" id="tab-data" hidden>
+    <div id="data-info" class="hint"></div>
+    <div class="row"><span>Auto refresh (60 s)</span><input type="checkbox" id="autorefresh" checked></div>
+    <div class="row"><span>Reload now</span><button class="btn" id="reload">Reload</button></div>
+    <div class="row"><span>Open a data.json file</span><button class="btn" id="openfile">Choose…</button></div>
+    <input type="file" id="file" accept=".json,application/json" hidden>
+    <div class="row"><span>Built-in sample data</span><button class="btn" id="usesample">Show sample</button></div>
+    <p class="hint">Calibrating: tap ✛, tap a spot, then copy the command into PowerShell on the PC.</p>
+  </div>
+</section>
+
+<div id="pickpanel" hidden>
+  <div class="pp-head"><b>Picked</b> <span id="pp-coords"></span><button id="pp-close" aria-label="Close">✕</button></div>
+  <div class="hint" style="margin:0">Standing on this exact spot in-game (ZoneSensor running)? Add a calibration point:</div>
+  <div class="cmd"><code id="pp-cmd-cal"></code><button class="btn" data-copy="pp-cmd-cal">Copy</button></div>
+  <div class="hint" style="margin:0">Or give a DLFR place name this position:</div>
+  <div class="cmd"><code id="pp-cmd-place"></code><button class="btn" data-copy="pp-cmd-place">Copy</button></div>
+  <div id="pp-msg"></div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"
+        integrity="sha256-65UqrlgGoRAnKfKRuriH3eeDrOhZgZo1SCenduc+SGo=" crossorigin="anonymous"></script>
+<script>
+"use strict";
+/* =====================================================================
+   SETTINGS - swap these
+   ===================================================================== */
+
+// >>> PLACEHOLDER MAP IMAGE - SWAP THIS <<<
+// Path or https URL of a full-Zone map image (PNG/JPG). Easiest: a screenshot
+// of your fully revealed in-game PDA map saved as map.jpg next to this file.
+// If it can't be loaded, a generated grid placeholder is drawn instead.
+const MAP_IMAGE_URL = "map.jpg";
+
+// data.json written by logger_to_json.py. Override per visit with ?data=<url>.
+const DATA_URL = new URLSearchParams(location.search).get("data") || "data.json";
+const REFRESH_MS = 60000;
+const WINDOW_STEPS_H = [0.25, 0.5, 1, 2, 3, 6, 12, 24, 48, 72, 168];
+
+const FACTION_COLORS = {
+  Loners: "#d9a441", Duty: "#d64545", Freedom: "#47b26b", Bandits: "#a1795e", Monolith: "#e8e8e8",
+  Mercenaries: "#4a90d9", Ward: "#8fae3c", Scientists: "#26c6da", Spark: "#ffd54f", Noon: "#ab47bc",
+  Corps: "#90a4ae", Scavengers: "#bcaaa4", Renegades: "#f06292", Mutants: "#ff7043", Unknown: "#bdbdbd"
+};
+function facColor(f) {
+  if (FACTION_COLORS[f]) return FACTION_COLORS[f];
+  let h = 0; for (const c of String(f)) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  return `hsl(${h % 360} 55% 60%)`;
+}
+
+/* =====================================================================
+   Built-in sample data (same schema as data.json) - used when data.json
+   is missing, so the page works immediately. Positions are invented.
+   ===================================================================== */
+function makeSampleData() {
+  const now = Date.now() / 1000;
+  const spots = {
+    "Zalissya": [820, 3350], "Rookie Village": [1500, 3600], "Slag Heap": [1950, 2650], "Rostok": [1380, 2100],
+    "Zaton": [2850, 1500], "Sultansk": [2500, 1250], "Yaniv": [2450, 2350], "Chemical Plant": [3300, 2300],
+    "Malachite": [1900, 1250], "Cement Factory": [3050, 3050], "Swamps": [700, 2600], "Pripyat": [2600, 700]
+  };
+  let seed = 7;
+  const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const hot = [["Rostok", ["Duty", "Freedom"], 26], ["Slag Heap", ["Bandits", "Loners"], 20], ["Zaton", ["Ward", "Bandits"], 14],
+               ["Pripyat", ["Monolith", "Mercenaries"], 10], ["Yaniv", ["Spark", "Ward"], 7], ["Cement Factory", ["Bandits", "Mutants"], 6]];
+  const conflicts = [];
+  for (const [loc, facs, n] of hot) {
+    const [cu, cv] = spots[loc];
+    for (let i = 0; i < n; i++) {
+      const kind = rnd() < 0.6 ? "death" : (rnd() < 0.7 ? "fight" : "chronicle");
+      const dead = kind === "fight" ? 0 : 1 + Math.floor(rnd() * 3);
+      conflicts.push({ t: now - Math.pow(rnd(), 2.2) * 7 * 3600, u: cu + (rnd() - .5) * 160, v: cv + (rnd() - .5) * 160,
+        w: kind === "fight" ? 0.5 : dead, kind, factions: facs, location: loc, dead,
+        text: `${facs[0]} vs ${facs[1]} near ${loc}`, source: "sample" });
+    }
+  }
+  const groups = [
+    { u: 1960, v: 2600, r: 30, n: 6, faction: "Bandits", mutant: false, combat: true, classes: [["BP_AI_Human_C", 6]] },
+    { u: 2010, v: 2700, r: 22, n: 4, faction: "Loners", mutant: false, combat: true, classes: [["BP_AI_Human_C", 4]] },
+    { u: 1850, v: 2480, r: 26, n: 5, faction: "Mutants", mutant: true, combat: false, classes: [["BP_BlindDog_C", 5]] },
+    { u: 2180, v: 2560, r: 18, n: 3, faction: "Ward", mutant: false, combat: false, classes: [["BP_AI_Human_C", 3]] }
+  ].map(g => Object.assign({ t: now - 20 }, g));
+  const actors = groups.flatMap(g => Array.from({ length: g.n }, () => ({
+    u: g.u + (rnd() - .5) * g.r * 1.4, v: g.v + (rnd() - .5) * g.r * 1.4, faction: g.faction, kind: g.mutant ? "mutant" : "human" })));
+  const trail = []; for (let i = 0; i < 40; i++) trail.push([1500 + i * 11 + Math.sin(i / 3) * 30, 3550 - i * 22]);
+  const wars = {}; for (const c of conflicts) { const k = c.factions.slice().sort().join(" vs ");
+    const w = wars[k] || (wars[k] = { pair: k, dead: 0, events: 0, last: 0 }); w.dead += c.dead; w.events++; w.last = Math.max(w.last, c.t); }
+  return {
+    schema: "zoneheat/1", generated: now - 30, setup: "Sample", sample: true,
+    map: { width: 4096, height: 4096, calibrated: true, pixels_per_meter: 0.5, labels: spots },
+    conflicts, groups, groups_t: now - 20, actors,
+    fronts: [{ rank: 1, name: "Rostok", u: 1380, v: 2100, factions: ["Duty", "Freedom"], heat: 26 },
+             { rank: 2, name: "Slag Heap", u: 1950, v: 2650, factions: ["Bandits", "Loners"], heat: 20 },
+             { rank: 3, name: "Zaton", u: 2850, v: 1500, factions: ["Ward", "Bandits"], heat: 14 }],
+    wars: Object.values(wars).sort((a, b) => b.dead - a.dead),
+    player: { u: trail[trail.length - 1][0], v: trail[trail.length - 1][1], t: now - 20 }, trail,
+    unplaced: [{ t: now - 600, kind: "death", factions: ["Duty", "Monolith"], location: "Red Forest", dead: 2,
+                 text: "Duty lost 2 to Monolith (no position yet)" }]
+  };
+}
+
+/* =====================================================================
+   State + persistence
+   ===================================================================== */
+const store = {
+  get(k, d) { try { const v = localStorage.getItem("zoneheat." + k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem("zoneheat." + k, JSON.stringify(v)); } catch (e) { /* private mode */ } }
+};
+const S = {
+  data: null, sourceLabel: "", isSample: false,
+  layers: store.get("layers", { heat: true, groups: true, actors: false, fronts: true, player: true }),
+  windowIdx: store.get("windowIdx", 5), halflife: store.get("halflife", 60), gain: store.get("gain", 1),
+  hidden: new Set(store.get("hidden", [])), auto: store.get("auto", true),
+  picking: false, imgW: 0, imgH: 0, scale: 1, mapKey: ""
+};
+
+/* =====================================================================
+   Map
+   ===================================================================== */
+const map = L.map("map", { crs: L.CRS.Simple, minZoom: -6, maxZoom: 4, zoomSnap: 0.25, zoomDelta: 0.5,
+  attributionControl: false, zoomControl: false, bounceAtZoomLimits: false, preferCanvas: true });
+const layer = { base: null, heat: null, groups: L.layerGroup().addTo(map), actors: L.layerGroup().addTo(map),
+  fronts: L.layerGroup().addTo(map), player: L.layerGroup().addTo(map), pick: L.layerGroup().addTo(map) };
+
+// data pixel (u right, v down) -> Leaflet latlng in image pixels
+const ll = (u, v) => L.latLng(-v * S.scale, u * S.scale);
+const toData = (latlng) => ({ u: latlng.lng / S.scale, v: -latlng.lat / S.scale });
+
+function placeholderMap(w, h, labels) {
+  const max = 2048, k = Math.min(1, max / Math.max(w, h));
+  const c = document.createElement("canvas"); c.width = Math.round(w * k); c.height = Math.round(h * k);
+  const g = c.getContext("2d");
+  g.fillStyle = "#151912"; g.fillRect(0, 0, c.width, c.height);
+  g.strokeStyle = "#232a1e"; g.lineWidth = 1;
+  const step = c.width / 16;
+  for (let x = 0; x <= c.width; x += step) { g.beginPath(); g.moveTo(x, 0); g.lineTo(x, c.height); g.stroke(); }
+  for (let y = 0; y <= c.height; y += step) { g.beginPath(); g.moveTo(0, y); g.lineTo(c.width, y); g.stroke(); }
+  g.fillStyle = "#3a4431"; g.font = `bold ${Math.round(c.width / 32)}px monospace`; g.textAlign = "center";
+  g.fillText("PLACEHOLDER MAP", c.width / 2, c.width / 14);
+  g.font = `${Math.round(c.width / 60)}px monospace`;
+  g.fillText("set MAP_IMAGE_URL / add map.jpg", c.width / 2, c.width / 14 + c.width / 30);
+  g.fillStyle = "#6b7560"; g.font = `${Math.round(c.width / 70)}px sans-serif`;
+  for (const [name, p] of Object.entries(labels || {})) g.fillText(name, p[0] * k, p[1] * k - 14);
+  return c.toDataURL("image/png");
+}
+
+function setBase(url, w, h) {
+  if (layer.base) map.removeLayer(layer.base);
+  S.imgW = w; S.imgH = h;
+  const bounds = L.latLngBounds([-h, 0], [0, w]);
+  layer.base = L.imageOverlay(url, bounds, { interactive: false }).addTo(map);
+  layer.base.bringToBack();
+  map.setMaxBounds(bounds.pad(0.5));
+  if (!S.didFit) { map.fitBounds(bounds); S.didFit = true; }
+  map.setMinZoom(map.getBoundsZoom(bounds) - 1);
+}
+
+function ensureBaseMap(d) {
+  const dw = d.map.width, dh = d.map.height;
+  const key = `${dw}x${dh}|${d.sample ? "s" : "r"}`;
+  if (S.mapKey === key) return Promise.resolve();
+  S.mapKey = key;
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => { S.scale = img.naturalWidth / dw; setBase(MAP_IMAGE_URL, img.naturalWidth, img.naturalHeight); S.realMap = true; resolve(); };
+    img.onerror = () => { S.scale = 1; setBase(placeholderMap(dw, dh, d.map.labels), dw, dh); S.realMap = false; resolve(); };
+    img.src = MAP_IMAGE_URL;
+  });
+}
+
+/* =====================================================================
+   Data loading
+   ===================================================================== */
+function validate(d) {
+  if (!d || typeof d !== "object") throw new Error("not a JSON object");
+  if (!d.map || !(d.map.width > 0) || !(d.map.height > 0)) throw new Error("missing map.width/height");
+  for (const k of ["conflicts", "groups", "actors", "fronts", "wars", "trail", "unplaced"]) if (!Array.isArray(d[k])) d[k] = [];
+  return d;
+}
+
+async function loadData(manual) {
+  try {
+    const sep = DATA_URL.includes("?") ? "&" : "?";
+    const r = await fetch(DATA_URL + sep + "_=" + Date.now(), { cache: "no-store" });
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    const d = validate(await r.json());
+    S.isSample = false; S.sourceLabel = DATA_URL; hideBanner();
+    await setData(d);
+  } catch (e) {
+    if (!S.data || manual) {
+      showBanner(`Showing built-in sample data - couldn't load ${DATA_URL} (${e.message}). Run logger_to_json.py and push data.json, or open a file in the Data tab.`);
+      S.isSample = true; S.sourceLabel = "built-in sample";
+      await setData(makeSampleData());
+    } else if (S.isSample) {
+      updateStatus(); // still no data.json - keep the sample quietly, retry next refresh
+    } else {
+      setStatus("stale", "offline · showing last data");
+    }
+  }
+}
+
+async function setData(d) {
+  S.data = d;
+  await ensureBaseMap(d);
+  buildChips(); render(); updateStatus();
+}
+
+/* =====================================================================
+   Rendering
+   ===================================================================== */
+const windowH = () => WINDOW_STEPS_H[S.windowIdx];
+const visibleFac = (list) => !list || !list.length || list.some(f => !S.hidden.has(f));
+const fmtAgo = (s) => s < 90 ? `${Math.round(s)} s` : s < 5400 ? `${Math.round(s / 60)} min` : s < 172800 ? `${(s / 3600).toFixed(1)} h` : `${Math.round(s / 86400)} d`;
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+function heatRadius() {
+  // ~1.2% of map width in image pixels, converted to screen pixels at this zoom
+  const r = S.imgW * 0.012 * Math.pow(2, map.getZoom());
+  return Math.max(14, Math.min(90, r));
+}
+
+function render() {
+  const d = S.data; if (!d) return;
+  const now = Date.now() / 1000;
+  const since = now - windowH() * 3600;
+  const hl = S.halflife * 60;
+
+  // --- heat
+  if (layer.heat) { map.removeLayer(layer.heat); layer.heat = null; }
+  if (S.layers.heat) {
+    const pts = [];
+    for (const c of d.conflicts) {
+      if (c.t < since || !visibleFac(c.factions)) continue;
+      const decay = hl > 0 ? Math.pow(0.5, Math.max(0, now - c.t) / hl) : 1;
+      const w = (c.w ?? 1) * decay;
+      if (w > 0.01) pts.push([ll(c.u, c.v).lat, ll(c.u, c.v).lng, w]);
+    }
+    const rad = heatRadius();
+    layer.heat = L.heatLayer(pts, { radius: rad, blur: rad * 0.85, max: 1.2 / S.gain, minOpacity: 0.3,
+      gradient: { 0.2: "#3b0f70", 0.4: "#8c2981", 0.6: "#de4968", 0.8: "#fe9f6d", 1.0: "#fcfdbf" } }).addTo(map);
+    S.heatCount = pts.length;
+  }
+
+  // --- groups
+  layer.groups.clearLayers();
+  const gAge = d.groups_t ? now - d.groups_t : 0;
+  const gStale = gAge > 180;
+  if (S.layers.groups) {
+    for (const g of d.groups) {
+      if (S.hidden.has(g.faction)) continue;
+      const col = facColor(g.faction);
+      const circle = L.circle(ll(g.u, g.v), { radius: Math.max(g.r || 20, 12) * S.scale, color: col, weight: g.combat ? 3 : 2,
+        dashArray: g.mutant ? "6 6" : null, fillColor: col, fillOpacity: gStale ? 0.05 : 0.16, opacity: gStale ? 0.45 : 0.95 });
+      const cls = (g.classes || []).map(c => `${esc(c[0])} ×${c[1]}`).join("<br>");
+      circle.bindPopup(`<b style="color:${col}">${esc(g.faction)}</b> · ${g.n} ${g.mutant ? "mutants" : "NPCs"}` +
+        `${g.combat ? " · <b style='color:#e2553f'>in combat</b>" : ""}<br>${cls}<br><small>seen ${fmtAgo(gAge)} ago</small>`);
+      layer.groups.addLayer(circle);
+      layer.groups.addLayer(L.marker(ll(g.u, g.v), { interactive: false,
+        icon: L.divIcon({ className: "", html: `<div class="grp-label" style="transform:translate(-50%,-50%)">${g.n}${g.combat ? "⚔" : ""}</div>`, iconSize: [0, 0] }) }));
+    }
+  }
+  layer.actors.clearLayers();
+  if (S.layers.actors) {
+    for (const a of d.actors) {
+      if (S.hidden.has(a.faction)) continue;
+      layer.actors.addLayer(L.circleMarker(ll(a.u, a.v), { radius: 4, color: "#000", weight: 1, fillColor: facColor(a.faction), fillOpacity: 0.95 })
+        .bindPopup(`${esc(a.faction)} ${esc(a.kind || "")}${a.cls ? "<br><small>" + esc(a.cls) + "</small>" : ""}`));
+    }
+  }
+
+  // --- fronts
+  layer.fronts.clearLayers();
+  if (S.layers.fronts) {
+    for (const f of d.fronts) {
+      if (f.u == null || f.v == null || !visibleFac(f.factions)) continue;
+      layer.fronts.addLayer(L.marker(ll(f.u, f.v), { icon: L.divIcon({ className: "front-ico", iconSize: [0, 0],
+        html: `<div class="ring"></div><div class="lbl">#${f.rank} ${esc(f.name)}</div>` }) })
+        .bindPopup(`<b>Front #${f.rank}: ${esc(f.name)}</b><br>${esc((f.factions || []).join(" vs "))}${f.heat != null ? "<br>heat " + f.heat : ""}`));
+    }
+  }
+
+  // --- player
+  layer.player.clearLayers();
+  if (S.layers.player) {
+    if (d.trail.length > 1) layer.player.addLayer(L.polyline(d.trail.map(p => ll(p[0], p[1])), { color: "#4fc3f7", weight: 2, opacity: 0.45, interactive: false }));
+    if (d.player) layer.player.addLayer(L.marker(ll(d.player.u, d.player.v), { icon: L.divIcon({ className: "me-ico", html: '<div class="dot"></div>', iconSize: [0, 0] }) })
+      .bindPopup(`You${d.player.t ? " · " + fmtAgo(now - d.player.t) + " ago" : ""}`));
+  }
+
+  renderLists(since);
+}
+
+function renderLists(since) {
+  const d = S.data;
+  const wars = {};
+  for (const c of d.conflicts.concat(d.unplaced)) {
+    if (c.t < since || !visibleFac(c.factions) || !(c.factions || []).length) continue;
+    const k = (c.factions || []).length >= 2 ? c.factions.slice(0, 2).sort().join(" vs ") : ((c.factions || [])[0] || "Unknown");
+    const w = wars[k] || (wars[k] = { pair: k, dead: 0, events: 0, last: 0 });
+    w.dead += c.dead || 0; w.events++; w.last = Math.max(w.last, c.t);
+  }
+  const list = Object.values(wars).sort((a, b) => b.dead - a.dead || b.events - a.events).slice(0, 12);
+  const now = Date.now() / 1000;
+  document.getElementById("war-count").textContent = list.length ? list.length : "";
+  document.getElementById("wars").innerHTML = list.length ? list.map(w =>
+    `<div class="war"><span>${w.pair.split(" vs ").map(f => `<span style="color:${facColor(f)}">${esc(f)}</span>`).join(" vs ")}</span>` +
+    `<span class="n">${w.dead} dead</span><small>${w.events} events · last ${fmtAgo(now - w.last)} ago</small></div>`).join("")
+    : '<p class="hint">Nothing in this time window.</p>';
+  const evs = d.conflicts.concat(d.unplaced).filter(c => c.t >= since && visibleFac(c.factions)).sort((a, b) => b.t - a.t).slice(0, 40);
+  document.getElementById("ticker").innerHTML = evs.length ? evs.map(c =>
+    `<div class="ev"><time>${fmtAgo(now - c.t)}</time><span class="k">${esc(c.kind)}</span>${esc(c.text || (c.factions || []).join(" vs "))}` +
+    `${c.location ? ` <small>· ${esc(c.location)}</small>` : ""}${c.u == null ? ' <small style="color:#d9a441">· no position</small>' : ""}</div>`).join("")
+    : '<p class="hint">No events in this window.</p>';
+}
+
+/* =====================================================================
+   UI
+   ===================================================================== */
+function setStatus(cls, text) { const el = document.getElementById("status"); el.className = "pill " + cls; el.textContent = text; }
+function showBanner(msg) { const b = document.getElementById("banner"); b.innerHTML = `<button aria-label="Dismiss">✕</button>${esc(msg)}`; b.hidden = false;
+  b.querySelector("button").onclick = () => { b.hidden = true; }; }
+function hideBanner() { document.getElementById("banner").hidden = true; }
+
+function updateStatus() {
+  const d = S.data; if (!d) return;
+  const age = Date.now() / 1000 - (d.generated || 0);
+  if (S.isSample) setStatus("sample", "sample data");
+  else if (age < 300) setStatus("live", `${d.setup || ""} · ${fmtAgo(age)} ago`);
+  else setStatus("stale", `${d.setup || ""} · ${fmtAgo(age)} old`);
+  document.getElementById("data-info").innerHTML =
+    `Source: <b>${esc(S.sourceLabel)}</b><br>Generated ${d.generated ? new Date(d.generated * 1000).toLocaleString() : "?"} · setup ${esc(d.setup || "?")}<br>` +
+    `${d.conflicts.length} placed events, ${d.unplaced.length} without position, ${d.groups.length} groups<br>` +
+    `Map: ${S.realMap ? "your image" : "<b>placeholder</b> (set MAP_IMAGE_URL)"} · ${d.map.calibrated ? "calibrated" : "<b>not calibrated</b> - ZoneSensor positions hidden"}`;
+}
+
+function buildChips() {
+  const d = S.data; const seen = new Set();
+  for (const c of d.conflicts.concat(d.unplaced)) (c.factions || []).forEach(f => seen.add(f));
+  d.groups.forEach(g => seen.add(g.faction)); d.actors.forEach(a => seen.add(a.faction));
+  const order = Object.keys(FACTION_COLORS);
+  const facs = [...seen].filter(Boolean).sort((a, b) => ((order.indexOf(a) + 1 || 99) - (order.indexOf(b) + 1 || 99)) || a.localeCompare(b));
+  const el = document.getElementById("chips");
+  el.innerHTML = facs.map(f => `<button class="chip${S.hidden.has(f) ? " off" : ""}" data-f="${esc(f)}"><i style="background:${facColor(f)}"></i>${esc(f)}</button>`).join("")
+    || '<p class="hint">No factions in the data yet.</p>';
+  el.querySelectorAll(".chip").forEach(b => b.onclick = () => {
+    const f = b.dataset.f; S.hidden.has(f) ? S.hidden.delete(f) : S.hidden.add(f);
+    store.set("hidden", [...S.hidden]); b.classList.toggle("off"); render();
+  });
+}
+
+function setWindowLabel() {
+  const h = windowH();
+  document.getElementById("window-label").textContent = h < 1 ? `${h * 60} min` : h >= 48 ? `${h / 24} days` : `${h} h`;
+}
+
+// tabs + sheet
+const sheet = document.getElementById("sheet");
+document.getElementById("sheet-handle").onclick = () => sheet.classList.toggle("collapsed");
+document.querySelectorAll("#tabs button").forEach(b => b.onclick = () => {
+  document.querySelectorAll("#tabs button").forEach(x => x.classList.toggle("on", x === b));
+  document.querySelectorAll(".tab").forEach(t => { t.hidden = t.id !== "tab-" + b.dataset.tab; });
+  sheet.classList.remove("collapsed");
+});
+let touchY = null;
+sheet.addEventListener("touchstart", e => { touchY = e.touches[0].clientY; }, { passive: true });
+sheet.addEventListener("touchend", e => {
+  if (touchY === null) return; const dy = e.changedTouches[0].clientY - touchY; touchY = null;
+  if (e.target.closest(".tab") && Math.abs(dy) < 80) return;
+  if (dy > 50) sheet.classList.add("collapsed"); else if (dy < -50) sheet.classList.remove("collapsed");
+}, { passive: true });
+
+// controls
+document.querySelectorAll("[data-layer]").forEach(cb => {
+  cb.checked = !!S.layers[cb.dataset.layer];
+  cb.onchange = () => { S.layers[cb.dataset.layer] = cb.checked; store.set("layers", S.layers); render(); };
+});
+const win = document.getElementById("window"); win.max = WINDOW_STEPS_H.length - 1;
+win.value = Math.min(S.windowIdx, WINDOW_STEPS_H.length - 1); S.windowIdx = +win.value; setWindowLabel();
+win.oninput = () => { S.windowIdx = +win.value; setWindowLabel(); store.set("windowIdx", S.windowIdx); render(); };
+const hlSel = document.getElementById("halflife"); hlSel.value = String(S.halflife);
+hlSel.onchange = () => { S.halflife = +hlSel.value; store.set("halflife", S.halflife); render(); };
+const gain = document.getElementById("gain"); gain.value = S.gain;
+gain.oninput = () => { S.gain = +gain.value; store.set("gain", S.gain); render(); };
+document.getElementById("chips-all").onclick = () => { S.hidden.clear(); store.set("hidden", []); buildChips(); render(); };
+const auto = document.getElementById("autorefresh"); auto.checked = S.auto;
+auto.onchange = () => { S.auto = auto.checked; store.set("auto", S.auto); };
+document.getElementById("reload").onclick = () => { S.manualSample = false; loadData(true); };
+document.getElementById("usesample").onclick = async () => { S.isSample = true; S.manualSample = true; S.sourceLabel = "built-in sample"; await setData(makeSampleData()); };
+const fileIn = document.getElementById("file");
+document.getElementById("openfile").onclick = () => fileIn.click();
+fileIn.onchange = async () => {
+  const f = fileIn.files[0]; if (!f) return;
+  try { const d = validate(JSON.parse(await f.text())); S.isSample = false; S.sourceLabel = "file: " + f.name; S.auto = false; auto.checked = false; hideBanner(); await setData(d); }
+  catch (e) { showBanner("That file isn't a valid data.json: " + e.message); }
+};
+document.getElementById("btn-fit").onclick = () => map.fitBounds(L.latLngBounds([-S.imgH, 0], [0, S.imgW]));
+document.getElementById("btn-player").onclick = () => {
+  const p = S.data && S.data.player;
+  if (p) map.setView(ll(p.u, p.v), Math.max(map.getZoom(), 0)); else showBanner("No player position in the data yet (needs ZoneSensor + calibration).");
+};
+
+// pick mode
+const pickBtn = document.getElementById("btn-pick"), pp = document.getElementById("pickpanel");
+pickBtn.onclick = () => { S.picking = !S.picking; pickBtn.classList.toggle("on", S.picking);
+  if (!S.picking) { pp.hidden = true; layer.pick.clearLayers(); } else { showBanner("Pick mode: tap a spot on the map."); } };
+document.getElementById("pp-close").onclick = () => { pp.hidden = true; layer.pick.clearLayers(); S.picking = false; pickBtn.classList.remove("on"); };
+map.on("click", (e) => {
+  if (!S.picking) { sheet.classList.add("collapsed"); return; }
+  hideBanner();
+  const { u, v } = toData(e.latlng);
+  const U = Math.round(u), V = Math.round(v);
+  layer.pick.clearLayers();
+  layer.pick.addLayer(L.marker(e.latlng, { icon: L.divIcon({ className: "pick-ico", html: '<div class="x"></div>', iconSize: [0, 0] }) }));
+  document.getElementById("pp-coords").textContent = `u ${U}  v ${V}`;
+  document.getElementById("pp-cmd-cal").textContent = `python logger_to_json.py calib-add "spot name" ${U} ${V}`;
+  document.getElementById("pp-cmd-place").textContent = `python logger_to_json.py place "Rostok" ${U} ${V}`;
+  document.getElementById("pp-msg").textContent = "Edit the name in quotes after pasting.";
+  pp.hidden = false;
+});
+document.querySelectorAll("[data-copy]").forEach(b => b.onclick = async () => {
+  const text = document.getElementById(b.dataset.copy).textContent;
+  try { await navigator.clipboard.writeText(text); b.textContent = "Copied"; }
+  catch (e) { const r = document.createRange(); r.selectNodeContents(document.getElementById(b.dataset.copy));
+    const s = getSelection(); s.removeAllRanges(); s.addRange(r); b.textContent = "Selected"; }
+  setTimeout(() => { b.textContent = "Copy"; }, 1500);
+});
+
+map.on("zoomend", () => { if (layer.heat) layer.heat.setOptions({ radius: heatRadius(), blur: heatRadius() * 0.85 }); });
+
+// refresh loop
+setInterval(() => { if (S.auto && !S.manualSample && document.visibilityState === "visible") loadData(false); else updateStatus(); }, REFRESH_MS);
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && S.auto && !S.manualSample) loadData(false); });
+loadData(false);
+</script>
+</body>
+</html>
