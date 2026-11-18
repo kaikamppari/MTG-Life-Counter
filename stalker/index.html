@@ -8,6 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Zone Heat">
 <meta name="theme-color" content="#0e100d">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%230e100d'/%3E%3C/svg%3E">
 <title>Zone Heat · S.T.A.L.K.E.R. 2</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
       integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="anonymous">
@@ -143,8 +144,8 @@ h4 { margin: 10px 0 6px; font-size: 12px; letter-spacing: .08em; text-transform:
 <section id="sheet" class="collapsed">
   <div id="sheet-handle"><span></span></div>
   <div id="quick">
-    <label for="window">Last <b id="window-label">6 h</b></label>
-    <input type="range" id="window" min="0" max="10" step="1" value="5" aria-label="Time window">
+    <label for="window"><span id="window-prefix"></span><b id="window-label">All time</b></label>
+    <input type="range" id="window" min="0" max="11" step="1" value="11" aria-label="Time window">
   </div>
   <nav id="tabs">
     <button data-tab="layers" class="on">Layers</button>
@@ -161,8 +162,8 @@ h4 { margin: 10px 0 6px; font-size: 12px; letter-spacing: .08em; text-transform:
     <label class="row"><span>Me + my trail</span><input type="checkbox" data-layer="player" checked></label>
     <div class="row"><span>Heat fades (half-life)</span>
       <select id="halflife">
-        <option value="5">5 min</option><option value="20">20 min</option><option value="60" selected>1 h</option>
-        <option value="240">4 h</option><option value="0">never</option>
+        <option value="5">5 min</option><option value="20">20 min</option><option value="60">1 h</option>
+        <option value="240">4 h</option><option value="0" selected>never</option>
       </select></div>
     <div class="row"><span>Heat strength</span><input type="range" id="gain" min="0.2" max="4" step="0.1" value="1"></div>
   </div>
@@ -219,7 +220,7 @@ const MAP_IMAGE_URL = "map.jpg";
 // data.json written by logger_to_json.py. Override per visit with ?data=<url>.
 const DATA_URL = new URLSearchParams(location.search).get("data") || "data.json";
 const REFRESH_MS = 60000;
-const WINDOW_STEPS_H = [0.25, 0.5, 1, 2, 3, 6, 12, 24, 48, 72, 168];
+const WINDOW_STEPS_H = [0.25, 0.5, 1, 2, 3, 6, 12, 24, 48, 72, 168, null]; // null = all time
 
 const FACTION_COLORS = {
   Loners: "#d9a441", Duty: "#d64545", Freedom: "#47b26b", Bandits: "#a1795e", Monolith: "#e8e8e8",
@@ -293,7 +294,7 @@ const store = {
 const S = {
   data: null, sourceLabel: "", isSample: false,
   layers: store.get("layers", { heat: true, groups: true, actors: false, fronts: true, player: true }),
-  windowIdx: store.get("windowIdx", 5), halflife: store.get("halflife", 60), gain: store.get("gain", 1),
+  windowIdx: store.get("win", WINDOW_STEPS_H.length - 1), halflife: store.get("hl", 0), gain: store.get("gain", 1),
   hidden: new Set(store.get("hidden", [])), auto: store.get("auto", true),
   picking: false, imgW: 0, imgH: 0, scale: 1, mapKey: ""
 };
@@ -406,7 +407,8 @@ function heatRadius() {
 function render() {
   const d = S.data; if (!d) return;
   const now = Date.now() / 1000;
-  const since = now - windowH() * 3600;
+  const hWin = windowH();
+  const since = hWin == null ? -Infinity : now - hWin * 3600;
   const hl = S.halflife * 60;
 
   // --- heat
@@ -534,6 +536,9 @@ function buildChips() {
 
 function setWindowLabel() {
   const h = windowH();
+  const pre = document.getElementById("window-prefix");
+  if (h == null) { pre.textContent = ""; document.getElementById("window-label").textContent = "All time"; return; }
+  pre.textContent = "Last ";
   document.getElementById("window-label").textContent = h < 1 ? `${h * 60} min` : h >= 48 ? `${h / 24} days` : `${h} h`;
 }
 
@@ -560,9 +565,9 @@ document.querySelectorAll("[data-layer]").forEach(cb => {
 });
 const win = document.getElementById("window"); win.max = WINDOW_STEPS_H.length - 1;
 win.value = Math.min(S.windowIdx, WINDOW_STEPS_H.length - 1); S.windowIdx = +win.value; setWindowLabel();
-win.oninput = () => { S.windowIdx = +win.value; setWindowLabel(); store.set("windowIdx", S.windowIdx); render(); };
+win.oninput = () => { S.windowIdx = +win.value; setWindowLabel(); store.set("win", S.windowIdx); render(); };
 const hlSel = document.getElementById("halflife"); hlSel.value = String(S.halflife);
-hlSel.onchange = () => { S.halflife = +hlSel.value; store.set("halflife", S.halflife); render(); };
+hlSel.onchange = () => { S.halflife = +hlSel.value; store.set("hl", S.halflife); render(); };
 const gain = document.getElementById("gain"); gain.value = S.gain;
 gain.oninput = () => { S.gain = +gain.value; store.set("gain", S.gain); render(); };
 document.getElementById("chips-all").onclick = () => { S.hidden.clear(); store.set("hidden", []); buildChips(); render(); };

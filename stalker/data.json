@@ -1,0 +1,4386 @@
+{
+  "schema": "zoneheat/1",
+  "generated": 1795025697.3,
+  "setup": "Unchained",
+  "map": {
+    "width": 1500,
+    "height": 1314,
+    "calibrated": false,
+    "pixels_per_meter": null,
+    "labels": {
+      "Region 1": [
+        729.9,
+        763.4
+      ],
+      "Region 2": [
+        704.3,
+        575.4
+      ],
+      "Region 3": [
+        488.5,
+        685.1
+      ],
+      "Region 4": [
+        837.8,
+        735.5
+      ],
+      "SIRCAA": [
+        1228.0,
+        710.0
+      ],
+      "SIRCAA outskirts": [
+        1187.0,
+        634.6
+      ],
+      "Zaton": [
+        222.0,
+        778.8
+      ],
+      "Region 11": [
+        521.2,
+        519.3
+      ],
+      "Region 14": [
+        807.7,
+        852.1
+      ],
+      "Yaniv / Duga": [
+        398.2,
+        340.0
+      ],
+      "Jupiter / Red Forest": [
+        396.6,
+        263.9
+      ],
+      "Pripyat": [
+        455.0,
+        175.0
+      ],
+      "Red Forest": [
+        426.9,
+        409.0
+      ]
+    }
+  },
+  "conflicts": [
+    {
+      "t": 1794986577.0,
+      "kind": "chronicle",
+      "factions": [
+        "Corps",
+        "Bandits"
+      ],
+      "location": "Yaniv / Duga",
+      "dead": 2,
+      "text": "Incident: Corps vs Bandits, 2 dead, Yaniv / Duga",
+      "source": "DLFR_Chronik",
+      "u": 420.1,
+      "v": 360.5,
+      "w": 2.0
+    },
+    {
+      "t": 1794986777.0,
+      "kind": "chronicle",
+      "factions": [
+        "Corps",
+        "Mercenaries"
+      ],
+      "location": "Pripyat",
+      "dead": 2,
+      "text": "Incident: Corps vs Mercenaries, 2 dead, Pripyat",
+      "source": "DLFR_Chronik",
+      "u": 427.8,
+      "v": 187.7,
+      "w": 2.0
+    },
+    {
+      "t": 1794986881.0,
+      "kind": "chronicle",
+      "factions": [
+        "Bandits",
+        "Monolith"
+      ],
+      "location": "Pripyat",
+      "dead": 8,
+      "text": "Incident: Bandits vs Monolith, 8 dead, Pripyat",
+      "source": "DLFR_Chronik",
+      "u": 446.4,
+      "v": 173.8,
+      "w": 8.0
+    },
+    {
+      "t": 1794986999.0,
+      "kind": "chronicle",
+      "factions": [
+        "Freedom",
+        "Monolith"
+      ],
+      "location": "Pripyat",
+      "dead": 3,
+      "text": "Incident: Freedom vs Monolith, 3 dead, Pripyat",
+      "source": "DLFR_Chronik",
+      "u": 427.7,
+      "v": 186.5,
+      "w": 3.0
+    },
+    {
+      "t": 1794988146.0,
+      "kind": "chronicle",
+      "factions": [
+        "Corps",
+        "Monolith"
+      ],
+      "location": "Pripyat",
+      "dead": 4,
+      "text": "Incident: Corps vs Monolith, 4 dead, Pripyat",
+      "source": "DLFR_Chronik",
+      "u": 452.2,
+      "v": 193.1,
+      "w": 4.0
+    },
+    {
+      "t": 1794988679.0,
+      "kind": "chronicle",
+      "factions": [
+        "Corps",
+        "Monolith"
+      ],
+      "location": "Pripyat",
+      "dead": 3,
+      "text": "Incident: Corps vs Monolith, 3 dead, Pripyat",
+      "source": "DLFR_Chronik",
+      "u": 476.8,
+      "v": 153.9,
+      "w": 3.0
+    },
+    {
+      "t": 1794989733.0,
+      "kind": "chronicle",
+      "factions": [
+        "Ward",
+        "Bandits"
+      ],
+      "location": "Yaniv / Duga",
+      "dead": 2,
+      "text": "Incident: Ward vs Bandits, 2 dead, Yaniv / Duga",
+      "source": "DLFR_Chronik",
+      "u": 359.1,
+      "v": 347.4,
+      "w": 2.0
+    },
+    {
+      "t": 1794989973.0,
+      "kind": "chronicle",
+      "factions": [
+        "Mercenaries",
+        "Bandits"
+      ],
+      "location": "Jupiter / Red Forest",
+      "dead": 2,
+      "text": "Incident: Mercenaries vs Bandits, 2 dead, Jupiter / Red Forest",
+      "source": "DLFR_Chronik",
+      "u": 378.8,
+      "v": 275.9,
+      "w": 2.0
+    },
+    {
+      "t": 1794990020.0,
+      "kind": "chronicle",
+      "factions": [
+        "Loners",
+        "Military"
+      ],
+      "location": "Region 2",
+      "dead": 2,
+      "text": "Incident: Loners vs Military, 2 dead, Region 2",
+      "source": "DLFR_Chronik",
+      "u": 689.9,
+      "v": 597.9,
+      "w": 2.0
+    },
+    {
+      "t": 1794990022.0,
+      "kind": "chronicle",
+      "factions": [
+        "Corps",
+        "Bandits"
+      ],
+      "location": "Yaniv / Duga",
+      "dead": 9,
+      "text": "Incident: Corps vs Bandits, 9 dead, Yaniv / Duga",
+      "source": "DLFR_Chronik",
+      "u": 406.6,
+      "v": 329.4,
+      "w": 9.0
+    },
+    {
+      "t": 1794990098.0,
+      "kind": "chronicle",
+      "factions": [
+        "Duty",
+        "Bandits"
+      ],
+      "location": "Jupiter / Red Forest",
+      "dead": 2,
+      "text": "Incident: Duty vs Bandits, 2 dead, Jupiter / Red Forest",
+      "source": "DLFR_Chronik",
+      "u": 406.0,
+      "v": 247.3,
+      "w": 2.0
+    },
+    {
+      "t": 1794990252.0,
+      "kind": "chronicle",
+      "factions": [
+        "Military",
+        "Monolith"
+      ],
+      "location": "Pripyat",
+      "dead": 2,
+      "text": "Incident: Military vs Monolith, 2 dead, Pripyat",
+      "source": "DLFR_Chronik",
+      "u": 429.4,
+      "v": 182.0,
+      "w": 2.0
+    },
+    {
+      "t": 1794991231.0,
+      "kind": "chronicle",
+      "factions": [
+        "Corps",
+        "Bandits"
+      ],
+      "location": "Jupiter / Red Forest",
+      "dead": 2,
+      "text": "Incident: Corps vs Bandits, 2 dead, Jupiter / Red Forest",
+      "source": "DLFR_Chronik",
+      "u": 404.1,
+      "v": 256.8,
+      "w": 2.0
+    },
+    {
+      "t": 1794991515.0,
+      "kind": "chronicle",
+      "factions": [
+        "Corps",
+        "Monolith"
+      ],
+      "location": "Pripyat",
+      "dead": 2,
+      "text": "Incident: Corps vs Monolith, 2 dead, Pripyat",
+      "source": "DLFR_Chronik",
+      "u": 477.6,
+      "v": 167.3,
+      "w": 2.0
+    },
+    {
+      "t": 1794991596.0,
+      "kind": "chronicle",
+      "factions": [
+        "Duty",
+        "Bandits"
+      ],
+      "location": "Region 2",
+      "dead": 2,
+      "text": "Incident: Duty vs Bandits, 2 dead, Region 2",
+      "source": "DLFR_Chronik",
+      "u": 724.9,
+      "v": 554.4,
+      "w": 2.0
+    },
+    {
+      "t": 1794991610.0,
+      "kind": "chronicle",
+      "factions": [
+        "Duty",
+        "Freedom"
+      ],
+      "location": "Region 2",
+      "dead": 2,
+      "text": "Incident: Duty vs Freedom, 2 dead, Region 2",
+      "source": "DLFR_Chronik",
+      "u": 716.8,
+      "v": 560.6,
+      "w": 2.0
+    },
+    {
+      "t": 1794991622.0,
+      "kind": "chronicle",
+      "factions": [
+        "Bandits",
+        "Monolith"
+      ],
+      "location": "Pripyat",
+      "dead": 7,
+      "text": "Incident: Bandits vs Monolith, 7 dead, Pripyat",
+      "source": "DLFR_Chronik",
+      "u": 441.6,
+      "v": 180.6,
+      "w": 7.0
+    },
+    {
+      "t": 1794991869.0,
+      "kind": "chronicle",
+      "factions": [
+        "Duty",
+        "Bandits"
+      ],
+      "location": "Region 2",
+      "dead": 2,
+      "text": "Incident: Duty vs Bandits, 2 dead, Region 2",
+      "source": "DLFR_Chronik",
+      "u": 670.9,
+      "v": 578.3,
+      "w": 2.0
+    },
+    {
+      "t": 1794991925.0,
+      "kind": "chronicle",
+      "factions": [
+        "Loners",
+        "Bandits"
+      ],
+      "location": "Jupiter / Red Forest",
+      "dead": 18,
+      "text": "Incident: Loners vs Bandits, 18 dead, Jupiter / Red Forest",
+      "source": "DLFR_Chronik",
+      "u": 362.1,
+      "v": 257.3,
+      "w": 18.0
+    },
+    {
+      "t": 1794992068.0,
+      "kind": "chronicle",
+      "factions": [
+        "Corps",
+        "Bandits"
+      ],
+      "location": "Jupiter / Red Forest",
+      "dead": 3,
+      "text": "Incident: Corps vs Bandits, 3 dead, Jupiter / Red Forest",
+      "source": "DLFR_Chronik",
+      "u": 421.3,
+      "v": 269.4,
+      "w": 3.0
+    },
+    {
+      "t": 1794992111.0,
+      "kind": "chronicle",
+      "factions": [
+        "Loners",
+        "Bandits"
+      ],
+      "location": "Jupiter / Red Forest",
+      "dead": 2,
+      "text": "Incident: Loners vs Bandits, 2 dead, Jupiter / Red Forest",
+      "source": "DLFR_Chronik",
+      "u": 380.5,
+      "v": 276.1,
+      "w": 2.0
+    },
+    {
+      "t": 1794992132.0,
+      "kind": "chronicle",
+      "factions": [
+        "Corps",
+        "Monolith"
+      ],
+      "location": "Pripyat",
+      "dead": 3,
+      "text": "Incident: Corps vs Monolith, 3 dead, Pripyat",
+      "source": "DLFR_Chronik",
+      "u": 489.6,
+      "v": 173.3,
+      "w": 3.0
+    },
+    {
+      "t": 1794992200.0,
+      "kind": "chronicle",
+      "factions": [
+        "Freedom",
+        "Monolith"
+      ],
+      "location": "Region 2",
+      "dead": 2,
+      "text": "Incident: Freedom vs Monolith, 2 dead, Region 2",
+      "source": "DLFR_Chronik",
+      "u": 709.3,
+      "v": 549.4,
+      "w": 2.0
+    },
+    {
+      "t": 1794992511.0,
+      "kind": "chronicle",
+      "factions": [
+        "Corps",
+        "Monolith"
+      ],
+      "location": "Pripyat",
+      "dead": 3,
+      "text": "Incident: Corps vs Monolith, 3 dead, Pripyat",
+      "source": "DLFR_Chronik",
+      "u": 492.8,
+      "v": 175.0,
+      "w": 3.0
+    },
+    {
+      "t": 1794992578.0,
+      "kind": "chronicle",
+      "factions": [
+        "Loners",
+        "Bandits"
+      ],
+      "location": "Yaniv / Duga",
+      "dead": 10,
+      "text": "Incident: Loners vs Bandits, 10 dead, Yaniv / Duga",
+      "source": "DLFR_Chronik",
+      "u": 414.7,
+      "v": 350.8,
+      "w": 10.0
+    },
+    {
+      "t": 1794992884.0,
+      "kind": "chronicle",
+      "factions": [
+        "Corps",
+        "Monolith"
+      ],
+      "location": "Pripyat",
+      "dead": 4,
+      "text": "Incident: Corps vs Monolith, 4 dead, Pripyat",
+      "source": "DLFR_Chronik",
+      "u": 451.7,
+      "v": 192.3,
+      "w": 4.0
+    },
+    {
+      "t": 1794992965.0,
+      "kind": "chronicle",
+      "factions": [
+        "Freedom",
+        "Monolith"
+      ],
+      "location": "Region 2",
+      "dead": 2,
+      "text": "Incident: Freedom vs Monolith, 2 dead, Region 2",
+      "source": "DLFR_Chronik",
+      "u": 679.4,
+      "v": 600.0,
+      "w": 2.0
+    },
+    {
+      "t": 1794993864.0,
+      "kind": "chronicle",
+      "factions": [
+        "Corps",
+        "Monolith"
+      ],
+      "location": "Pripyat",
+      "dead": 3,
+      "text": "Incident: Corps vs Monolith, 3 dead, Pripyat",
+      "source": "DLFR_Chronik",
+      "u": 457.2,
+      "v": 167.4,
+      "w": 3.0
+    },
+    {
+      "t": 1794994637.0,
+      "kind": "chronicle",
+      "factions": [
+        "Corps",
+        "Monolith"
+      ],
+      "location": "Pripyat",
+      "dead": 10,
+      "text": "Incident: Corps vs Monolith, 10 dead, Pripyat",
+      "source": "DLFR_Chronik",
+      "u": 455.9,
+      "v": 171.4,
+      "w": 10.0
+    },
+    {
+      "t": 1794994846.0,
+      "kind": "chronicle",
+      "factions": [
+        "Corps",
+        "Monolith"
+      ],
+      "location": "Pripyat",
+      "dead": 5,
+      "text": "Incident: Corps vs Monolith, 5 dead, Pripyat",
+      "source": "DLFR_Chronik",
+      "u": 424.4,
+      "v": 180.0,
+      "w": 5.0
+    },
+    {
+      "t": 1794995177.0,
+      "kind": "chronicle",
+      "factions": [
+        "Freedom",
+        "Loners"
+      ],
+      "location": "Pripyat",
+      "dead": 2,
+      "text": "Incident: Freedom vs Loners, 2 dead, Pripyat",
+      "source": "DLFR_Chronik",
+      "u": 435.4,
+      "v": 182.8,
+      "w": 2.0
+    },
+    {
+      "t": 1794995181.0,
+      "kind": "chronicle",
+      "factions": [
+        "Freedom",
+        "Monolith"
+      ],
+      "location": "Region 2",
+      "dead": 2,
+      "text": "Incident: Freedom vs Monolith, 2 dead, Region 2",
+      "source": "DLFR_Chronik",
+      "u": 690.9,
+      "v": 555.5,
+      "w": 2.0
+    },
+    {
+      "t": 1794995316.0,
+      "kind": "chronicle",
+      "factions": [
+        "Corps",
+        "Monolith"
+      ],
+      "location": "Pripyat",
+      "dead": 3,
+      "text": "Incident: Corps vs Monolith, 3 dead, Pripyat",
+      "source": "DLFR_Chronik",
+      "u": 423.5,
+      "v": 160.3,
+      "w": 3.0
+    },
+    {
+      "t": 1794995545.0,
+      "kind": "chronicle",
+      "factions": [
+        "Corps",
+        "Bandits"
+      ],
+      "location": "Yaniv / Duga",
+      "dead": 2,
+      "text": "Incident: Corps vs Bandits, 2 dead, Yaniv / Duga",
+      "source": "DLFR_Chronik",
+      "u": 449.8,
+      "v": 345.9,
+      "w": 2.0
+    },
+    {
+      "t": 1794995669.0,
+      "kind": "chronicle",
+      "factions": [
+        "Duty",
+        "Bandits"
+      ],
+      "location": "Region 2",
+      "dead": 6,
+      "text": "Incident: Duty vs Bandits, 6 dead, Region 2",
+      "source": "DLFR_Chronik",
+      "u": 694.1,
+      "v": 549.3,
+      "w": 6.0
+    },
+    {
+      "t": 1794995695.0,
+      "kind": "chronicle",
+      "factions": [
+        "Mercenaries",
+        "Monolith"
+      ],
+      "location": "Pripyat",
+      "dead": 2,
+      "text": "Incident: Mercenaries vs Monolith, 2 dead, Pripyat",
+      "source": "DLFR_Chronik",
+      "u": 483.5,
+      "v": 170.6,
+      "w": 2.0
+    },
+    {
+      "t": 1794995729.0,
+      "kind": "chronicle",
+      "factions": [
+        "Corps",
+        "Monolith"
+      ],
+      "location": "Pripyat",
+      "dead": 3,
+      "text": "Incident: Corps vs Monolith, 3 dead, Pripyat",
+      "source": "DLFR_Chronik",
+      "u": 481.7,
+      "v": 181.5,
+      "w": 3.0
+    },
+    {
+      "t": 1794996609.0,
+      "kind": "chronicle",
+      "factions": [
+        "Freedom",
+        "Monolith"
+      ],
+      "location": "Region 2",
+      "dead": 2,
+      "text": "Incident: Freedom vs Monolith, 2 dead, Region 2",
+      "source": "DLFR_Chronik",
+      "u": 726.7,
+      "v": 552.6,
+      "w": 2.0
+    },
+    {
+      "t": 1794996613.0,
+      "kind": "chronicle",
+      "factions": [
+        "Freedom",
+        "Bandits"
+      ],
+      "location": "Region 2",
+      "dead": 2,
+      "text": "Incident: Freedom vs Bandits, 2 dead, Region 2",
+      "source": "DLFR_Chronik",
+      "u": 717.9,
+      "v": 586.7,
+      "w": 2.0
+    },
+    {
+      "t": 1794996633.0,
+      "kind": "chronicle",
+      "factions": [
+        "Corps",
+        "Monolith"
+      ],
+      "location": "Pripyat",
+      "dead": 3,
+      "text": "Incident: Corps vs Monolith, 3 dead, Pripyat",
+      "source": "DLFR_Chronik",
+      "u": 425.5,
+      "v": 171.3,
+      "w": 3.0
+    },
+    {
+      "t": 1794997464.0,
+      "kind": "chronicle",
+      "factions": [
+        "Duty",
+        "Bandits"
+      ],
+      "location": "Region 2",
+      "dead": 14,
+      "text": "Incident: Duty vs Bandits, 14 dead, Region 2",
+      "source": "DLFR_Chronik",
+      "u": 711.1,
+      "v": 600.8,
+      "w": 14.0
+    },
+    {
+      "t": 1794997645.0,
+      "kind": "chronicle",
+      "factions": [
+        "Military",
+        "Bandits"
+      ],
+      "location": "Red Forest",
+      "dead": 2,
+      "text": "Incident: Military vs Bandits, 2 dead, Red Forest",
+      "source": "DLFR_Chronik",
+      "u": 422.2,
+      "v": 423.3,
+      "w": 2.0
+    },
+    {
+      "t": 1794997861.0,
+      "kind": "chronicle",
+      "factions": [
+        "Corps",
+        "Monolith"
+      ],
+      "location": "Pripyat",
+      "dead": 3,
+      "text": "Incident: Corps vs Monolith, 3 dead, Pripyat",
+      "source": "DLFR_Chronik",
+      "u": 481.8,
+      "v": 175.9,
+      "w": 3.0
+    },
+    {
+      "t": 1794998137.0,
+      "kind": "chronicle",
+      "factions": [
+        "Corps",
+        "Monolith"
+      ],
+      "location": "Pripyat",
+      "dead": 2,
+      "text": "Incident: Corps vs Monolith, 2 dead, Pripyat",
+      "source": "DLFR_Chronik",
+      "u": 468.0,
+      "v": 164.7,
+      "w": 2.0
+    },
+    {
+      "t": 1794998951.0,
+      "kind": "chronicle",
+      "factions": [
+        "Bandits",
+        "Monolith"
+      ],
+      "location": "Region 2",
+      "dead": 2,
+      "text": "Incident: Bandits vs Monolith, 2 dead, Region 2",
+      "source": "DLFR_Chronik",
+      "u": 676.5,
+      "v": 568.7,
+      "w": 2.0
+    },
+    {
+      "t": 1795001255.0,
+      "kind": "chronicle",
+      "factions": [
+        "Corps",
+        "Monolith"
+      ],
+      "location": "Pripyat",
+      "dead": 4,
+      "text": "Incident: Corps vs Monolith, 4 dead, Pripyat",
+      "source": "DLFR_Chronik",
+      "u": 461.8,
+      "v": 184.9,
+      "w": 4.0
+    },
+    {
+      "t": 1795001444.0,
+      "kind": "chronicle",
+      "factions": [
+        "Corps",
+        "Monolith"
+      ],
+      "location": "Pripyat",
+      "dead": 2,
+      "text": "Incident: Corps vs Monolith, 2 dead, Pripyat",
+      "source": "DLFR_Chronik",
+      "u": 463.2,
+      "v": 154.5,
+      "w": 2.0
+    },
+    {
+      "t": 1795001567.0,
+      "kind": "chronicle",
+      "factions": [
+        "Ward",
+        "Monolith"
+      ],
+      "location": "Pripyat",
+      "dead": 2,
+      "text": "Incident: Ward vs Monolith, 2 dead, Pripyat",
+      "source": "DLFR_Chronik",
+      "u": 426.8,
+      "v": 185.0,
+      "w": 2.0
+    },
+    {
+      "t": 1795001657.0,
+      "kind": "chronicle",
+      "factions": [
+        "Duty",
+        "Freedom"
+      ],
+      "location": "Region 2",
+      "dead": 2,
+      "text": "Incident: Duty vs Freedom, 2 dead, Region 2",
+      "source": "DLFR_Chronik",
+      "u": 720.0,
+      "v": 585.5,
+      "w": 2.0
+    },
+    {
+      "t": 1795001755.0,
+      "kind": "chronicle",
+      "factions": [
+        "Corps",
+        "Monolith"
+      ],
+      "location": "Pripyat",
+      "dead": 3,
+      "text": "Incident: Corps vs Monolith, 3 dead, Pripyat",
+      "source": "DLFR_Chronik",
+      "u": 466.5,
+      "v": 197.0,
+      "w": 3.0
+    },
+    {
+      "t": 1795001993.0,
+      "kind": "chronicle",
+      "factions": [
+        "Loners",
+        "Bandits"
+      ],
+      "location": "SIRCAA",
+      "dead": 2,
+      "text": "Incident: Loners vs Bandits, 2 dead, SIRCAA",
+      "source": "DLFR_Chronik",
+      "u": 1238.3,
+      "v": 679.0,
+      "w": 2.0
+    },
+    {
+      "t": 1795002198.0,
+      "kind": "chronicle",
+      "factions": [
+        "Duty",
+        "Bandits"
+      ],
+      "location": "Region 11",
+      "dead": 2,
+      "text": "Incident: Duty vs Bandits, 2 dead, Region 11",
+      "source": "DLFR_Chronik",
+      "u": 526.7,
+      "v": 502.8,
+      "w": 2.0
+    },
+    {
+      "t": 1795002248.0,
+      "kind": "chronicle",
+      "factions": [
+        "Corps",
+        "Monolith"
+      ],
+      "location": "Pripyat",
+      "dead": 3,
+      "text": "Incident: Corps vs Monolith, 3 dead, Pripyat",
+      "source": "DLFR_Chronik",
+      "u": 454.3,
+      "v": 160.7,
+      "w": 3.0
+    },
+    {
+      "t": 1795002800.0,
+      "kind": "chronicle",
+      "factions": [
+        "Corps",
+        "Monolith"
+      ],
+      "location": "Pripyat",
+      "dead": 2,
+      "text": "Incident: Corps vs Monolith, 2 dead, Pripyat",
+      "source": "DLFR_Chronik",
+      "u": 439.4,
+      "v": 174.9,
+      "w": 2.0
+    },
+    {
+      "t": 1795003412.0,
+      "kind": "chronicle",
+      "factions": [
+        "Duty",
+        "Bandits"
+      ],
+      "location": "Region 2",
+      "dead": 2,
+      "text": "Incident: Duty vs Bandits, 2 dead, Region 2",
+      "source": "DLFR_Chronik",
+      "u": 677.0,
+      "v": 567.4,
+      "w": 2.0
+    },
+    {
+      "t": 1795003412.0,
+      "kind": "chronicle",
+      "factions": [
+        "Corps",
+        "Monolith"
+      ],
+      "location": "Pripyat",
+      "dead": 2,
+      "text": "Incident: Corps vs Monolith, 2 dead, Pripyat",
+      "source": "DLFR_Chronik",
+      "u": 442.3,
+      "v": 178.2,
+      "w": 2.0
+    },
+    {
+      "t": 1795003570.0,
+      "kind": "chronicle",
+      "factions": [
+        "Loners",
+        "Bandits"
+      ],
+      "location": "Yaniv / Duga",
+      "dead": 5,
+      "text": "Incident: Loners vs Bandits, 5 dead, Yaniv / Duga",
+      "source": "DLFR_Chronik",
+      "u": 368.0,
+      "v": 350.5,
+      "w": 5.0
+    },
+    {
+      "t": 1795003817.0,
+      "kind": "chronicle",
+      "factions": [
+        "Loners",
+        "Military"
+      ],
+      "location": "Region 3",
+      "dead": 11,
+      "text": "Incident: Loners vs Military, 11 dead, Region 3",
+      "source": "DLFR_Chronik",
+      "u": 473.6,
+      "v": 692.5,
+      "w": 11.0
+    },
+    {
+      "t": 1795003939.0,
+      "kind": "chronicle",
+      "factions": [
+        "Corps",
+        "Monolith"
+      ],
+      "location": "Pripyat",
+      "dead": 3,
+      "text": "Incident: Corps vs Monolith, 3 dead, Pripyat",
+      "source": "DLFR_Chronik",
+      "u": 489.1,
+      "v": 168.0,
+      "w": 3.0
+    },
+    {
+      "t": 1795004060.0,
+      "kind": "chronicle",
+      "factions": [
+        "Duty",
+        "Bandits"
+      ],
+      "location": "Region 2",
+      "dead": 2,
+      "text": "Incident: Duty vs Bandits, 2 dead, Region 2",
+      "source": "DLFR_Chronik",
+      "u": 704.8,
+      "v": 563.6,
+      "w": 2.0
+    },
+    {
+      "t": 1795004679.0,
+      "kind": "chronicle",
+      "factions": [
+        "Mercenaries",
+        "Bandits"
+      ],
+      "location": "Yaniv / Duga",
+      "dead": 4,
+      "text": "Incident: Mercenaries vs Bandits, 4 dead, Yaniv / Duga",
+      "source": "DLFR_Chronik",
+      "u": 346.5,
+      "v": 347.3,
+      "w": 4.0
+    },
+    {
+      "t": 1795004773.0,
+      "kind": "chronicle",
+      "factions": [
+        "Freedom",
+        "Bandits"
+      ],
+      "location": "Region 11",
+      "dead": 2,
+      "text": "Incident: Freedom vs Bandits, 2 dead, Region 11",
+      "source": "DLFR_Chronik",
+      "u": 514.3,
+      "v": 521.0,
+      "w": 2.0
+    },
+    {
+      "t": 1795006137.0,
+      "kind": "chronicle",
+      "factions": [
+        "Ward",
+        "Bandits"
+      ],
+      "location": "Region 3",
+      "dead": 5,
+      "text": "Incident: Ward vs Bandits, 5 dead, Region 3",
+      "source": "DLFR_Chronik",
+      "u": 496.3,
+      "v": 687.2,
+      "w": 5.0
+    },
+    {
+      "t": 1795006213.0,
+      "kind": "chronicle",
+      "factions": [
+        "Corps",
+        "Monolith"
+      ],
+      "location": "Pripyat",
+      "dead": 2,
+      "text": "Incident: Corps vs Monolith, 2 dead, Pripyat",
+      "source": "DLFR_Chronik",
+      "u": 423.9,
+      "v": 187.3,
+      "w": 2.0
+    },
+    {
+      "t": 1795006560.0,
+      "kind": "chronicle",
+      "factions": [
+        "Loners",
+        "Military"
+      ],
+      "location": "Region 3",
+      "dead": 2,
+      "text": "Incident: Loners vs Military, 2 dead, Region 3",
+      "source": "DLFR_Chronik",
+      "u": 509.1,
+      "v": 692.7,
+      "w": 2.0
+    },
+    {
+      "t": 1795006993.0,
+      "kind": "chronicle",
+      "factions": [
+        "Military",
+        "Monolith"
+      ],
+      "location": "Region 14",
+      "dead": 2,
+      "text": "Incident: Military vs Monolith, 2 dead, Region 14",
+      "source": "DLFR_Chronik",
+      "u": 790.6,
+      "v": 845.3,
+      "w": 2.0
+    },
+    {
+      "t": 1795007164.0,
+      "kind": "chronicle",
+      "factions": [
+        "Freedom",
+        "Mercenaries"
+      ],
+      "location": "Region 3",
+      "dead": 5,
+      "text": "Incident: Freedom vs Mercenaries, 5 dead, Region 3",
+      "source": "DLFR_Chronik",
+      "u": 481.4,
+      "v": 677.0,
+      "w": 5.0
+    },
+    {
+      "t": 1795007238.0,
+      "kind": "chronicle",
+      "factions": [
+        "Mercenaries",
+        "Bandits"
+      ],
+      "location": "Jupiter / Red Forest",
+      "dead": 4,
+      "text": "Incident: Mercenaries vs Bandits, 4 dead, Jupiter / Red Forest",
+      "source": "DLFR_Chronik",
+      "u": 370.5,
+      "v": 266.6,
+      "w": 4.0
+    },
+    {
+      "t": 1795007348.0,
+      "kind": "chronicle",
+      "factions": [
+        "Military",
+        "Monolith"
+      ],
+      "location": "Region 14",
+      "dead": 2,
+      "text": "Incident: Military vs Monolith, 2 dead, Region 14",
+      "source": "DLFR_Chronik",
+      "u": 807.6,
+      "v": 822.7,
+      "w": 2.0
+    },
+    {
+      "t": 1795007706.0,
+      "kind": "chronicle",
+      "factions": [
+        "Loners",
+        "Bandits"
+      ],
+      "location": "Yaniv / Duga",
+      "dead": 3,
+      "text": "Incident: Loners vs Bandits, 3 dead, Yaniv / Duga",
+      "source": "DLFR_Chronik",
+      "u": 372.5,
+      "v": 326.8,
+      "w": 3.0
+    },
+    {
+      "t": 1795007712.0,
+      "kind": "chronicle",
+      "factions": [
+        "Corps",
+        "Bandits"
+      ],
+      "location": "Yaniv / Duga",
+      "dead": 3,
+      "text": "Incident: Corps vs Bandits, 3 dead, Yaniv / Duga",
+      "source": "DLFR_Chronik",
+      "u": 400.2,
+      "v": 352.2,
+      "w": 3.0
+    },
+    {
+      "t": 1795008077.0,
+      "kind": "chronicle",
+      "factions": [
+        "Mercenaries",
+        "Bandits"
+      ],
+      "location": "Region 3",
+      "dead": 2,
+      "text": "Incident: Mercenaries vs Bandits, 2 dead, Region 3",
+      "source": "DLFR_Chronik",
+      "u": 496.0,
+      "v": 687.1,
+      "w": 2.0
+    },
+    {
+      "t": 1795008084.0,
+      "kind": "chronicle",
+      "factions": [
+        "Loners",
+        "Military"
+      ],
+      "location": "Region 14",
+      "dead": 2,
+      "text": "Incident: Loners vs Military, 2 dead, Region 14",
+      "source": "DLFR_Chronik",
+      "u": 824.5,
+      "v": 837.7,
+      "w": 2.0
+    },
+    {
+      "t": 1795008198.0,
+      "kind": "chronicle",
+      "factions": [
+        "Ward",
+        "Corps"
+      ],
+      "location": "Pripyat",
+      "dead": 3,
+      "text": "Incident: Ward vs Corps, 3 dead, Pripyat",
+      "source": "DLFR_Chronik",
+      "u": 459.7,
+      "v": 173.2,
+      "w": 3.0
+    },
+    {
+      "t": 1795008366.0,
+      "kind": "chronicle",
+      "factions": [
+        "Military",
+        "Monolith"
+      ],
+      "location": "Region 14",
+      "dead": 10,
+      "text": "Incident: Military vs Monolith, 10 dead, Region 14",
+      "source": "DLFR_Chronik",
+      "u": 803.1,
+      "v": 882.2,
+      "w": 10.0
+    },
+    {
+      "t": 1795008418.0,
+      "kind": "chronicle",
+      "factions": [
+        "Corps",
+        "Monolith"
+      ],
+      "location": "Pripyat",
+      "dead": 2,
+      "text": "Incident: Corps vs Monolith, 2 dead, Pripyat",
+      "source": "DLFR_Chronik",
+      "u": 487.6,
+      "v": 163.1,
+      "w": 2.0
+    },
+    {
+      "t": 1795008709.0,
+      "kind": "chronicle",
+      "factions": [
+        "Military",
+        "Monolith"
+      ],
+      "location": "Region 14",
+      "dead": 2,
+      "text": "Incident: Military vs Monolith, 2 dead, Region 14",
+      "source": "DLFR_Chronik",
+      "u": 817.7,
+      "v": 848.7,
+      "w": 2.0
+    },
+    {
+      "t": 1795009130.0,
+      "kind": "chronicle",
+      "factions": [
+        "Loners",
+        "Bandits"
+      ],
+      "location": "SIRCAA",
+      "dead": 9,
+      "text": "Incident: Loners vs Bandits, 9 dead, SIRCAA",
+      "source": "DLFR_Chronik",
+      "u": 1247.1,
+      "v": 710.0,
+      "w": 9.0
+    },
+    {
+      "t": 1795009150.0,
+      "kind": "chronicle",
+      "factions": [
+        "Corps",
+        "Monolith"
+      ],
+      "location": "Pripyat",
+      "dead": 3,
+      "text": "Incident: Corps vs Monolith, 3 dead, Pripyat",
+      "source": "DLFR_Chronik",
+      "u": 426.6,
+      "v": 174.3,
+      "w": 3.0
+    },
+    {
+      "t": 1795009304.0,
+      "kind": "chronicle",
+      "factions": [
+        "Loners",
+        "Bandits"
+      ],
+      "location": "Region 2",
+      "dead": 4,
+      "text": "Incident: Loners vs Bandits, 4 dead, Region 2",
+      "source": "DLFR_Chronik",
+      "u": 722.3,
+      "v": 562.6,
+      "w": 4.0
+    },
+    {
+      "t": 1795009673.0,
+      "kind": "chronicle",
+      "factions": [
+        "Duty",
+        "Monolith"
+      ],
+      "location": "Pripyat",
+      "dead": 2,
+      "text": "Incident: Duty vs Monolith, 2 dead, Pripyat",
+      "source": "DLFR_Chronik",
+      "u": 471.5,
+      "v": 157.2,
+      "w": 2.0
+    },
+    {
+      "t": 1795009725.0,
+      "kind": "chronicle",
+      "factions": [
+        "Mercenaries",
+        "Bandits"
+      ],
+      "location": "Region 3",
+      "dead": 3,
+      "text": "Incident: Mercenaries vs Bandits, 3 dead, Region 3",
+      "source": "DLFR_Chronik",
+      "u": 496.4,
+      "v": 700.9,
+      "w": 3.0
+    },
+    {
+      "t": 1795011272.0,
+      "kind": "chronicle",
+      "factions": [
+        "Ward",
+        "Bandits"
+      ],
+      "location": "Region 3",
+      "dead": 6,
+      "text": "Incident: Ward vs Bandits, 6 dead, Region 3",
+      "source": "DLFR_Chronik",
+      "u": 480.6,
+      "v": 653.9,
+      "w": 6.0
+    },
+    {
+      "t": 1795011314.0,
+      "kind": "chronicle",
+      "factions": [
+        "Ward",
+        "Corps"
+      ],
+      "location": "Pripyat",
+      "dead": 4,
+      "text": "Incident: Ward vs Corps, 4 dead, Pripyat",
+      "source": "DLFR_Chronik",
+      "u": 433.4,
+      "v": 190.8,
+      "w": 4.0
+    },
+    {
+      "t": 1795011414.0,
+      "kind": "chronicle",
+      "factions": [
+        "Freedom",
+        "Ward"
+      ],
+      "location": "Region 2",
+      "dead": 2,
+      "text": "Incident: Freedom vs Ward, 2 dead, Region 2",
+      "source": "DLFR_Chronik",
+      "u": 735.2,
+      "v": 584.9,
+      "w": 2.0
+    },
+    {
+      "t": 1795011425.0,
+      "kind": "chronicle",
+      "factions": [
+        "Military",
+        "Monolith"
+      ],
+      "location": "Pripyat",
+      "dead": 2,
+      "text": "Incident: Military vs Monolith, 2 dead, Pripyat",
+      "source": "DLFR_Chronik",
+      "u": 462.6,
+      "v": 166.8,
+      "w": 2.0
+    },
+    {
+      "t": 1795011647.0,
+      "kind": "chronicle",
+      "factions": [
+        "Bandits",
+        "Monolith"
+      ],
+      "location": "Jupiter / Red Forest",
+      "dead": 2,
+      "text": "Incident: Bandits vs Monolith, 2 dead, Jupiter / Red Forest",
+      "source": "DLFR_Chronik",
+      "u": 403.4,
+      "v": 264.9,
+      "w": 2.0
+    },
+    {
+      "t": 1795011780.0,
+      "kind": "chronicle",
+      "factions": [
+        "Duty",
+        "Bandits"
+      ],
+      "location": "Region 2",
+      "dead": 3,
+      "text": "Incident: Duty vs Bandits, 3 dead, Region 2",
+      "source": "DLFR_Chronik",
+      "u": 721.4,
+      "v": 584.7,
+      "w": 3.0
+    },
+    {
+      "t": 1795011893.0,
+      "kind": "chronicle",
+      "factions": [
+        "Freedom",
+        "Ward"
+      ],
+      "location": "Region 11",
+      "dead": 6,
+      "text": "Incident: Freedom vs Ward, 6 dead, Region 11",
+      "source": "DLFR_Chronik",
+      "u": 511.4,
+      "v": 506.7,
+      "w": 6.0
+    },
+    {
+      "t": 1795012186.0,
+      "kind": "chronicle",
+      "factions": [
+        "Corps",
+        "Monolith"
+      ],
+      "location": "Pripyat",
+      "dead": 5,
+      "text": "Incident: Corps vs Monolith, 5 dead, Pripyat",
+      "source": "DLFR_Chronik",
+      "u": 460.6,
+      "v": 189.1,
+      "w": 5.0
+    },
+    {
+      "t": 1795012390.0,
+      "kind": "chronicle",
+      "factions": [
+        "Corps",
+        "Monolith"
+      ],
+      "location": "Pripyat",
+      "dead": 2,
+      "text": "Incident: Corps vs Monolith, 2 dead, Pripyat",
+      "source": "DLFR_Chronik",
+      "u": 429.9,
+      "v": 163.2,
+      "w": 2.0
+    },
+    {
+      "t": 1795012530.0,
+      "kind": "chronicle",
+      "factions": [
+        "Duty",
+        "Freedom"
+      ],
+      "location": "Red Forest",
+      "dead": 3,
+      "text": "Incident: Duty vs Freedom, 3 dead, Red Forest",
+      "source": "DLFR_Chronik",
+      "u": 451.2,
+      "v": 416.8,
+      "w": 3.0
+    },
+    {
+      "t": 1795012659.0,
+      "kind": "chronicle",
+      "factions": [
+        "Freedom",
+        "Bandits"
+      ],
+      "location": "Red Forest",
+      "dead": 2,
+      "text": "Incident: Freedom vs Bandits, 2 dead, Red Forest",
+      "source": "DLFR_Chronik",
+      "u": 402.2,
+      "v": 398.5,
+      "w": 2.0
+    },
+    {
+      "t": 1795016901.0,
+      "kind": "chronicle",
+      "factions": [
+        "Loners",
+        "Bandits"
+      ],
+      "location": "Region 14",
+      "dead": 10,
+      "text": "Incident: Loners vs Bandits, 10 dead, Region 14",
+      "source": "DLFR_Chronik",
+      "u": 807.0,
+      "v": 833.7,
+      "w": 10.0
+    },
+    {
+      "t": 1795016999.0,
+      "kind": "chronicle",
+      "factions": [
+        "Ward",
+        "Bandits"
+      ],
+      "location": "Region 1",
+      "dead": 2,
+      "text": "Incident: Ward vs Bandits, 2 dead, Region 1",
+      "source": "DLFR_Chronik",
+      "u": 718.5,
+      "v": 755.9,
+      "w": 2.0
+    },
+    {
+      "t": 1795017263.0,
+      "kind": "chronicle",
+      "factions": [
+        "Loners",
+        "Mercenaries"
+      ],
+      "location": "Region 14",
+      "dead": 4,
+      "text": "Incident: Loners vs Mercenaries, 4 dead, Region 14",
+      "source": "DLFR_Chronik",
+      "u": 810.7,
+      "v": 849.4,
+      "w": 4.0
+    },
+    {
+      "t": 1795017275.0,
+      "kind": "chronicle",
+      "factions": [
+        "Loners",
+        "Bandits"
+      ],
+      "location": "Region 14",
+      "dead": 3,
+      "text": "Incident: Loners vs Bandits, 3 dead, Region 14",
+      "source": "DLFR_Chronik",
+      "u": 806.3,
+      "v": 840.5,
+      "w": 3.0
+    },
+    {
+      "t": 1795018001.0,
+      "kind": "chronicle",
+      "factions": [
+        "Loners",
+        "Mercenaries"
+      ],
+      "location": "SIRCAA",
+      "dead": 4,
+      "text": "Incident: Loners vs Mercenaries, 4 dead, SIRCAA",
+      "source": "DLFR_Chronik",
+      "u": 1217.2,
+      "v": 736.6,
+      "w": 4.0
+    },
+    {
+      "t": 1795018018.0,
+      "kind": "chronicle",
+      "factions": [
+        "Military",
+        "Bandits"
+      ],
+      "location": "Region 1",
+      "dead": 2,
+      "text": "Incident: Military vs Bandits, 2 dead, Region 1",
+      "source": "DLFR_Chronik",
+      "u": 706.3,
+      "v": 743.6,
+      "w": 2.0
+    },
+    {
+      "t": 1795018904.0,
+      "kind": "chronicle",
+      "factions": [
+        "Ward",
+        "Bandits"
+      ],
+      "location": "Region 3",
+      "dead": 2,
+      "text": "Incident: Ward vs Bandits, 2 dead, Region 3",
+      "source": "DLFR_Chronik",
+      "u": 495.9,
+      "v": 689.5,
+      "w": 2.0
+    },
+    {
+      "t": 1795019358.0,
+      "kind": "chronicle",
+      "factions": [
+        "Freedom",
+        "Mercenaries"
+      ],
+      "location": "Region 3",
+      "dead": 3,
+      "text": "Incident: Freedom vs Mercenaries, 3 dead, Region 3",
+      "source": "DLFR_Chronik",
+      "u": 509.7,
+      "v": 674.1,
+      "w": 3.0
+    },
+    {
+      "t": 1795019422.0,
+      "kind": "chronicle",
+      "factions": [
+        "Loners",
+        "Mercenaries"
+      ],
+      "location": "Red Forest",
+      "dead": 4,
+      "text": "Incident: Loners vs Mercenaries, 4 dead, Red Forest",
+      "source": "DLFR_Chronik",
+      "u": 382.0,
+      "v": 411.0,
+      "w": 4.0
+    },
+    {
+      "t": 1795020110.0,
+      "kind": "chronicle",
+      "factions": [
+        "Bandits",
+        "Monolith"
+      ],
+      "location": "Region 14",
+      "dead": 2,
+      "text": "Incident: Bandits vs Monolith, 2 dead, Region 14",
+      "source": "DLFR_Chronik",
+      "u": 798.2,
+      "v": 834.1,
+      "w": 2.0
+    },
+    {
+      "t": 1795020473.0,
+      "kind": "chronicle",
+      "factions": [
+        "Loners",
+        "Monolith"
+      ],
+      "location": "Region 2",
+      "dead": 2,
+      "text": "Incident: Loners vs Monolith, 2 dead, Region 2",
+      "source": "DLFR_Chronik",
+      "u": 671.5,
+      "v": 564.9,
+      "w": 2.0
+    },
+    {
+      "t": 1795020517.0,
+      "kind": "chronicle",
+      "factions": [
+        "Loners",
+        "Bandits"
+      ],
+      "location": "SIRCAA",
+      "dead": 3,
+      "text": "Incident: Loners vs Bandits, 3 dead, SIRCAA",
+      "source": "DLFR_Chronik",
+      "u": 1209.3,
+      "v": 707.6,
+      "w": 3.0
+    },
+    {
+      "t": 1795020880.0,
+      "kind": "chronicle",
+      "factions": [
+        "Ward",
+        "Bandits"
+      ],
+      "location": "Region 2",
+      "dead": 2,
+      "text": "Incident: Ward vs Bandits, 2 dead, Region 2",
+      "source": "DLFR_Chronik",
+      "u": 721.1,
+      "v": 602.4,
+      "w": 2.0
+    },
+    {
+      "t": 1795020880.0,
+      "kind": "chronicle",
+      "factions": [
+        "Loners",
+        "Military"
+      ],
+      "location": "Region 11",
+      "dead": 2,
+      "text": "Incident: Loners vs Military, 2 dead, Region 11",
+      "source": "DLFR_Chronik",
+      "u": 509.8,
+      "v": 539.7,
+      "w": 2.0
+    },
+    {
+      "t": 1795020880.0,
+      "kind": "chronicle",
+      "factions": [
+        "Loners",
+        "Mercenaries"
+      ],
+      "location": "Region 3",
+      "dead": 13,
+      "text": "Incident: Loners vs Mercenaries, 13 dead, Region 3",
+      "source": "DLFR_Chronik",
+      "u": 511.0,
+      "v": 689.6,
+      "w": 13.0
+    },
+    {
+      "t": 1795021347.0,
+      "kind": "chronicle",
+      "factions": [
+        "Freedom",
+        "Military"
+      ],
+      "location": "Region 2",
+      "dead": 2,
+      "text": "Incident: Freedom vs Military, 2 dead, Region 2",
+      "source": "DLFR_Chronik",
+      "u": 703.5,
+      "v": 565.2,
+      "w": 2.0
+    },
+    {
+      "t": 1795021349.0,
+      "kind": "chronicle",
+      "factions": [
+        "Loners",
+        "Monolith"
+      ],
+      "location": "Yaniv / Duga",
+      "dead": 2,
+      "text": "Incident: Loners vs Monolith, 2 dead, Yaniv / Duga",
+      "source": "DLFR_Chronik",
+      "u": 446.3,
+      "v": 332.9,
+      "w": 2.0
+    },
+    {
+      "t": 1795021425.0,
+      "kind": "chronicle",
+      "factions": [
+        "Loners",
+        "Mercenaries"
+      ],
+      "location": "Region 11",
+      "dead": 6,
+      "text": "Incident: Loners vs Mercenaries, 6 dead, Region 11",
+      "source": "DLFR_Chronik",
+      "u": 529.0,
+      "v": 542.6,
+      "w": 6.0
+    },
+    {
+      "t": 1795021599.0,
+      "kind": "chronicle",
+      "factions": [
+        "Military",
+        "Bandits"
+      ],
+      "location": "Region 1",
+      "dead": 7,
+      "text": "Incident: Military vs Bandits, 7 dead, Region 1",
+      "source": "DLFR_Chronik",
+      "u": 715.3,
+      "v": 765.6,
+      "w": 7.0
+    },
+    {
+      "t": 1795021945.0,
+      "kind": "chronicle",
+      "factions": [
+        "Loners",
+        "Mercenaries"
+      ],
+      "location": "Region 14",
+      "dead": 4,
+      "text": "Incident: Loners vs Mercenaries, 4 dead, Region 14",
+      "source": "DLFR_Chronik",
+      "u": 820.0,
+      "v": 852.1,
+      "w": 4.0
+    },
+    {
+      "t": 1795022080.0,
+      "kind": "chronicle",
+      "factions": [
+        "Ward",
+        "Corps"
+      ],
+      "location": "Region 2",
+      "dead": 4,
+      "text": "Incident: Ward vs Corps, 4 dead, Region 2",
+      "source": "DLFR_Chronik",
+      "u": 695.9,
+      "v": 570.2,
+      "w": 4.0
+    },
+    {
+      "t": 1795022126.0,
+      "kind": "chronicle",
+      "factions": [
+        "Loners",
+        "Mercenaries"
+      ],
+      "location": "Region 14",
+      "dead": 2,
+      "text": "Incident: Loners vs Mercenaries, 2 dead, Region 14",
+      "source": "DLFR_Chronik",
+      "u": 792.4,
+      "v": 853.5,
+      "w": 2.0
+    },
+    {
+      "t": 1795022302.0,
+      "kind": "chronicle",
+      "factions": [
+        "Loners",
+        "Monolith"
+      ],
+      "location": "Yaniv / Duga",
+      "dead": 3,
+      "text": "Incident: Loners vs Monolith, 3 dead, Yaniv / Duga",
+      "source": "DLFR_Chronik",
+      "u": 432.3,
+      "v": 354.1,
+      "w": 3.0
+    },
+    {
+      "t": 1795022306.0,
+      "kind": "chronicle",
+      "factions": [
+        "Military",
+        "Bandits"
+      ],
+      "location": "Region 1",
+      "dead": 4,
+      "text": "Incident: Military vs Bandits, 4 dead, Region 1",
+      "source": "DLFR_Chronik",
+      "u": 746.9,
+      "v": 735.2,
+      "w": 4.0
+    },
+    {
+      "t": 1795022324.0,
+      "kind": "chronicle",
+      "factions": [
+        "Corps",
+        "Monolith"
+      ],
+      "location": "Pripyat",
+      "dead": 2,
+      "text": "Incident: Corps vs Monolith, 2 dead, Pripyat",
+      "source": "DLFR_Chronik",
+      "u": 487.7,
+      "v": 167.0,
+      "w": 2.0
+    },
+    {
+      "t": 1795022331.0,
+      "kind": "chronicle",
+      "factions": [
+        "Corps",
+        "Mercenaries"
+      ],
+      "location": "Region 2",
+      "dead": 2,
+      "text": "Incident: Corps vs Mercenaries, 2 dead, Region 2",
+      "source": "DLFR_Chronik",
+      "u": 734.5,
+      "v": 561.8,
+      "w": 2.0
+    },
+    {
+      "t": 1795022670.0,
+      "kind": "chronicle",
+      "factions": [
+        "Loners",
+        "Mercenaries"
+      ],
+      "location": "Yaniv / Duga",
+      "dead": 2,
+      "text": "Incident: Loners vs Mercenaries, 2 dead, Yaniv / Duga",
+      "source": "DLFR_Chronik",
+      "u": 385.9,
+      "v": 322.3,
+      "w": 2.0
+    },
+    {
+      "t": 1795022935.0,
+      "kind": "chronicle",
+      "factions": [
+        "Loners",
+        "Bandits"
+      ],
+      "location": "Region 4",
+      "dead": 7,
+      "text": "Incident: Loners vs Bandits, 7 dead, Region 4",
+      "source": "DLFR_Chronik",
+      "u": 841.8,
+      "v": 726.4,
+      "w": 7.0
+    },
+    {
+      "t": 1795022995.0,
+      "kind": "chronicle",
+      "factions": [
+        "Ward",
+        "Bandits"
+      ],
+      "location": "Region 3",
+      "dead": 14,
+      "text": "Incident: Ward vs Bandits, 14 dead, Region 3",
+      "source": "DLFR_Chronik",
+      "u": 491.1,
+      "v": 679.9,
+      "w": 14.0
+    },
+    {
+      "t": 1795023631.0,
+      "kind": "chronicle",
+      "factions": [
+        "Bandits",
+        "Monolith"
+      ],
+      "location": "Pripyat",
+      "dead": 6,
+      "text": "Incident: Bandits vs Monolith, 6 dead, Pripyat",
+      "source": "DLFR_Chronik",
+      "u": 458.3,
+      "v": 199.2,
+      "w": 6.0
+    },
+    {
+      "t": 1795023889.0,
+      "kind": "chronicle",
+      "factions": [
+        "Loners",
+        "Bandits"
+      ],
+      "location": "Red Forest",
+      "dead": 8,
+      "text": "Incident: Loners vs Bandits, 8 dead, Red Forest",
+      "source": "DLFR_Chronik",
+      "u": 468.5,
+      "v": 414.9,
+      "w": 8.0
+    },
+    {
+      "t": 1795024134.0,
+      "kind": "chronicle",
+      "factions": [
+        "Ward",
+        "Bandits"
+      ],
+      "location": "SIRCAA",
+      "dead": 2,
+      "text": "Incident: Ward vs Bandits, 2 dead, SIRCAA",
+      "source": "DLFR_Chronik",
+      "u": 1223.4,
+      "v": 694.8,
+      "w": 2.0
+    },
+    {
+      "t": 1795024442.0,
+      "kind": "chronicle",
+      "factions": [
+        "Ward",
+        "Bandits"
+      ],
+      "location": "Region 3",
+      "dead": 2,
+      "text": "Incident: Ward vs Bandits, 2 dead, Region 3",
+      "source": "DLFR_Chronik",
+      "u": 483.0,
+      "v": 656.8,
+      "w": 2.0
+    }
+  ],
+  "groups": [],
+  "groups_t": null,
+  "actors": [],
+  "fronts": [
+    {
+      "rank": 1,
+      "name": "Pripyat",
+      "u": 455.0,
+      "v": 175.0,
+      "factions": [
+        "Monolith",
+        "Corps",
+        "Bandits"
+      ],
+      "heat": 131.0
+    },
+    {
+      "rank": 2,
+      "name": "Region 3",
+      "u": 488.5,
+      "v": 685.1,
+      "factions": [
+        "Bandits",
+        "Ward",
+        "Mercenaries"
+      ],
+      "heat": 68.0
+    },
+    {
+      "rank": 3,
+      "name": "Region 2",
+      "u": 704.3,
+      "v": 575.4,
+      "factions": [
+        "Bandits",
+        "Duty",
+        "Freedom"
+      ],
+      "heat": 67.0
+    },
+    {
+      "rank": 4,
+      "name": "Yaniv / Duga",
+      "u": 398.2,
+      "v": 340.0,
+      "factions": [
+        "Bandits",
+        "Loners",
+        "Corps"
+      ],
+      "heat": 47.0
+    },
+    {
+      "rank": 5,
+      "name": "Region 14",
+      "u": 807.7,
+      "v": 852.1,
+      "factions": [
+        "Loners",
+        "Military",
+        "Monolith"
+      ],
+      "heat": 43.0
+    },
+    {
+      "rank": 6,
+      "name": "Jupiter / Red Forest",
+      "u": 396.6,
+      "v": 263.9,
+      "factions": [
+        "Bandits",
+        "Mercenaries",
+        "Corps"
+      ],
+      "heat": 35.0
+    },
+    {
+      "rank": 7,
+      "name": "SIRCAA",
+      "u": 1228.0,
+      "v": 710.0,
+      "factions": [
+        "Loners",
+        "Bandits",
+        "Mercenaries"
+      ],
+      "heat": 20.0
+    },
+    {
+      "rank": 8,
+      "name": "Red Forest",
+      "u": 426.9,
+      "v": 409.0,
+      "factions": [
+        "Bandits",
+        "Freedom",
+        "Loners"
+      ],
+      "heat": 19.0
+    }
+  ],
+  "wars": [
+    {
+      "pair": "Bandits vs Loners",
+      "dead": 222,
+      "events": 26,
+      "last": 1795023889.0
+    },
+    {
+      "pair": "Loners vs Mercenaries",
+      "dead": 103,
+      "events": 23,
+      "last": 1795022670.0
+    },
+    {
+      "pair": "Bandits vs Spark",
+      "dead": 103,
+      "events": 21,
+      "last": 1795017098.0
+    },
+    {
+      "pair": "Loners vs Monolith",
+      "dead": 93,
+      "events": 21,
+      "last": 1795022302.0
+    },
+    {
+      "pair": "Bandits vs Monolith",
+      "dead": 92,
+      "events": 19,
+      "last": 1795024284.0
+    },
+    {
+      "pair": "Corps vs Monolith",
+      "dead": 86,
+      "events": 27,
+      "last": 1795022324.0
+    },
+    {
+      "pair": "Military vs Monolith",
+      "dead": 74,
+      "events": 19,
+      "last": 1795011425.0
+    },
+    {
+      "pair": "Bandits vs Ward",
+      "dead": 70,
+      "events": 15,
+      "last": 1795024442.0
+    },
+    {
+      "pair": "Bandits vs Duty",
+      "dead": 70,
+      "events": 15,
+      "last": 1795022570.0
+    },
+    {
+      "pair": "Duty vs Monolith",
+      "dead": 37,
+      "events": 13,
+      "last": 1795012426.0
+    },
+    {
+      "pair": "Duty vs Mercenaries",
+      "dead": 33,
+      "events": 11,
+      "last": 1795022345.0
+    },
+    {
+      "pair": "Bandits vs Mercenaries",
+      "dead": 31,
+      "events": 8,
+      "last": 1795021089.0
+    },
+    {
+      "pair": "Loners vs Military",
+      "dead": 26,
+      "events": 8,
+      "last": 1795020880.0
+    },
+    {
+      "pair": "Bandits vs Military",
+      "dead": 25,
+      "events": 7,
+      "last": 1795022306.0
+    },
+    {
+      "pair": "Bandits vs Corps",
+      "dead": 24,
+      "events": 7,
+      "last": 1795007712.0
+    },
+    {
+      "pair": "Bandits vs Freedom",
+      "dead": 20,
+      "events": 6,
+      "last": 1795012659.0
+    },
+    {
+      "pair": "Freedom vs Monolith",
+      "dead": 11,
+      "events": 5,
+      "last": 1794996609.0
+    },
+    {
+      "pair": "Corps vs Ward",
+      "dead": 11,
+      "events": 5,
+      "last": 1795022080.0
+    },
+    {
+      "pair": "Spark vs Ward",
+      "dead": 8,
+      "events": 6,
+      "last": 1795020880.0
+    },
+    {
+      "pair": "Mercenaries vs Spark",
+      "dead": 8,
+      "events": 4,
+      "last": 1795019693.0
+    },
+    {
+      "pair": "Freedom vs Ward",
+      "dead": 8,
+      "events": 4,
+      "last": 1795018972.0
+    },
+    {
+      "pair": "Freedom vs Mercenaries",
+      "dead": 8,
+      "events": 2,
+      "last": 1795019358.0
+    },
+    {
+      "pair": "Duty vs Freedom",
+      "dead": 7,
+      "events": 5,
+      "last": 1795018445.0
+    },
+    {
+      "pair": "Military vs Spark",
+      "dead": 5,
+      "events": 1,
+      "last": 1795001599.0
+    },
+    {
+      "pair": "Corps vs Mercenaries",
+      "dead": 4,
+      "events": 3,
+      "last": 1795022331.0
+    },
+    {
+      "pair": "Monolith vs Noon",
+      "dead": 4,
+      "events": 2,
+      "last": 1795008817.0
+    },
+    {
+      "pair": "Mercenaries vs Ward",
+      "dead": 2,
+      "events": 2,
+      "last": 1794994250.0
+    },
+    {
+      "pair": "Freedom vs Military",
+      "dead": 2,
+      "events": 2,
+      "last": 1795021347.0
+    },
+    {
+      "pair": "Freedom vs Loners",
+      "dead": 2,
+      "events": 1,
+      "last": 1794995177.0
+    },
+    {
+      "pair": "Mercenaries vs Monolith",
+      "dead": 2,
+      "events": 1,
+      "last": 1794995695.0
+    },
+    {
+      "pair": "Monolith vs Ward",
+      "dead": 2,
+      "events": 1,
+      "last": 1795001567.0
+    },
+    {
+      "pair": "Noon vs Ward",
+      "dead": 0,
+      "events": 3,
+      "last": 1795018445.0
+    },
+    {
+      "pair": "Duty vs Spark",
+      "dead": 0,
+      "events": 3,
+      "last": 1795020880.0
+    },
+    {
+      "pair": "Duty vs Noon",
+      "dead": 0,
+      "events": 2,
+      "last": 1795018445.0
+    },
+    {
+      "pair": "Corps vs Duty",
+      "dead": 0,
+      "events": 1,
+      "last": 1794994874.0
+    },
+    {
+      "pair": "Corps vs Spark",
+      "dead": 0,
+      "events": 1,
+      "last": 1794994874.0
+    },
+    {
+      "pair": "Corps vs Freedom",
+      "dead": 0,
+      "events": 1,
+      "last": 1795011436.0
+    }
+  ],
+  "player": null,
+  "trail": [],
+  "unplaced": [
+    {
+      "t": 1795024284.0,
+      "kind": "chronicle",
+      "factions": [
+        "Bandits",
+        "Monolith"
+      ],
+      "location": null,
+      "dead": 3,
+      "text": "Incident: Bandits vs Monolith, 3 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1795022570.0,
+      "kind": "chronicle",
+      "factions": [
+        "Duty",
+        "Bandits"
+      ],
+      "location": null,
+      "dead": 3,
+      "text": "Incident: Duty vs Bandits, 3 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1795022345.0,
+      "kind": "chronicle",
+      "factions": [
+        "Duty",
+        "Mercenaries"
+      ],
+      "location": null,
+      "dead": 4,
+      "text": "Incident: Duty vs Mercenaries, 4 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1795022324.0,
+      "kind": "chronicle",
+      "factions": [
+        "Ward",
+        "Bandits"
+      ],
+      "location": null,
+      "dead": 6,
+      "text": "Incident: Ward vs Bandits, 6 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1795022076.0,
+      "kind": "chronicle",
+      "factions": [
+        "Duty",
+        "Mercenaries"
+      ],
+      "location": null,
+      "dead": 2,
+      "text": "Incident: Duty vs Mercenaries, 2 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1795021696.0,
+      "kind": "chronicle",
+      "factions": [
+        "Duty",
+        "Mercenaries"
+      ],
+      "location": null,
+      "dead": 4,
+      "text": "Incident: Duty vs Mercenaries, 4 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1795021207.0,
+      "kind": "chronicle",
+      "factions": [
+        "Duty",
+        "Mercenaries"
+      ],
+      "location": null,
+      "dead": 2,
+      "text": "Incident: Duty vs Mercenaries, 2 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1795021089.0,
+      "kind": "chronicle",
+      "factions": [
+        "Mercenaries",
+        "Bandits"
+      ],
+      "location": null,
+      "dead": 5,
+      "text": "Incident: Mercenaries vs Bandits, 5 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1795020880.0,
+      "kind": "chronicle",
+      "factions": [
+        "Duty",
+        "Spark"
+      ],
+      "location": null,
+      "dead": 0,
+      "text": "War: Duty vs Spark",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1795020880.0,
+      "kind": "chronicle",
+      "factions": [
+        "Duty",
+        "Spark"
+      ],
+      "location": null,
+      "dead": 0,
+      "text": "War: Duty vs Spark",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1795020880.0,
+      "kind": "chronicle",
+      "factions": [
+        "Ward",
+        "Spark"
+      ],
+      "location": null,
+      "dead": 0,
+      "text": "War: Ward vs Spark",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1795020880.0,
+      "kind": "chronicle",
+      "factions": [
+        "Ward",
+        "Corps"
+      ],
+      "location": null,
+      "dead": 0,
+      "text": "War: Ward vs Corps",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1795020793.0,
+      "kind": "chronicle",
+      "factions": [
+        "Duty",
+        "Mercenaries"
+      ],
+      "location": null,
+      "dead": 2,
+      "text": "Incident: Duty vs Mercenaries, 2 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1795019693.0,
+      "kind": "chronicle",
+      "factions": [
+        "Spark",
+        "Mercenaries"
+      ],
+      "location": null,
+      "dead": 3,
+      "text": "Incident: Spark vs Mercenaries, 3 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1795018972.0,
+      "kind": "chronicle",
+      "factions": [
+        "Freedom",
+        "Ward"
+      ],
+      "location": null,
+      "dead": 0,
+      "text": "War: Freedom vs Ward",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1795018445.0,
+      "kind": "chronicle",
+      "factions": [
+        "Ward",
+        "Bandits"
+      ],
+      "location": null,
+      "dead": 4,
+      "text": "Incident: Ward vs Bandits, 4 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1795018445.0,
+      "kind": "chronicle",
+      "factions": [
+        "Ward",
+        "Spark"
+      ],
+      "location": null,
+      "dead": 0,
+      "text": "War: Ward vs Spark",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1795018445.0,
+      "kind": "chronicle",
+      "factions": [
+        "Duty",
+        "Noon"
+      ],
+      "location": null,
+      "dead": 0,
+      "text": "War: Duty vs Noon",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1795018445.0,
+      "kind": "chronicle",
+      "factions": [
+        "Duty",
+        "Freedom"
+      ],
+      "location": null,
+      "dead": 0,
+      "text": "War: Duty vs Freedom",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1795018445.0,
+      "kind": "chronicle",
+      "factions": [
+        "Ward",
+        "Noon"
+      ],
+      "location": null,
+      "dead": 0,
+      "text": "War: Ward vs Noon",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1795017907.0,
+      "kind": "chronicle",
+      "factions": [
+        "Mercenaries",
+        "Bandits"
+      ],
+      "location": null,
+      "dead": 9,
+      "text": "Incident: Mercenaries vs Bandits, 9 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1795017523.0,
+      "kind": "chronicle",
+      "factions": [
+        "Ward",
+        "Bandits"
+      ],
+      "location": null,
+      "dead": 4,
+      "text": "Incident: Ward vs Bandits, 4 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1795017146.0,
+      "kind": "chronicle",
+      "factions": [
+        "Freedom",
+        "Military"
+      ],
+      "location": null,
+      "dead": 0,
+      "text": "War: Freedom vs Military",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1795017098.0,
+      "kind": "chronicle",
+      "factions": [
+        "Spark",
+        "Bandits"
+      ],
+      "location": null,
+      "dead": 5,
+      "text": "Incident: Spark vs Bandits, 5 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1795017079.0,
+      "kind": "chronicle",
+      "factions": [
+        "Duty",
+        "Bandits"
+      ],
+      "location": null,
+      "dead": 2,
+      "text": "Incident: Duty vs Bandits, 2 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1795017037.0,
+      "kind": "chronicle",
+      "factions": [
+        "Spark",
+        "Mercenaries"
+      ],
+      "location": null,
+      "dead": 2,
+      "text": "Incident: Spark vs Mercenaries, 2 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1795016921.0,
+      "kind": "chronicle",
+      "factions": [
+        "Corps",
+        "Mercenaries"
+      ],
+      "location": null,
+      "dead": 0,
+      "text": "War: Corps vs Mercenaries",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1795016372.0,
+      "kind": "chronicle",
+      "factions": [
+        "Loners",
+        "Mercenaries"
+      ],
+      "location": null,
+      "dead": 0,
+      "text": "War: Loners vs Mercenaries",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1795016372.0,
+      "kind": "chronicle",
+      "factions": [
+        "Spark",
+        "Mercenaries"
+      ],
+      "location": null,
+      "dead": 0,
+      "text": "War: Spark vs Mercenaries",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1795016371.0,
+      "kind": "chronicle",
+      "factions": [
+        "Duty",
+        "Mercenaries"
+      ],
+      "location": null,
+      "dead": 0,
+      "text": "War: Duty vs Mercenaries",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1795012771.0,
+      "kind": "chronicle",
+      "factions": [
+        "Duty",
+        "Bandits"
+      ],
+      "location": null,
+      "dead": 7,
+      "text": "Incident: Duty vs Bandits, 7 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1795012633.0,
+      "kind": "chronicle",
+      "factions": [
+        "Loners",
+        "Monolith"
+      ],
+      "location": null,
+      "dead": 3,
+      "text": "Incident: Loners vs Monolith, 3 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1795012627.0,
+      "kind": "chronicle",
+      "factions": [
+        "Loners",
+        "Mercenaries"
+      ],
+      "location": null,
+      "dead": 5,
+      "text": "Incident: Loners vs Mercenaries, 5 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1795012548.0,
+      "kind": "chronicle",
+      "factions": [
+        "Spark",
+        "Bandits"
+      ],
+      "location": null,
+      "dead": 4,
+      "text": "Incident: Spark vs Bandits, 4 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1795012426.0,
+      "kind": "chronicle",
+      "factions": [
+        "Duty",
+        "Monolith"
+      ],
+      "location": null,
+      "dead": 2,
+      "text": "Incident: Duty vs Monolith, 2 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1795012225.0,
+      "kind": "chronicle",
+      "factions": [
+        "Spark",
+        "Bandits"
+      ],
+      "location": null,
+      "dead": 8,
+      "text": "Incident: Spark vs Bandits, 8 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1795011788.0,
+      "kind": "chronicle",
+      "factions": [
+        "Loners",
+        "Mercenaries"
+      ],
+      "location": null,
+      "dead": 3,
+      "text": "Incident: Loners vs Mercenaries, 3 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1795011758.0,
+      "kind": "chronicle",
+      "factions": [
+        "Loners",
+        "Monolith"
+      ],
+      "location": null,
+      "dead": 3,
+      "text": "Incident: Loners vs Monolith, 3 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1795011436.0,
+      "kind": "chronicle",
+      "factions": [
+        "Freedom",
+        "Corps"
+      ],
+      "location": null,
+      "dead": 0,
+      "text": "War: Freedom vs Corps",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1795009576.0,
+      "kind": "chronicle",
+      "factions": [
+        "Military",
+        "Monolith"
+      ],
+      "location": null,
+      "dead": 3,
+      "text": "Incident: Military vs Monolith, 3 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1795009413.0,
+      "kind": "chronicle",
+      "factions": [
+        "Bandits",
+        "Monolith"
+      ],
+      "location": null,
+      "dead": 11,
+      "text": "Incident: Bandits vs Monolith, 11 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1795009290.0,
+      "kind": "chronicle",
+      "factions": [
+        "Duty",
+        "Monolith"
+      ],
+      "location": null,
+      "dead": 2,
+      "text": "Incident: Duty vs Monolith, 2 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1795009284.0,
+      "kind": "chronicle",
+      "factions": [
+        "Duty",
+        "Bandits"
+      ],
+      "location": null,
+      "dead": 13,
+      "text": "Incident: Duty vs Bandits, 13 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1795009047.0,
+      "kind": "chronicle",
+      "factions": [
+        "Spark",
+        "Bandits"
+      ],
+      "location": null,
+      "dead": 4,
+      "text": "Incident: Spark vs Bandits, 4 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1795008817.0,
+      "kind": "chronicle",
+      "factions": [
+        "Noon",
+        "Monolith"
+      ],
+      "location": null,
+      "dead": 2,
+      "text": "Incident: Noon vs Monolith, 2 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1795008563.0,
+      "kind": "chronicle",
+      "factions": [
+        "Military",
+        "Bandits"
+      ],
+      "location": null,
+      "dead": 5,
+      "text": "Incident: Military vs Bandits, 5 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1795008424.0,
+      "kind": "chronicle",
+      "factions": [
+        "Loners",
+        "Monolith"
+      ],
+      "location": null,
+      "dead": 2,
+      "text": "Incident: Loners vs Monolith, 2 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1795008364.0,
+      "kind": "chronicle",
+      "factions": [
+        "Loners",
+        "Mercenaries"
+      ],
+      "location": null,
+      "dead": 2,
+      "text": "Incident: Loners vs Mercenaries, 2 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1795008324.0,
+      "kind": "chronicle",
+      "factions": [
+        "Spark",
+        "Bandits"
+      ],
+      "location": null,
+      "dead": 6,
+      "text": "Incident: Spark vs Bandits, 6 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1795008132.0,
+      "kind": "chronicle",
+      "factions": [
+        "Loners",
+        "Mercenaries"
+      ],
+      "location": null,
+      "dead": 4,
+      "text": "Incident: Loners vs Mercenaries, 4 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1795008073.0,
+      "kind": "chronicle",
+      "factions": [
+        "Loners",
+        "Bandits"
+      ],
+      "location": null,
+      "dead": 2,
+      "text": "Incident: Loners vs Bandits, 2 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1795007833.0,
+      "kind": "chronicle",
+      "factions": [
+        "Loners",
+        "Monolith"
+      ],
+      "location": null,
+      "dead": 2,
+      "text": "Incident: Loners vs Monolith, 2 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1795006945.0,
+      "kind": "chronicle",
+      "factions": [
+        "Loners",
+        "Mercenaries"
+      ],
+      "location": null,
+      "dead": 4,
+      "text": "Incident: Loners vs Mercenaries, 4 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1795006907.0,
+      "kind": "chronicle",
+      "factions": [
+        "Spark",
+        "Bandits"
+      ],
+      "location": null,
+      "dead": 2,
+      "text": "Incident: Spark vs Bandits, 2 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1795006745.0,
+      "kind": "chronicle",
+      "factions": [
+        "Noon",
+        "Monolith"
+      ],
+      "location": null,
+      "dead": 2,
+      "text": "Incident: Noon vs Monolith, 2 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1795006312.0,
+      "kind": "chronicle",
+      "factions": [
+        "Loners",
+        "Bandits"
+      ],
+      "location": null,
+      "dead": 5,
+      "text": "Incident: Loners vs Bandits, 5 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1795006139.0,
+      "kind": "chronicle",
+      "factions": [
+        "Loners",
+        "Mercenaries"
+      ],
+      "location": null,
+      "dead": 2,
+      "text": "Incident: Loners vs Mercenaries, 2 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1795004693.0,
+      "kind": "chronicle",
+      "factions": [
+        "Military",
+        "Monolith"
+      ],
+      "location": null,
+      "dead": 2,
+      "text": "Incident: Military vs Monolith, 2 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1795004269.0,
+      "kind": "chronicle",
+      "factions": [
+        "Mercenaries",
+        "Bandits"
+      ],
+      "location": null,
+      "dead": 2,
+      "text": "Incident: Mercenaries vs Bandits, 2 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1795004259.0,
+      "kind": "chronicle",
+      "factions": [
+        "Spark",
+        "Bandits"
+      ],
+      "location": null,
+      "dead": 5,
+      "text": "Incident: Spark vs Bandits, 5 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1795004207.0,
+      "kind": "chronicle",
+      "factions": [
+        "Corps",
+        "Bandits"
+      ],
+      "location": "Region 12",
+      "dead": 3,
+      "text": "Incident: Corps vs Bandits, 3 dead, Region 12",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1795004056.0,
+      "kind": "chronicle",
+      "factions": [
+        "Loners",
+        "Monolith"
+      ],
+      "location": null,
+      "dead": 2,
+      "text": "Incident: Loners vs Monolith, 2 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1795003924.0,
+      "kind": "chronicle",
+      "factions": [
+        "Loners",
+        "Bandits"
+      ],
+      "location": null,
+      "dead": 5,
+      "text": "Incident: Loners vs Bandits, 5 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1795003908.0,
+      "kind": "chronicle",
+      "factions": [
+        "Military",
+        "Monolith"
+      ],
+      "location": null,
+      "dead": 3,
+      "text": "Incident: Military vs Monolith, 3 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1795003837.0,
+      "kind": "chronicle",
+      "factions": [
+        "Spark",
+        "Bandits"
+      ],
+      "location": null,
+      "dead": 2,
+      "text": "Incident: Spark vs Bandits, 2 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1795003440.0,
+      "kind": "chronicle",
+      "factions": [
+        "Duty",
+        "Monolith"
+      ],
+      "location": null,
+      "dead": 2,
+      "text": "Incident: Duty vs Monolith, 2 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1795002858.0,
+      "kind": "chronicle",
+      "factions": [
+        "Military",
+        "Monolith"
+      ],
+      "location": null,
+      "dead": 5,
+      "text": "Incident: Military vs Monolith, 5 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1795002500.0,
+      "kind": "chronicle",
+      "factions": [
+        "Ward",
+        "Spark"
+      ],
+      "location": null,
+      "dead": 0,
+      "text": "War: Ward vs Spark",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1795002491.0,
+      "kind": "chronicle",
+      "factions": [
+        "Military",
+        "Monolith"
+      ],
+      "location": null,
+      "dead": 8,
+      "text": "Incident: Military vs Monolith, 8 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1795002491.0,
+      "kind": "chronicle",
+      "factions": [
+        "Loners",
+        "Monolith"
+      ],
+      "location": null,
+      "dead": 4,
+      "text": "Incident: Loners vs Monolith, 4 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1795002491.0,
+      "kind": "chronicle",
+      "factions": [
+        "Duty",
+        "Monolith"
+      ],
+      "location": null,
+      "dead": 2,
+      "text": "Incident: Duty vs Monolith, 2 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1795002491.0,
+      "kind": "chronicle",
+      "factions": [
+        "Loners",
+        "Bandits"
+      ],
+      "location": null,
+      "dead": 5,
+      "text": "Incident: Loners vs Bandits, 5 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1795001735.0,
+      "kind": "chronicle",
+      "factions": [
+        "Military",
+        "Monolith"
+      ],
+      "location": null,
+      "dead": 2,
+      "text": "Incident: Military vs Monolith, 2 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1795001681.0,
+      "kind": "chronicle",
+      "factions": [
+        "Loners",
+        "Bandits"
+      ],
+      "location": null,
+      "dead": 11,
+      "text": "Incident: Loners vs Bandits, 11 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1795001629.0,
+      "kind": "chronicle",
+      "factions": [
+        "Spark",
+        "Bandits"
+      ],
+      "location": null,
+      "dead": 5,
+      "text": "Incident: Spark vs Bandits, 5 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1795001599.0,
+      "kind": "chronicle",
+      "factions": [
+        "Spark",
+        "Military"
+      ],
+      "location": null,
+      "dead": 5,
+      "text": "Incident: Spark vs Military, 5 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1795001400.0,
+      "kind": "chronicle",
+      "factions": [
+        "Loners",
+        "Monolith"
+      ],
+      "location": null,
+      "dead": 2,
+      "text": "Incident: Loners vs Monolith, 2 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1795001273.0,
+      "kind": "chronicle",
+      "factions": [
+        "Loners",
+        "Bandits"
+      ],
+      "location": null,
+      "dead": 8,
+      "text": "Incident: Loners vs Bandits, 8 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1795001223.0,
+      "kind": "chronicle",
+      "factions": [
+        "Duty",
+        "Bandits"
+      ],
+      "location": null,
+      "dead": 3,
+      "text": "Incident: Duty vs Bandits, 3 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794997972.0,
+      "kind": "chronicle",
+      "factions": [
+        "Loners",
+        "Monolith"
+      ],
+      "location": null,
+      "dead": 12,
+      "text": "Incident: Loners vs Monolith, 12 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794997822.0,
+      "kind": "chronicle",
+      "factions": [
+        "Military",
+        "Monolith"
+      ],
+      "location": null,
+      "dead": 4,
+      "text": "Incident: Military vs Monolith, 4 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794997752.0,
+      "kind": "chronicle",
+      "factions": [
+        "Duty",
+        "Monolith"
+      ],
+      "location": null,
+      "dead": 2,
+      "text": "Incident: Duty vs Monolith, 2 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794996740.0,
+      "kind": "chronicle",
+      "factions": [
+        "Loners",
+        "Monolith"
+      ],
+      "location": null,
+      "dead": 11,
+      "text": "Incident: Loners vs Monolith, 11 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794996641.0,
+      "kind": "chronicle",
+      "factions": [
+        "Loners",
+        "Mercenaries"
+      ],
+      "location": null,
+      "dead": 2,
+      "text": "Incident: Loners vs Mercenaries, 2 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794996170.0,
+      "kind": "chronicle",
+      "factions": [
+        "Duty",
+        "Monolith"
+      ],
+      "location": null,
+      "dead": 4,
+      "text": "Incident: Duty vs Monolith, 4 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794996106.0,
+      "kind": "chronicle",
+      "factions": [
+        "Loners",
+        "Military"
+      ],
+      "location": null,
+      "dead": 2,
+      "text": "Incident: Loners vs Military, 2 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794995957.0,
+      "kind": "chronicle",
+      "factions": [
+        "Bandits",
+        "Monolith"
+      ],
+      "location": null,
+      "dead": 2,
+      "text": "Incident: Bandits vs Monolith, 2 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794995745.0,
+      "kind": "chronicle",
+      "factions": [
+        "Loners",
+        "Mercenaries"
+      ],
+      "location": null,
+      "dead": 7,
+      "text": "Incident: Loners vs Mercenaries, 7 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794995691.0,
+      "kind": "chronicle",
+      "factions": [
+        "Freedom",
+        "Bandits"
+      ],
+      "location": null,
+      "dead": 12,
+      "text": "Incident: Freedom vs Bandits, 12 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794995691.0,
+      "kind": "chronicle",
+      "factions": [
+        "Bandits",
+        "Monolith"
+      ],
+      "location": null,
+      "dead": 8,
+      "text": "Incident: Bandits vs Monolith, 8 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794995477.0,
+      "kind": "chronicle",
+      "factions": [
+        "Duty",
+        "Monolith"
+      ],
+      "location": null,
+      "dead": 3,
+      "text": "Incident: Duty vs Monolith, 3 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794994874.0,
+      "kind": "chronicle",
+      "factions": [
+        "Duty",
+        "Spark"
+      ],
+      "location": null,
+      "dead": 0,
+      "text": "War: Duty vs Spark",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794994874.0,
+      "kind": "chronicle",
+      "factions": [
+        "Freedom",
+        "Bandits"
+      ],
+      "location": null,
+      "dead": 0,
+      "text": "War: Freedom vs Bandits",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794994874.0,
+      "kind": "chronicle",
+      "factions": [
+        "Duty",
+        "Noon"
+      ],
+      "location": null,
+      "dead": 0,
+      "text": "War: Duty vs Noon",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794994874.0,
+      "kind": "chronicle",
+      "factions": [
+        "Freedom",
+        "Ward"
+      ],
+      "location": null,
+      "dead": 0,
+      "text": "War: Freedom vs Ward",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794994874.0,
+      "kind": "chronicle",
+      "factions": [
+        "Duty",
+        "Corps"
+      ],
+      "location": null,
+      "dead": 0,
+      "text": "War: Duty vs Corps",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794994874.0,
+      "kind": "chronicle",
+      "factions": [
+        "Spark",
+        "Corps"
+      ],
+      "location": null,
+      "dead": 0,
+      "text": "War: Spark vs Corps",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794994874.0,
+      "kind": "chronicle",
+      "factions": [
+        "Ward",
+        "Corps"
+      ],
+      "location": null,
+      "dead": 0,
+      "text": "War: Ward vs Corps",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794994848.0,
+      "kind": "chronicle",
+      "factions": [
+        "Military",
+        "Monolith"
+      ],
+      "location": null,
+      "dead": 3,
+      "text": "Incident: Military vs Monolith, 3 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794994812.0,
+      "kind": "chronicle",
+      "factions": [
+        "Loners",
+        "Bandits"
+      ],
+      "location": null,
+      "dead": 3,
+      "text": "Incident: Loners vs Bandits, 3 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794994802.0,
+      "kind": "chronicle",
+      "factions": [
+        "Spark",
+        "Bandits"
+      ],
+      "location": null,
+      "dead": 3,
+      "text": "Incident: Spark vs Bandits, 3 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794994757.0,
+      "kind": "chronicle",
+      "factions": [
+        "Loners",
+        "Mercenaries"
+      ],
+      "location": null,
+      "dead": 10,
+      "text": "Incident: Loners vs Mercenaries, 10 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794994755.0,
+      "kind": "chronicle",
+      "factions": [
+        "Loners",
+        "Military"
+      ],
+      "location": null,
+      "dead": 3,
+      "text": "Incident: Loners vs Military, 3 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794994570.0,
+      "kind": "chronicle",
+      "factions": [
+        "Loners",
+        "Bandits"
+      ],
+      "location": null,
+      "dead": 13,
+      "text": "Incident: Loners vs Bandits, 13 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794994348.0,
+      "kind": "chronicle",
+      "factions": [
+        "Bandits",
+        "Monolith"
+      ],
+      "location": null,
+      "dead": 2,
+      "text": "Incident: Bandits vs Monolith, 2 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794994312.0,
+      "kind": "chronicle",
+      "factions": [
+        "Duty",
+        "Monolith"
+      ],
+      "location": null,
+      "dead": 5,
+      "text": "Incident: Duty vs Monolith, 5 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794994304.0,
+      "kind": "chronicle",
+      "factions": [
+        "Military",
+        "Monolith"
+      ],
+      "location": null,
+      "dead": 4,
+      "text": "Incident: Military vs Monolith, 4 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794994250.0,
+      "kind": "chronicle",
+      "factions": [
+        "Ward",
+        "Mercenaries"
+      ],
+      "location": null,
+      "dead": 0,
+      "text": "War: Ward vs Mercenaries",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794994127.0,
+      "kind": "chronicle",
+      "factions": [
+        "Spark",
+        "Bandits"
+      ],
+      "location": null,
+      "dead": 2,
+      "text": "Incident: Spark vs Bandits, 2 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794994095.0,
+      "kind": "chronicle",
+      "factions": [
+        "Military",
+        "Monolith"
+      ],
+      "location": null,
+      "dead": 12,
+      "text": "Incident: Military vs Monolith, 12 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794994001.0,
+      "kind": "chronicle",
+      "factions": [
+        "Loners",
+        "Bandits"
+      ],
+      "location": null,
+      "dead": 19,
+      "text": "Incident: Loners vs Bandits, 19 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794993938.0,
+      "kind": "chronicle",
+      "factions": [
+        "Loners",
+        "Military"
+      ],
+      "location": null,
+      "dead": 2,
+      "text": "Incident: Loners vs Military, 2 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794993888.0,
+      "kind": "chronicle",
+      "factions": [
+        "Duty",
+        "Mercenaries"
+      ],
+      "location": null,
+      "dead": 3,
+      "text": "Incident: Duty vs Mercenaries, 3 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794993842.0,
+      "kind": "chronicle",
+      "factions": [
+        "Loners",
+        "Monolith"
+      ],
+      "location": null,
+      "dead": 3,
+      "text": "Incident: Loners vs Monolith, 3 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794993792.0,
+      "kind": "chronicle",
+      "factions": [
+        "Spark",
+        "Bandits"
+      ],
+      "location": null,
+      "dead": 8,
+      "text": "Incident: Spark vs Bandits, 8 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794993752.0,
+      "kind": "chronicle",
+      "factions": [
+        "Military",
+        "Bandits"
+      ],
+      "location": null,
+      "dead": 2,
+      "text": "Incident: Military vs Bandits, 2 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794993686.0,
+      "kind": "chronicle",
+      "factions": [
+        "Bandits",
+        "Monolith"
+      ],
+      "location": null,
+      "dead": 3,
+      "text": "Incident: Bandits vs Monolith, 3 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794993284.0,
+      "kind": "chronicle",
+      "factions": [
+        "Spark",
+        "Bandits"
+      ],
+      "location": null,
+      "dead": 4,
+      "text": "Incident: Spark vs Bandits, 4 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794993227.0,
+      "kind": "chronicle",
+      "factions": [
+        "Duty",
+        "Monolith"
+      ],
+      "location": null,
+      "dead": 5,
+      "text": "Incident: Duty vs Monolith, 5 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794993173.0,
+      "kind": "chronicle",
+      "factions": [
+        "Loners",
+        "Bandits"
+      ],
+      "location": null,
+      "dead": 16,
+      "text": "Incident: Loners vs Bandits, 16 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794993074.0,
+      "kind": "chronicle",
+      "factions": [
+        "Spark",
+        "Bandits"
+      ],
+      "location": null,
+      "dead": 4,
+      "text": "Incident: Spark vs Bandits, 4 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794993052.0,
+      "kind": "chronicle",
+      "factions": [
+        "Loners",
+        "Mercenaries"
+      ],
+      "location": null,
+      "dead": 2,
+      "text": "Incident: Loners vs Mercenaries, 2 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794992801.0,
+      "kind": "chronicle",
+      "factions": [
+        "Loners",
+        "Mercenaries"
+      ],
+      "location": null,
+      "dead": 7,
+      "text": "Incident: Loners vs Mercenaries, 7 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794992781.0,
+      "kind": "chronicle",
+      "factions": [
+        "Duty",
+        "Monolith"
+      ],
+      "location": null,
+      "dead": 4,
+      "text": "Incident: Duty vs Monolith, 4 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794992764.0,
+      "kind": "chronicle",
+      "factions": [
+        "Loners",
+        "Monolith"
+      ],
+      "location": null,
+      "dead": 2,
+      "text": "Incident: Loners vs Monolith, 2 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794992660.0,
+      "kind": "chronicle",
+      "factions": [
+        "Duty",
+        "Bandits"
+      ],
+      "location": null,
+      "dead": 7,
+      "text": "Incident: Duty vs Bandits, 7 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794992610.0,
+      "kind": "chronicle",
+      "factions": [
+        "Loners",
+        "Monolith"
+      ],
+      "location": null,
+      "dead": 7,
+      "text": "Incident: Loners vs Monolith, 7 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794992475.0,
+      "kind": "chronicle",
+      "factions": [
+        "Spark",
+        "Bandits"
+      ],
+      "location": null,
+      "dead": 3,
+      "text": "Incident: Spark vs Bandits, 3 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794992281.0,
+      "kind": "chronicle",
+      "factions": [
+        "Bandits",
+        "Monolith"
+      ],
+      "location": null,
+      "dead": 5,
+      "text": "Incident: Bandits vs Monolith, 5 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794992134.0,
+      "kind": "chronicle",
+      "factions": [
+        "Ward",
+        "Spark"
+      ],
+      "location": null,
+      "dead": 4,
+      "text": "Incident: Ward vs Spark, 4 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794991997.0,
+      "kind": "chronicle",
+      "factions": [
+        "Military",
+        "Monolith"
+      ],
+      "location": null,
+      "dead": 2,
+      "text": "Incident: Military vs Monolith, 2 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794991973.0,
+      "kind": "chronicle",
+      "factions": [
+        "Loners",
+        "Mercenaries"
+      ],
+      "location": null,
+      "dead": 2,
+      "text": "Incident: Loners vs Mercenaries, 2 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794991931.0,
+      "kind": "chronicle",
+      "factions": [
+        "Loners",
+        "Monolith"
+      ],
+      "location": null,
+      "dead": 5,
+      "text": "Incident: Loners vs Monolith, 5 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794991864.0,
+      "kind": "chronicle",
+      "factions": [
+        "Spark",
+        "Bandits"
+      ],
+      "location": null,
+      "dead": 5,
+      "text": "Incident: Spark vs Bandits, 5 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794991642.0,
+      "kind": "chronicle",
+      "factions": [
+        "Spark",
+        "Bandits"
+      ],
+      "location": null,
+      "dead": 4,
+      "text": "Incident: Spark vs Bandits, 4 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794991630.0,
+      "kind": "chronicle",
+      "factions": [
+        "Loners",
+        "Mercenaries"
+      ],
+      "location": null,
+      "dead": 8,
+      "text": "Incident: Loners vs Mercenaries, 8 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794991584.0,
+      "kind": "chronicle",
+      "factions": [
+        "Ward",
+        "Noon"
+      ],
+      "location": null,
+      "dead": 0,
+      "text": "War: Ward vs Noon",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794990889.0,
+      "kind": "chronicle",
+      "factions": [
+        "Ward",
+        "Noon"
+      ],
+      "location": null,
+      "dead": 0,
+      "text": "War: Ward vs Noon",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794990715.0,
+      "kind": "chronicle",
+      "factions": [
+        "Bandits",
+        "Monolith"
+      ],
+      "location": null,
+      "dead": 2,
+      "text": "Incident: Bandits vs Monolith, 2 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794990715.0,
+      "kind": "chronicle",
+      "factions": [
+        "Loners",
+        "Bandits"
+      ],
+      "location": null,
+      "dead": 2,
+      "text": "Incident: Loners vs Bandits, 2 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794990715.0,
+      "kind": "chronicle",
+      "factions": [
+        "Loners",
+        "Monolith"
+      ],
+      "location": null,
+      "dead": 2,
+      "text": "Incident: Loners vs Monolith, 2 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794990466.0,
+      "kind": "chronicle",
+      "factions": [
+        "Duty",
+        "Mercenaries"
+      ],
+      "location": null,
+      "dead": 5,
+      "text": "Incident: Duty vs Mercenaries, 5 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794990427.0,
+      "kind": "chronicle",
+      "factions": [
+        "Loners",
+        "Monolith"
+      ],
+      "location": null,
+      "dead": 2,
+      "text": "Incident: Loners vs Monolith, 2 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794990413.0,
+      "kind": "chronicle",
+      "factions": [
+        "Spark",
+        "Mercenaries"
+      ],
+      "location": null,
+      "dead": 3,
+      "text": "Incident: Spark vs Mercenaries, 3 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794990408.0,
+      "kind": "chronicle",
+      "factions": [
+        "Freedom",
+        "Bandits"
+      ],
+      "location": null,
+      "dead": 2,
+      "text": "Incident: Freedom vs Bandits, 2 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794990384.0,
+      "kind": "chronicle",
+      "factions": [
+        "Duty",
+        "Monolith"
+      ],
+      "location": null,
+      "dead": 2,
+      "text": "Incident: Duty vs Monolith, 2 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794990315.0,
+      "kind": "chronicle",
+      "factions": [
+        "Spark",
+        "Bandits"
+      ],
+      "location": null,
+      "dead": 14,
+      "text": "Incident: Spark vs Bandits, 14 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794990245.0,
+      "kind": "chronicle",
+      "factions": [
+        "Ward",
+        "Spark"
+      ],
+      "location": null,
+      "dead": 4,
+      "text": "Incident: Ward vs Spark, 4 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794990197.0,
+      "kind": "chronicle",
+      "factions": [
+        "Bandits",
+        "Monolith"
+      ],
+      "location": null,
+      "dead": 13,
+      "text": "Incident: Bandits vs Monolith, 13 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794990187.0,
+      "kind": "chronicle",
+      "factions": [
+        "Loners",
+        "Mercenaries"
+      ],
+      "location": null,
+      "dead": 6,
+      "text": "Incident: Loners vs Mercenaries, 6 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794990157.0,
+      "kind": "chronicle",
+      "factions": [
+        "Duty",
+        "Mercenaries"
+      ],
+      "location": null,
+      "dead": 4,
+      "text": "Incident: Duty vs Mercenaries, 4 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794990110.0,
+      "kind": "chronicle",
+      "factions": [
+        "Loners",
+        "Bandits"
+      ],
+      "location": null,
+      "dead": 9,
+      "text": "Incident: Loners vs Bandits, 9 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794990032.0,
+      "kind": "chronicle",
+      "factions": [
+        "Loners",
+        "Monolith"
+      ],
+      "location": null,
+      "dead": 6,
+      "text": "Incident: Loners vs Monolith, 6 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794990000.0,
+      "kind": "chronicle",
+      "factions": [
+        "Military",
+        "Bandits"
+      ],
+      "location": null,
+      "dead": 3,
+      "text": "Incident: Military vs Bandits, 3 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794989861.0,
+      "kind": "chronicle",
+      "factions": [
+        "Military",
+        "Monolith"
+      ],
+      "location": null,
+      "dead": 4,
+      "text": "Incident: Military vs Monolith, 4 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794989687.0,
+      "kind": "chronicle",
+      "factions": [
+        "Duty",
+        "Monolith"
+      ],
+      "location": null,
+      "dead": 2,
+      "text": "Incident: Duty vs Monolith, 2 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794989488.0,
+      "kind": "chronicle",
+      "factions": [
+        "Duty",
+        "Freedom"
+      ],
+      "location": null,
+      "dead": 0,
+      "text": "War: Duty vs Freedom",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794989438.0,
+      "kind": "chronicle",
+      "factions": [
+        "Bandits",
+        "Monolith"
+      ],
+      "location": null,
+      "dead": 5,
+      "text": "Incident: Bandits vs Monolith, 5 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794989389.0,
+      "kind": "chronicle",
+      "factions": [
+        "Ward",
+        "Bandits"
+      ],
+      "location": null,
+      "dead": 3,
+      "text": "Incident: Ward vs Bandits, 3 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794988696.0,
+      "kind": "chronicle",
+      "factions": [
+        "Duty",
+        "Mercenaries"
+      ],
+      "location": null,
+      "dead": 5,
+      "text": "Incident: Duty vs Mercenaries, 5 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794988631.0,
+      "kind": "chronicle",
+      "factions": [
+        "Spark",
+        "Bandits"
+      ],
+      "location": null,
+      "dead": 3,
+      "text": "Incident: Spark vs Bandits, 3 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794988289.0,
+      "kind": "chronicle",
+      "factions": [
+        "Bandits",
+        "Monolith"
+      ],
+      "location": null,
+      "dead": 3,
+      "text": "Incident: Bandits vs Monolith, 3 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794988066.0,
+      "kind": "chronicle",
+      "factions": [
+        "Bandits",
+        "Monolith"
+      ],
+      "location": null,
+      "dead": 4,
+      "text": "Incident: Bandits vs Monolith, 4 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794987629.0,
+      "kind": "chronicle",
+      "factions": [
+        "Loners",
+        "Monolith"
+      ],
+      "location": null,
+      "dead": 2,
+      "text": "Incident: Loners vs Monolith, 2 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794987629.0,
+      "kind": "chronicle",
+      "factions": [
+        "Military",
+        "Monolith"
+      ],
+      "location": null,
+      "dead": 2,
+      "text": "Incident: Military vs Monolith, 2 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794987454.0,
+      "kind": "chronicle",
+      "factions": [
+        "Loners",
+        "Bandits"
+      ],
+      "location": null,
+      "dead": 40,
+      "text": "Incident: Loners vs Bandits, 40 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794987344.0,
+      "kind": "chronicle",
+      "factions": [
+        "Spark",
+        "Bandits"
+      ],
+      "location": null,
+      "dead": 6,
+      "text": "Incident: Spark vs Bandits, 6 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794987291.0,
+      "kind": "chronicle",
+      "factions": [
+        "Bandits",
+        "Monolith"
+      ],
+      "location": null,
+      "dead": 4,
+      "text": "Incident: Bandits vs Monolith, 4 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794987027.0,
+      "kind": "chronicle",
+      "factions": [
+        "Ward",
+        "Bandits"
+      ],
+      "location": null,
+      "dead": 3,
+      "text": "Incident: Ward vs Bandits, 3 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794986979.0,
+      "kind": "chronicle",
+      "factions": [
+        "Loners",
+        "Monolith"
+      ],
+      "location": null,
+      "dead": 16,
+      "text": "Incident: Loners vs Monolith, 16 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794986973.0,
+      "kind": "chronicle",
+      "factions": [
+        "Spark",
+        "Bandits"
+      ],
+      "location": null,
+      "dead": 6,
+      "text": "Incident: Spark vs Bandits, 6 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794986743.0,
+      "kind": "chronicle",
+      "factions": [
+        "Duty",
+        "Mercenaries"
+      ],
+      "location": null,
+      "dead": 2,
+      "text": "Incident: Duty vs Mercenaries, 2 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794986742.0,
+      "kind": "chronicle",
+      "factions": [
+        "Ward",
+        "Spark"
+      ],
+      "location": null,
+      "dead": 0,
+      "text": "War: Ward vs Spark",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794986717.0,
+      "kind": "chronicle",
+      "factions": [
+        "Ward",
+        "Mercenaries"
+      ],
+      "location": null,
+      "dead": 2,
+      "text": "Incident: Ward vs Mercenaries, 2 dead",
+      "source": "DLFR_Chronik"
+    },
+    {
+      "t": 1794986505.0,
+      "kind": "chronicle",
+      "factions": [
+        "Ward",
+        "Bandits"
+      ],
+      "location": null,
+      "dead": 13,
+      "text": "Incident: Ward vs Bandits, 13 dead",
+      "source": "DLFR_Chronik"
+    }
+  ]
+}

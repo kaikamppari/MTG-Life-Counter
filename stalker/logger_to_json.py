@@ -29,6 +29,7 @@ COMMANDS (PowerShell, run from the folder with this script):
 FILES (all next to this script unless changed in logger_config.json):
   logger_config.json   settings (created with defaults on first run)
   locations.json       place name -> map pixel [u, v] (for DLFR events that only carry a name)
+    dlfr_regions.json  region id -> map pixel (DLFR_Chronik; approximate until calibrated)
   calib_points.json    calibration points (world x,y <-> map pixel u,v)
   data.json            output for index.html
   zoneheat_state\\      the logger's own history (events.jsonl, reader_state.json) - don't publish
@@ -654,7 +655,9 @@ class DLFRReader:
             if fmt in ("binary", "unreadable", "empty", "xml"):
                 continue
             try:
-                if fmt in STRUCTURED:
+                if p.name.lower() == "dlfr_chronik.txt":
+                    ev = self._chronik(p)
+                elif fmt in STRUCTURED:
                     ev, fr = self._structured(p, fmt)
                     fronts += fr
                 else:
@@ -826,6 +829,193 @@ class DLFRReader:
         return ev
 
 
+    def _chronik(self, p: Path):
+        """Parse DLFR_Chronik.txt in full (not from EOF).
+
+        Line format: seq|tick|EVENT|facA|facB|val1|val2|saveId|regionOr-1
+        facA/facB are 0-based indexes into DLFR_Ids.txt. Region -1 is unplaced.
+        Ticks are treated as seconds; the file mtime anchors the latest tick of
+        the newest playthrough (a big downward tick jump starts a new clock).
+        """
+        events = parse_dlfr_chronik(
+            p,
+            ids_path=_sibling(p, "DLFR_Ids.txt"),
+            regions_path=_regions_path(self.cfg),
+            anchor=p.stat().st_mtime,
+        )
+        return events
+
+
+# =============================================================================
+# DLFR_Chronik reader (whole-file, region-aware)
+# =============================================================================
+
+CHRONIK_EN = {
+    "ZWISCHENFALL": "Incident", "KRIEG": "War", "WAFFENSTILLSTAND": "Ceasefire",
+    "WAFFENRUHE_ENDE": "Truce ended", "BUENDNIS": "Alliance",
+    "BUENDNIS_ABLAUF": "Alliance expired", "BUENDNIS_ENDE": "Alliance ended",
+    "MISSTRAUEN": "Distrust", "ENTSPANNUNG": "Easing",
+}
+CHRONIK_CONFLICTS = {"ZWISCHENFALL", "KRIEG"}
+CHRONIK_FACTION_EN = {
+    "Varta": "Ward", "Neutrals": "Loners", "Corpus": "Corps", "Militaries": "Military",
+}
+
+
+def _sibling(path: Path, name: str) -> Path | None:
+    q = path.with_name(name)
+    return q if q.is_file() else None
+
+
+def _regions_path(cfg) -> Path | None:
+    here = Path(cfg.get("_here") or Path(__file__).resolve().parent)
+    for q in (here / "dlfr_regions.json", Path(cfg.get("_state", here)) / "dlfr_regions.json"):
+        if q.is_file():
+            return q
+    return None
+
+
+def load_dlfr_ids(path: Path | None) -> list:
+    """Faction names in Chronik index order, already translated to English."""
+    if not path or not path.is_file():
+        return []
+    names = []
+    for line in read_text(path).splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        parts = line.rsplit(None, 1)
+        raw = parts[0] if parts else line
+        names.append(CHRONIK_FACTION_EN.get(raw, raw))
+    return names
+
+
+def load_dlfr_regions(path: Path | None) -> dict:
+    if not path or not path.is_file():
+        return {}
+    try:
+        return json.loads(path.read_text(encoding="utf-8")).get("regions") or {}
+    except Exception:
+        return {}
+
+
+def _chronik_clocks(rows: list) -> list:
+    """Split rows into playthroughs when the tick counter resets downward."""
+    if not rows:
+        return []
+    clocks, cur = [], [rows[0]]
+    peak = rows[0]["tick"]
+    for r in rows[1:]:
+        if r["tick"] < peak - 50_000:  # new game / new clock
+            clocks.append(cur)
+            cur, peak = [r], r["tick"]
+        else:
+            cur.append(r)
+            if r["tick"] > peak:
+                peak = r["tick"]
+    clocks.append(cur)
+    return clocks
+
+
+def chronik_event_times(rows: list, anchor: float) -> dict:
+    """Map (save, seq) -> unix seconds. Latest clock ends at *anchor*; earlier
+    clocks end 1 hour before the next clock starts. 1 tick = 1 second."""
+    times = {}
+    clocks = _chronik_clocks(rows)
+    end = float(anchor)
+    for clock in reversed(clocks):
+        lo = min(r["tick"] for r in clock)
+        hi = max(r["tick"] for r in clock)
+        for r in clock:
+            times[(r["save"], r["seq"])] = end - (hi - r["tick"])
+        end = end - (hi - lo) - 3600
+    return times
+
+
+def parse_dlfr_chronik_line(line: str) -> dict | None:
+    line = line.strip()
+    if not line or line.startswith("#"):
+        return None
+    p = line.split("|")
+    if len(p) < 9:
+        return None
+    try:
+        return {
+            "seq": int(p[0]), "tick": int(p[1]), "ev": p[2],
+            "a": int(p[3]), "b": int(p[4]), "v1": int(p[5]), "v2": int(p[6]),
+            "save": p[7], "region": int(p[8]), "raw": line,
+        }
+    except ValueError:
+        return None
+
+
+def parse_dlfr_chronik(path: Path, ids_path=None, regions_path=None, anchor=None,
+                       types=None) -> list:
+    """Read the whole Chronik file and return event dicts for logger_to_json.
+
+    Only KRIEG and ZWISCHENFALL are emitted by default (they feed the heat
+    layer). Region -1 or an unknown id leaves the event without x/y so it
+    goes to unplaced. Positions come from dlfr_regions.json (approximate).
+    """
+    wanted = types or CHRONIK_CONFLICTS
+    names = load_dlfr_ids(ids_path)
+    regions = load_dlfr_regions(regions_path)
+    raw = read_text(path)
+    rows = []
+    for line in raw.splitlines():
+        r = parse_dlfr_chronik_line(line)
+        if r:
+            rows.append(r)
+    if not rows:
+        return []
+    if anchor is None:
+        try:
+            anchor = path.stat().st_mtime
+        except OSError:
+            anchor = time.time()
+    times = chronik_event_times(rows, anchor)
+
+    def fac(i):
+        return names[i] if 0 <= i < len(names) else f"Faction {i}"
+
+    out = []
+    for r in rows:
+        if r["ev"] not in wanted:
+            continue
+        fa, fb = fac(r["a"]), fac(r["b"])
+        ev_en = CHRONIK_EN.get(r["ev"], r["ev"])
+        info = regions.get(str(r["region"])) if r["region"] != -1 else None
+        loc = (info.get("name") if info else (f"Region {r['region']}" if r["region"] != -1 else None))
+        if r["ev"] == "ZWISCHENFALL":
+            dead = max(0, r["v2"])
+            weight = float(dead) if dead else 1.0
+            text = f"{ev_en}: {fa} vs {fb}" + (f", {dead} dead" if dead else "") + (f", {loc}" if loc else "")
+        else:
+            dead, weight = 0, 1.0
+            text = f"{ev_en}: {fa} vs {fb}" + (f", {loc}" if loc else "")
+        ev = {
+            "id": f"chronik:{r['save']}:{r['seq']}",
+            "t": round(times[(r["save"], r["seq"])], 1),
+            "source": "DLFR_Chronik",
+            "kind": "chronicle",
+            "factions": [fa, fb],
+            "location": loc,
+            "dead": int(dead),
+            "weight": round(weight, 2),
+            "text": text[:240],
+            "region": r["region"],
+        }
+        if info and info.get("u") is not None and info.get("v") is not None:
+            # keep the raw region centre here; build_data jitters by place name
+            # when only a location is set. Also store a hint pixel so a later
+            # path can use it if locations.json has no entry yet.
+            ev["u_hint"] = info["u"]
+            ev["v_hint"] = info["v"]
+        out.append(ev)
+    return out
+
+
+
 # =============================================================================
 # ZoneSensor + clustering
 # =============================================================================
@@ -954,6 +1144,9 @@ def build_data(cfg, snaps) -> dict:
             px = loc_px(e["location"])
             dx, dy = jitter(e.get("id"), jit)
             uv = (px[0] + dx, px[1] + dy)
+        elif e.get("u_hint") is not None and e.get("v_hint") is not None:
+            dx, dy = jitter(e.get("id"), jit)
+            uv = (float(e["u_hint"]) + dx, float(e["v_hint"]) + dy)
         row = {"t": round(t, 1), "kind": e.get("kind", "fight"), "factions": facs, "location": e.get("location"),
                "dead": int(e.get("dead") or 0), "text": (e.get("text") or "")[:160], "source": e.get("source")}
         if uv:
