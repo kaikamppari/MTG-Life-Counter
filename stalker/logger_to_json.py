@@ -3359,6 +3359,12 @@ def make_live_server(cfg, port: int, serve_dir: Path, bind="0.0.0.0"):
 
     tracker = LiveTracker(cfg, serve_dir=serve_dir)
     root = Path(serve_dir).resolve()
+    try:                                  # route runner click-to-go API (route_api.py next to this script)
+        import route_api
+        routes = route_api.RouteAPI.from_logger(cfg, expand, map_size(cfg)[0])
+    except Exception as e:                # missing module or bad calib -> logger runs as before
+        routes = None
+        print(f"[live] route API off: {e}")
 
     class Handler(SimpleHTTPRequestHandler):
         server_version = "ZoneHeat/1"
@@ -3402,6 +3408,11 @@ def make_live_server(cfg, port: int, serve_dir: Path, bind="0.0.0.0"):
                 return self._send(200, tracker.snapshot_bytes(), "application/json; charset=utf-8")
             if p == "/ping":
                 return self._send(200, b"ok", "text/plain")
+            if p.startswith("/api/route/"):
+                if not routes:
+                    return self._send(404, b"not found", "text/plain")
+                code, body = routes.handle("GET", p, self.headers)
+                return self._send(code, body, "application/json; charset=utf-8")
             if not self._allowed():
                 return self._send(404, b"not found", "text/plain")
             return super().do_GET()
@@ -3413,6 +3424,19 @@ def make_live_server(cfg, port: int, serve_dir: Path, bind="0.0.0.0"):
             if not self._allowed():
                 return self._send(404, b"", "text/plain")
             return super().do_HEAD()
+
+        def do_POST(self):
+            p = urlsplit(self.path).path
+            if not (routes and p.startswith("/api/route/")):
+                return self._send(404, b"not found", "text/plain")
+            try:
+                n = int(self.headers.get("Content-Length") or 0)
+            except ValueError:
+                n = -1
+            if n < 0 or n > 4096:
+                return self._send(413, b'{"ok":false,"error":"body too large"}', "application/json")
+            code, body = routes.handle("POST", p, self.headers, self.rfile.read(n) if n else b"")
+            return self._send(code, body, "application/json; charset=utf-8")
 
         def list_directory(self, path):
             self._send(404, b"not found", "text/plain")

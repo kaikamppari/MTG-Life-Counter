@@ -494,6 +494,57 @@ body.live-mode #legend .lg-live { display: block; }
   /* mid-size windows: a slimmer card column so the region still gets most of the width */
   #region-card { zoom: min(var(--ui, 1), 1.1); width: 300px; }
 }
+
+/* ---- Route runner: Go here (never arms the runner) ---- */
+#btn-route { font-size: 20px; line-height: 1; }
+#btn-route[hidden] { display: none; }
+#route-confirm, #route-status {
+  position: fixed; z-index: 820; box-sizing: border-box;
+  background: var(--panel); color: var(--text);
+  border: 1px solid var(--line); border-top: 2px solid var(--accent);
+  border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,.45);
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  padding: 12px 14px 14px;
+  /* leave the FAB column free; sit just above the (possibly zoomed) sheet */
+  left: 10px; right: 66px;
+  bottom: calc((126px + var(--safe-b)) * var(--z, 1) + 8px);
+  width: auto; max-width: 420px; margin: 0;
+}
+#route-confirm[hidden], #route-status[hidden] { display: none; }
+@media (min-width: 700px) {
+  /* Dock to the right of the (up to 540px) live panel and left of the FABs.
+     JS (positionRouteCard) tightens this against the real panel/region-card boxes. */
+  #route-confirm, #route-status {
+    left: auto;
+    right: calc(16px + 56px * var(--z, 1));
+    width: 300px;
+    max-width: calc(100vw - 10px - 540px - 12px - (16px + 56px * var(--z, 1)));
+    margin: 0;
+  }
+}
+#route-confirm h2, #route-status h2 {
+  font: 700 16px/1.25 Rajdhani, sans-serif; margin: 0 0 6px; letter-spacing: .04em;
+}
+#route-confirm .rc-dist, #route-status .rs-line {
+  font: 600 13px/1.35 var(--mono); color: var(--muted); margin: 0 0 10px; min-height: 1em;
+}
+#route-confirm .rc-actions, #route-status .rs-actions { display: flex; gap: 8px; }
+#route-confirm button, #route-status button {
+  flex: 1; min-height: 48px; border-radius: 8px; border: 1px solid var(--line);
+  font: 700 16px/1 Rajdhani, sans-serif; letter-spacing: .06em; text-transform: uppercase;
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+#route-confirm #rc-go { background: var(--accent); color: #1a1406; border-color: var(--accent); }
+#route-confirm #rc-cancel, #route-status #rs-dismiss { background: #2a2c24; color: var(--text); }
+#route-status #rs-stop {
+  background: #c8352a; color: #fff; border-color: #ff7a5c;
+  flex: 1.6; min-height: 52px; font-size: 18px;
+}
+#route-status .rs-state {
+  font: 700 12px/1.2 var(--mono); letter-spacing: .12em; text-transform: uppercase;
+  color: var(--accent); margin: 0 0 4px;
+}
+#route-line-legend { pointer-events: none; }
 </style>
 </head>
 <body>
@@ -593,6 +644,23 @@ body.live-mode #legend .lg-live { display: block; }
   <div class="hint" style="margin:0">Or give a DLFR place name this position:</div>
   <div class="cmd"><code id="pp-cmd-place"></code><button class="btn" data-copy="pp-cmd-place">Copy</button></div>
   <div id="pp-msg"></div>
+</div>
+
+<div id="route-confirm" hidden role="dialog" aria-labelledby="rc-title">
+  <h2 id="rc-title">Go here?</h2>
+  <p class="rc-dist" id="rc-dist"></p>
+  <div class="rc-actions">
+    <button type="button" id="rc-cancel">Cancel</button>
+    <button type="button" id="rc-go">Go here</button>
+  </div>
+</div>
+<div id="route-status" hidden role="status" aria-live="polite">
+  <div class="rs-state" id="rs-state"></div>
+  <h2 id="rs-title">Route</h2>
+  <p class="rs-line" id="rs-line"></p>
+  <div class="rs-actions">
+    <button type="button" id="rs-stop">Stop</button>
+  </div>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
@@ -938,7 +1006,7 @@ map.getPane("poiPane").style.pointerEvents = "none";
 const layer = { base: null, groups: L.layerGroup().addTo(map), actors: L.layerGroup().addTo(map),
   fights: L.layerGroup().addTo(map), theaters: L.layerGroup().addTo(map), outlines: L.layerGroup().addTo(map),
   mask: L.layerGroup().addTo(map), pois: L.layerGroup().addTo(map),
-  fronts: L.layerGroup().addTo(map), player: L.layerGroup().addTo(map), pick: L.layerGroup().addTo(map) };
+  fronts: L.layerGroup().addTo(map), player: L.layerGroup().addTo(map), pick: L.layerGroup().addTo(map), route: L.layerGroup().addTo(map) };
 
 // data pixel (u right, v down) -> Leaflet latlng in image pixels
 const ll = (u, v) => L.latLng(-v * S.scale, u * S.scale);
@@ -2127,6 +2195,7 @@ document.getElementById("lg-toggle").addEventListener("click", (ev) => {
   ev.currentTarget.setAttribute("aria-expanded", String(open));
 });
 map.on("click", (e) => {
+  if (typeof routeConsumeClick === "function" && routeConsumeClick(e)) return;
   if (!S.picking) { sheet.classList.add("collapsed"); return; }
   hideBanner();
   const { u, v } = toData(e.latlng);
@@ -2901,10 +2970,65 @@ function renderLive() {
   }
   renderLivePanel(items);
 }
+
+function routeCardEls() {
+  return ["route-confirm", "route-status"]
+    .map(id => document.getElementById(id))
+    .filter(el => el && !el.hidden);
+}
+function positionRouteCard() {
+  const els = routeCardEls();
+  if (!els.length) return;
+  const W = window.innerWidth, H = window.innerHeight, wide = W >= 700;
+  const sheet = visRect("#sheet");
+  const fabs = visRect("#fabs");
+  const lp = visRect("#live-panel");
+  const rc = visRect("#region-card");
+  let bottom = 16;
+  if (sheet) bottom = Math.max(bottom, H - sheet.top + 8);
+  let right = 10;
+  // A vertical FAB column is a right wall; a bottom row is not.
+  if (fabs && !(fabs.width > 120 && fabs.height < 90)) right = Math.max(right, W - fabs.left + 8);
+  else if (fabs) right = Math.max(right, 10);
+  let left = 10;
+  if (wide) {
+    if (lp && lp.width) left = Math.max(left, lp.right + 10);
+    if (rc && rc.width) left = Math.max(left, rc.right + 10);
+  }
+  const avail = W - left - right;
+  for (const el of els) {
+    el.style.top = "auto";
+    el.style.bottom = Math.round(bottom) + "px";
+    if (wide && avail >= 240) {
+      el.style.left = "auto";
+      el.style.right = Math.round(right) + "px";
+      el.style.width = Math.round(Math.min(300, avail)) + "px";
+      el.style.maxWidth = Math.round(avail) + "px";
+      el.style.margin = "0";
+    } else {
+      // Phone (full-width panel) or a tight mid-size desk: span the free strip
+      // above the sheet / left of the FABs. positionLivePanel then shortens the
+      // live panel so the two don't overlap.
+      const phoneRight = (fabs && !(fabs.width > 120 && fabs.height < 90))
+        ? Math.max(10, W - fabs.left + 8) : (wide ? right : 66);
+      el.style.left = "10px";
+      el.style.right = Math.round(phoneRight) + "px";
+      el.style.width = "auto";
+      el.style.maxWidth = "none";
+      el.style.margin = "0";
+    }
+  }
+}
+function routeLayout() {
+  if (typeof positionRouteCard === "function") positionRouteCard();
+  if (typeof positionLivePanel === "function") positionLivePanel();
+}
+
 function positionLivePanel() {
   const fl = document.getElementById("filters"), lp = document.getElementById("live-panel");
   const leg = document.getElementById("legend");
   if (!fl || !lp) return;
+  if (typeof positionRouteCard === "function") positionRouteCard();
   const z = parseFloat(getComputedStyle(lp).zoom) || 1;
   const wide = window.innerWidth >= 700;
   const expanded = !lp.hidden && !lp.classList.contains("min");
@@ -2979,13 +3103,13 @@ function positionLivePanel() {
       if (left < 8) left = 8;
       leg.style.left = Math.round(left / lz) + "px";
     }
-    for (const sel of ["#fabs", "#sheet"]) {
+    for (const sel of ["#fabs", "#sheet", "#route-confirm", "#route-status"]) {
       const r = visRect(sel);
       if (r && r.left < lr.right + 4 && r.right > lr.left && r.top > top + 80) lim = Math.min(lim, r.top);
     }
   } else {
     if (leg) leg.style.left = "";
-    for (const sel of ["#legend", "#fabs", "#sheet", "#region-card"]) {
+    for (const sel of ["#legend", "#fabs", "#sheet", "#region-card", "#route-confirm", "#route-status"]) {
       const r = visRect(sel);
       if (r && r.left < lr.right && r.right > lr.left && r.top > top + 80) lim = Math.min(lim, r.top);
     }
@@ -3019,6 +3143,8 @@ function positionLivePanel() {
     const al = document.getElementById("lv-alert");
     if (al && !al.hidden) lvAlertPlace();
   }
+  // Panel width/height may have changed; dock the Go-here card again so it stays off the 540px column.
+  if (typeof positionRouteCard === "function") positionRouteCard();
 }
 function lpSameShape(a, b) {
   if (a.childNodes.length !== b.childNodes.length) return false;
@@ -3232,6 +3358,7 @@ map.on("zoomend", () => { if (LV.on) renderLive(); });
 let _rzT = null;
 let _rzBand = window.innerWidth >= 900 ? 2 : window.innerWidth >= 700 ? 1 : 0;
 window.addEventListener("resize", () => {
+  if (typeof positionRouteCard === "function") positionRouteCard();
   if (LV.on) positionLivePanel();
   clearTimeout(_rzT);
   _rzT = setTimeout(() => {
@@ -3265,6 +3392,283 @@ window.addEventListener("resize", () => {
 setInterval(() => { if (S.auto && !S.manualSample && document.visibilityState === "visible") loadData(false); else updateStatus(); }, REFRESH_MS);
 document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && S.auto && !S.manualSample) loadData(false); });
 loadData(false);
+
+/* =====================================================================
+   Route runner: Go here. The page never sends armed:true or any arm call.
+   ===================================================================== */
+const ROUTE_STATUS = "/api/route/status";
+const ROUTE_GOAL = "/api/route/goal";
+const ROUTE_STOP = "/api/route/stop";
+const ROUTE_WALK_M_S = 2.0;
+const RT = {
+  ready: false, offline: true, goMode: false,
+  confirm: null, pollT: null, pollMs: 1000,
+  swallowClick: false
+};
+
+function routePlayer() {
+  return (LV && LV.on && LV.data && LV.data.player) || (S.data && S.data.player) || null;
+}
+function routePpm() {
+  const m = (S.data && S.data.map) || {};
+  return Number(m.pixels_per_meter) || 0.175;
+}
+function routeDistM(u, v) {
+  const p = routePlayer();
+  if (!p || p.u == null || p.v == null) return null;
+  return Math.hypot(u - p.u, v - p.v) / routePpm();
+}
+function fmtRouteDist(m) {
+  if (m == null || !isFinite(m)) return "";
+  if (m < 1000) return `~${Math.round(m)} m`;
+  return `~${(m / 1000).toFixed(1)} km`;
+}
+function fmtRouteEta(s) {
+  if (s == null || !isFinite(s)) return "";
+  s = Math.max(0, Math.round(s));
+  if (s < 60) return `${s}s`;
+  const m = Math.floor(s / 60), r = s % 60;
+  if (m < 60) return r ? `${m}m ${r}s` : `${m} min`;
+  return `${Math.floor(m / 60)}h ${m % 60}m`;
+}
+
+/* Strip any armed field before a request is sent. Used by tests too. */
+function routeSanitizeBody(obj) {
+  if (!obj || typeof obj !== "object") return obj;
+  const out = Object.assign({}, obj);
+  delete out.armed;
+  return out;
+}
+
+async function routeFetch(path, opts) {
+  const o = Object.assign({ cache: "no-store" }, opts || {});
+  const method = (o.method || "GET").toUpperCase();
+  if (method !== "GET" && method !== "HEAD") {
+    o.headers = Object.assign({ "Content-Type": "application/json" }, o.headers || {});
+    if (o.body && typeof o.body !== "string") o.body = JSON.stringify(routeSanitizeBody(o.body));
+    else if (typeof o.body === "string") {
+      try { o.body = JSON.stringify(routeSanitizeBody(JSON.parse(o.body))); } catch (e) {}
+    }
+  }
+  return fetch(path, o);
+}
+
+async function routeProbe() {
+  try {
+    const r = await routeFetch(ROUTE_STATUS, { method: "GET" });
+    if (!r.ok) throw new Error("offline");
+    RT.ready = true; RT.offline = false;
+    routeEnsureFab();
+    return true;
+  } catch (e) {
+    RT.ready = false; RT.offline = true;
+    RT.goMode = false;
+    const fab = document.getElementById("btn-route");
+    if (fab) fab.remove();
+    return false;
+  }
+}
+
+function routeEnsureFab() {
+  if (document.getElementById("btn-route") || !RT.ready) return;
+  const fabs = document.getElementById("fabs");
+  if (!fabs) return;
+  const b = document.createElement("button");
+  b.id = "btn-route"; b.className = "fab"; b.type = "button";
+  b.setAttribute("aria-label", "Go here"); b.title = "Go here";
+  b.textContent = "➤";
+  b.addEventListener("click", (ev) => {
+    ev.preventDefault(); ev.stopPropagation();
+    if (RT.offline || !RT.ready) { showBanner("Route runner offline"); return; }
+    RT.goMode = !RT.goMode;
+    b.classList.toggle("on", RT.goMode);
+    if (RT.goMode) showBanner("Tap a spot on the map to go there.");
+    else if (typeof hideBanner === "function") hideBanner();
+  });
+  fabs.appendChild(b);
+}
+
+async function routeOpenConfirm(latlng) {
+  if (S.picking) return;
+  if (!RT.ready) {
+    const ok = await routeProbe();
+    if (!ok) { showBanner("Route runner offline"); return; }
+  }
+  const { u, v } = toData(latlng);
+  const dist = routeDistM(u, v);
+  RT.confirm = { u, v, latlng, distM: dist };
+  document.getElementById("route-status").hidden = true;
+  const title = document.getElementById("rc-title");
+  const distEl = document.getElementById("rc-dist");
+  title.textContent = dist != null ? `Go here? ${fmtRouteDist(dist)}` : "Go here?";
+  distEl.textContent = dist != null ? "" : "Distance unknown (no player position yet).";
+  document.getElementById("route-confirm").hidden = false;
+  if (typeof routeLayout === "function") routeLayout();
+  layer.route.clearLayers();
+  layer.route.addLayer(L.marker(latlng, { icon: L.divIcon({ className: "pick-ico", html: '<div class="x"></div>', iconSize: [0, 0] }), interactive: false, keyboard: false }));
+}
+
+function routeCloseConfirm(clearMark) {
+  document.getElementById("route-confirm").hidden = true;
+  RT.confirm = null;
+  if (clearMark) layer.route.clearLayers();
+  if (typeof routeLayout === "function") routeLayout();
+}
+
+function routeDraw(plan, goal) {
+  layer.route.clearLayers();
+  const pix = (plan && (plan.pixels || plan.waypoints_px)) || [];
+  const pts = [];
+  for (const p of pix) if (p && p.length >= 2) pts.push(ll(p[0], p[1]));
+  if (pts.length >= 2) {
+    layer.route.addLayer(L.polyline(pts, { color: "#e8bf7a", weight: 4, opacity: 0.95, dashArray: "10 6", interactive: false, className: "route-line" }));
+  }
+  if (goal && goal.u != null && goal.v != null) {
+    layer.route.addLayer(L.marker(ll(goal.u, goal.v), { icon: L.divIcon({ className: "pick-ico", html: '<div class="x"></div>', iconSize: [0, 0] }), interactive: false, keyboard: false }));
+  }
+}
+
+function routeSetStatusCard(st) {
+  const stateEl = document.getElementById("rs-state");
+  const title = document.getElementById("rs-title");
+  const line = document.getElementById("rs-line");
+  const runner = st.runner || {};
+  const plan = st.plan || {};
+  let state = st.state || "idle";
+  if (st.stop_requested && String(state).toLowerCase() !== "walking") state = "stopped";
+  const nice = {
+    idle: "Idle", goal_set: "Goal set — arm in-game to walk", armed: "Armed",
+    walking: "Walking", stopped: "Stopped", planned: "Planned"
+  };
+  const key = String(state).toLowerCase();
+  stateEl.textContent = nice[key] || state;
+  const gname = st.goal && st.goal.name;
+  title.textContent = gname ? gname : "Route";
+  const dist = runner.dist_to_goal_m != null ? runner.dist_to_goal_m : (plan.length_m != null ? plan.length_m : null);
+  const eta = plan.eta_s != null ? plan.eta_s : (dist != null ? dist / ROUTE_WALK_M_S : null);
+  const bits = [];
+  if (dist != null) bits.push((fmtRouteDist(dist).replace(/^~/, "")) + (runner.dist_to_goal_m != null ? " remaining" : ""));
+  if (eta != null && key !== "stopped" && key !== "idle") bits.push("ETA " + fmtRouteEta(eta));
+  if (plan.ok === false && plan.reason) bits.push(String(plan.reason));
+  line.textContent = bits.join(" · ");
+  document.getElementById("route-status").hidden = false;
+  if (typeof routeLayout === "function") routeLayout();
+}
+
+function routeStopPolling() {
+  if (RT.pollT) { clearTimeout(RT.pollT); RT.pollT = null; }
+}
+function routeSchedulePoll(ms) {
+  routeStopPolling();
+  RT.pollMs = ms;
+  RT.pollT = setTimeout(() => { routePoll(); }, ms);
+}
+
+async function routePoll() {
+  RT.pollT = null;
+  try {
+    const r = await routeFetch(ROUTE_STATUS, { method: "GET" });
+    if (!r.ok) throw new Error("offline");
+    const st = await r.json();
+    if (st.plan && (st.plan.pixels || []).length) routeDraw(st.plan, st.goal);
+    routeSetStatusCard(st);
+    const raw = String(st.state || "idle").toLowerCase();
+    const state = (st.stop_requested && raw !== "walking") ? "stopped" : raw;
+    if (state === "idle" || state === "stopped") { routeStopPolling(); return; }
+    const next = state === "walking" ? 1000 : Math.min((RT.pollMs || 1000) * 1.5, 5000);
+    routeSchedulePoll(next);
+  } catch (e) {
+    routeSchedulePoll(Math.min((RT.pollMs || 1000) * 2, 8000));
+  }
+}
+
+async function routeConfirmGo() {
+  const c = RT.confirm;
+  if (!c) return;
+  const body = { u: +c.u, v: +c.v };
+  const p = routePlayer();
+  if (p && p.u != null && p.v != null) { body.start_u = +p.u; body.start_v = +p.v; }
+  const go = document.getElementById("rc-go");
+  go.disabled = true;
+  try {
+    const r = await routeFetch(ROUTE_GOAL, { method: "POST", body });
+    let j = null;
+    try { j = await r.json(); } catch (e) { j = null; }
+    if (!r.ok) {
+      showBanner((j && j.error) ? String(j.error) : "Could not set the goal");
+      return;
+    }
+    routeCloseConfirm(false);
+    routeDraw(j && j.plan, j && j.goal);
+    routeSetStatusCard({ state: "goal_set", goal: j && j.goal, plan: j && j.plan, stop_requested: false, runner: null });
+    routeSchedulePoll(1000);
+  } catch (e) {
+    showBanner("Route runner offline");
+  } finally { go.disabled = false; }
+}
+
+async function routeStop() {
+  try {
+    const r = await routeFetch(ROUTE_STOP, { method: "POST", body: { reason: "stop requested from the map" } });
+    if (!r.ok) throw new Error("stop failed");
+    await routePoll();
+  } catch (e) {
+    showBanner("Route runner offline");
+  }
+}
+
+function routeConsumeClick(e) {
+  if (RT.swallowClick) { RT.swallowClick = false; if (e && e.originalEvent) L.DomEvent.stop(e); return true; }
+  if (RT.goMode && !S.picking) {
+    if (e && e.originalEvent) L.DomEvent.stop(e);
+    routeOpenConfirm(e.latlng);
+    return true;
+  }
+  return false;
+}
+
+(function routeGestures() {
+  let timer = null, start = null;
+  const HOLD = 480, MOVE = 14;
+  function clearHold() { if (timer) { clearTimeout(timer); timer = null; } start = null; }
+  function fromUi(ev) {
+    const t = ev.originalEvent && ev.originalEvent.target;
+    if (!t || !t.closest) return false;
+    return !!t.closest("#route-confirm, #route-status, #live-panel, #fabs, #sheet, #legend, #banner, #lv-alert, #pickpanel, #topbar, #filters, #btn-back, #region-card");
+  }
+  function onDown(ev) {
+    if (S.picking || fromUi(ev)) return;
+    start = ev.containerPoint;
+    timer = setTimeout(() => {
+      timer = null;
+      RT.swallowClick = true;
+      routeOpenConfirm(ev.latlng);
+    }, HOLD);
+  }
+  function onMove(ev) {
+    if (!start) return;
+    if (ev.containerPoint && ev.containerPoint.distanceTo(start) > MOVE) clearHold();
+  }
+  map.on("mousedown", onDown);
+  map.on("touchstart", onDown);
+  map.on("mousemove", onMove);
+  map.on("touchmove", onMove);
+  map.on("mouseup", clearHold);
+  map.on("touchend", clearHold);
+  map.on("dragstart", clearHold);
+  map.on("contextmenu", (ev) => {
+    if (S.picking || fromUi(ev)) return;
+    if (ev.originalEvent) ev.originalEvent.preventDefault();
+    RT.swallowClick = true;
+    routeOpenConfirm(ev.latlng);
+  });
+})();
+
+(function routeBindUi() {
+  document.getElementById("rc-cancel").addEventListener("click", () => routeCloseConfirm(true));
+  document.getElementById("rc-go").addEventListener("click", () => routeConfirmGo());
+  document.getElementById("rs-stop").addEventListener("click", () => routeStop());
+})();
 </script>
 </body>
 </html>
