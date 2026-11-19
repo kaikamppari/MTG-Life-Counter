@@ -12,7 +12,8 @@ Reads what the mods write and turns it into data.json for index.html:
   * ZoneSensor (the UE4SS Lua mod): %LOCALAPPDATA%\\Stalker2\\Saved\\ZoneSensor_snap.jsonl
     -> NPC groups around you (clustered), your position/trail, and deaths it saw.
   * Zone Wanderers events: %LOCALAPPDATA%\\Stalker2\\Saved\\ZoneWanderers_Events.txt
-     -> battle and losses lines (faction + map metres) become fight events.
+     -> battle/losses coordinates. ZoneWanderersAsi.log clash and loss lines supply
+     the time, sides, fighters fielded, and losses. Close clashes are merged into one battle.
 
 Writes data.json every 60 s (default). Never writes into the game or mod folders.
 
@@ -50,7 +51,7 @@ import subprocess
 import sys
 import time
 from collections import Counter, defaultdict
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -69,11 +70,14 @@ DEFAULTS = {
     ],
     "zonesensor_file": "%LOCALAPPDATA%\\Stalker2\\Saved\\ZoneSensor_snap.jsonl",
     "wanderers_events_file": "%LOCALAPPDATA%\\Stalker2\\Saved\\ZoneWanderers_Events.txt",
+    "wanderers_log_file": "%LOCALAPPDATA%\\Stalker2\\Saved\\ZoneWanderersAsi.log",
+    "battle_cluster_m": 200,
+    "battle_cluster_s": 90,
     "discovery_extra_dirs": ["%LOCALAPPDATA%\\Stalker2\\Saved"],
     "locations_file": "locations.json",
     "calib_points_file": "calib_points.json",
     "state_dir": "zoneheat_state",
-    "keep_hours": 72,
+    "keep_hours": 168,
     "max_conflicts": 4000,
     "cluster_eps_m": 35,
     "cluster_min_size": 3,
@@ -271,6 +275,323 @@ def wanderers_ingest(cfg, reader: "DLFRReader"):
         seen["first_seen"] = dict(keep)
     write_json_atomic(seen_path, seen)
     return reader.add_events(events)
+
+
+ZW_SPEED_MPS = 1.3
+ZW_HEADER_RE = re.compile(r"^===== ZoneWanderersAsi start (\d{2}\.\d{2}\.\d{4} \d{2}:\d{2}:\d{2}) =====")
+ZW_SETOFF_RE = re.compile(
+    r"^(?P<t>\d{2}:\d{2}:\d{2})\s+(?:group|pack) (?P<id>\d+) \((?P<f>[^,]+), (?P<n>\d+)\) sets off:"
+    r".*from \((?P<fx>-?[\d.]+), (?P<fy>-?[\d.]+)\) to \((?P<tx>-?[\d.]+), (?P<ty>-?[\d.]+)\)"
+)
+ZW_ARRIV_RE = re.compile(
+    r"^(?P<t>\d{2}:\d{2}:\d{2})\s+(?:group|pack) (?P<id>\d+) arrived.*?\((?P<x>-?[\d.]+), (?P<y>-?[\d.]+)"
+)
+ZW_CLASH_RE = re.compile(
+    r"^(?P<t>\d{2}:\d{2}:\d{2})\s+groups (?P<a>\d+) \((?P<af>[^,]+), (?P<an>\d+)\) and "
+    r"(?P<b>\d+) \((?P<bf>[^,]+), (?P<bn>\d+)\) clash"
+)
+ZW_LOST_RE = re.compile(
+    r"^(?P<t>\d{2}:\d{2}:\d{2})\s+group (?P<id>\d+) \((?P<f>[^)]+)\) lost "
+    r"(?P<lost>\d+) of (?P<of>\d+) \((?P<why>\w+)\)"
+)
+
+
+class _ZwClock:
+    """Turn HH:MM:SS log lines into datetimes using the Asi 'start' headers."""
+
+    def __init__(self):
+        self.date = None
+        self.prev_sec = None
+
+    def header(self, text):
+        self.date = datetime.strptime(text, "%d.%m.%Y %H:%M:%S")
+        self.prev_sec = self.date.hour * 3600 + self.date.minute * 60 + self.date.second
+
+    def stamp(self, t):
+        if self.date is None:
+            return None
+        h, m, s = map(int, t.split(":"))
+        sec = h * 3600 + m * 60 + s
+        if self.prev_sec is not None and sec + 120 < self.prev_sec:
+            self.date = self.date + timedelta(days=1)
+        self.prev_sec = sec
+        return datetime(self.date.year, self.date.month, self.date.day, h, m, s)
+
+
+def parse_wanderers_log(path: Path):
+    """Parse ZoneWanderersAsi.log for clashes, losses, and last-known group positions."""
+    pos = defaultdict(list)
+    clashes, losses = [], []
+    if not path.exists():
+        return pos, clashes, losses
+    try:
+        raw = read_text(path)
+    except OSError:
+        return pos, clashes, losses
+    clock = _ZwClock()
+    for ln in raw.splitlines():
+        mh = ZW_HEADER_RE.match(ln)
+        if mh:
+            clock.header(mh.group(1))
+            continue
+        m = ZW_SETOFF_RE.match(ln)
+        if m:
+            dt = clock.stamp(m["t"])
+            if dt:
+                pos[m["id"]].append((dt, float(m["fx"]), float(m["fy"]), "from",
+                                     float(m["tx"]), float(m["ty"])))
+            continue
+        m = ZW_ARRIV_RE.match(ln)
+        if m:
+            dt = clock.stamp(m["t"])
+            if dt:
+                pos[m["id"]].append((dt, float(m["x"]), float(m["y"]), "arrived", None, None))
+            continue
+        m = ZW_LOST_RE.match(ln)
+        if m:
+            dt = clock.stamp(m["t"])
+            losses.append({"dt": dt, "id": m["id"], "faction": m["f"],
+                           "lost": int(m["lost"]), "of": int(m["of"]), "why": m["why"]})
+            continue
+        m = ZW_CLASH_RE.match(ln)
+        if m:
+            dt = clock.stamp(m["t"])
+            clashes.append({"dt": dt, "a": m["a"], "af": m["af"], "an": int(m["an"]),
+                            "b": m["b"], "bf": m["bf"], "bn": int(m["bn"])})
+    clashes.sort(key=lambda c: c["dt"] or datetime.min)
+    return pos, clashes, losses
+
+
+def _zw_last_loc(hist, dt):
+    """Position at or before dt; interpolate along the last set-off at 1.3 m/s."""
+    cur = None
+    pending = None
+    for h in hist:
+        if dt is not None and h[0] > dt:
+            break
+        if h[3] == "arrived":
+            cur = (h[1], h[2], "arrived")
+            pending = None
+        elif h[3] == "from":
+            cur = (h[1], h[2], "from")
+            pending = (h[0], h[1], h[2], h[4], h[5])
+    if pending and dt is not None:
+        t0, fx, fy, tx, ty = pending
+        elapsed = (dt - t0).total_seconds()
+        if elapsed > 0 and tx is not None:
+            dist = math.hypot(tx - fx, ty - fy)
+            if dist > 0:
+                travel = min(dist, ZW_SPEED_MPS * elapsed)
+                cur = (fx + (tx - fx) * travel / dist,
+                       fy + (ty - fy) * travel / dist, "interpolated")
+    return cur
+
+
+def _zw_cluster(clashes, placed, cluster_m, cluster_s):
+    n = len(clashes)
+    parent = list(range(n))
+
+    def find(i):
+        while parent[i] != i:
+            parent[i] = parent[parent[i]]
+            i = parent[i]
+        return i
+
+    def union(i, j):
+        ri, rj = find(i), find(j)
+        if ri != rj:
+            parent[rj] = ri
+
+    for i in range(n):
+        ci = clashes[i]
+        if ci["dt"] is None:
+            continue
+        ids_i = {ci["a"], ci["b"]}
+        pi = placed[i]
+        for j in range(i + 1, n):
+            cj = clashes[j]
+            if cj["dt"] is None:
+                continue
+            gap = (cj["dt"] - ci["dt"]).total_seconds()
+            if gap > cluster_s:
+                break
+            if gap < -cluster_s:
+                continue
+            close = bool(ids_i & {cj["a"], cj["b"]})
+            if (not close) and pi and placed[j]:
+                if math.hypot(pi[0] - placed[j][0], pi[1] - placed[j][1]) <= cluster_m:
+                    close = True
+            if close:
+                union(i, j)
+    groups = defaultdict(list)
+    for i in range(n):
+        groups[find(i)].append(i)
+    return list(groups.values())
+
+
+def _zw_canon(lex, name):
+    if not name:
+        return "Unknown"
+    facs = lex.factions_in(name) if lex else None
+    return facs[0] if facs else name
+
+
+def _zw_side_text(s):
+    name = s["faction"]
+    if s.get("fielded") is not None and s.get("lost") is not None:
+        return f"{name} {s['fielded']} (lost {s['lost']})"
+    if s.get("fielded") is not None:
+        return f"{name} {s['fielded']}"
+    if s.get("lost") is not None:
+        return f"{name} (lost {s['lost']})"
+    return name
+
+
+def build_wanderers_battles(cfg, lex=None):
+    """Merge close Asi.log clashes into battles with sides, counts, and real times.
+
+    Fighter and loss counts come only from clash and 'lost N of M (battle)' lines
+    in ZoneWanderersAsi.log. Coordinates prefer matching ZoneWanderers_Events.txt
+    rows, then last-known group positions from the same log. Emission losses are
+    ignored. Returns (placed, unplaced) event dicts ready for data.json.
+    """
+    lex = lex or make_lexicon(cfg)
+    log_path = expand(cfg.get("wanderers_log_file") or DEFAULTS["wanderers_log_file"])
+    ev_path = expand(cfg.get("wanderers_events_file") or DEFAULTS["wanderers_events_file"])
+    pos, clashes, losses = parse_wanderers_log(log_path)
+    if not clashes:
+        return [], []
+    events = [r for r in parse_wanderers_events(ev_path) if r["kind"] in WANDERERS_FIGHT_KINDS]
+    cluster_m = float(cfg.get("battle_cluster_m") or DEFAULTS["battle_cluster_m"])
+    cluster_s = float(cfg.get("battle_cluster_s") or DEFAULTS["battle_cluster_s"])
+    event_match_m = cluster_m
+
+    loss_idx = defaultdict(list)
+    for L in losses:
+        if L["why"] == "battle" and L["dt"] is not None:
+            loss_idx[(L["dt"], L["id"])].append(L)
+
+    placed_xy = []
+    for c in clashes:
+        pts = []
+        for gid in (c["a"], c["b"]):
+            loc = _zw_last_loc(pos.get(gid, []), c["dt"])
+            if loc:
+                pts.append(loc)
+        if pts:
+            placed_xy.append((sum(p[0] for p in pts) / len(pts),
+                              sum(p[1] for p in pts) / len(pts)))
+        else:
+            placed_xy.append(None)
+
+    used = set()
+    placed, unplaced = [], []
+    for members in _zw_cluster(clashes, placed_xy, cluster_m, cluster_s):
+        sides = {}
+        dts, pred_pts = [], []
+        for i in members:
+            c = clashes[i]
+            if c["dt"]:
+                dts.append(c["dt"])
+            if placed_xy[i]:
+                pred_pts.append(placed_xy[i])
+            for gid, fac, n in ((c["a"], c["af"], c["an"]), (c["b"], c["bf"], c["bn"])):
+                rec = sides.setdefault(gid, {"faction": fac, "fielded": n, "lost": 0, "lost_known": False})
+                rec["fielded"] = max(rec["fielded"], n)
+                for L in loss_idx.get((c["dt"], gid), []):
+                    rec["lost"] += L["lost"]
+                    rec["lost_known"] = True
+                    rec["fielded"] = max(rec["fielded"], L["of"])
+        for rec in sides.values():
+            if rec["lost_known"]:
+                rec["lost"] = min(rec["lost"], rec["fielded"])
+        if not dts:
+            continue
+        dt = min(dts)
+        facs_raw = {s["faction"] for s in sides.values()}
+        evs = []
+        if pred_pts:
+            for i, e in enumerate(events):
+                if i in used or e["faction"] not in facs_raw:
+                    continue
+                dmin = min(math.hypot(e["x"] - px, e["y"] - py) for px, py in pred_pts)
+                if dmin <= event_match_m:
+                    evs.append((dmin, i, e))
+        evs.sort()
+        picked = []
+        if evs:
+            anchor = evs[0][2]
+            for dmin, i, e in evs:
+                if math.hypot(e["x"] - anchor["x"], e["y"] - anchor["y"]) <= 150:
+                    picked.append(e)
+                    used.add(i)
+        if picked:
+            x = sum(e["x"] for e in picked) / len(picked)
+            y = sum(e["y"] for e in picked) / len(picked)
+            pos_source = "events"
+            activity = next((e["activity"] for e in picked if e.get("activity")), None)
+        elif pred_pts:
+            x = sum(p[0] for p in pred_pts) / len(pred_pts)
+            y = sum(p[1] for p in pred_pts) / len(pred_pts)
+            pos_source = "group_position"
+            activity = None
+        else:
+            x = y = None
+            pos_source = None
+            activity = None
+
+        by_fac = defaultdict(lambda: {"faction": None, "fielded": 0, "lost": 0, "lost_known": False})
+        for s in sides.values():
+            canon = _zw_canon(lex, s["faction"])
+            # keep mutant species names (lex leaves them unmatched); human aliases are canonical
+            name = canon
+            b = by_fac[name]
+            b["faction"] = name
+            b["fielded"] += s["fielded"]
+            if s["lost_known"]:
+                b["lost"] += s["lost"]
+                b["lost_known"] = True
+        disp = []
+        for b in by_fac.values():
+            row = {"faction": b["faction"], "fielded": b["fielded"]}
+            if b["lost_known"]:
+                row["lost"] = b["lost"]
+            disp.append(row)
+        text = " vs ".join(_zw_side_text(s) for s in disp)
+        fielded = sum(s["fielded"] for s in disp)
+        lost = sum(s["lost"] for s in disp if "lost" in s)
+        lost_all = all("lost" in s for s in disp)
+        weight = max(0.8, lost * 1.0 + fielded * 0.25)
+        ev = {
+            "id": f"zwb:{dt.isoformat()}:{'-'.join(sorted(sides))}",
+            "t": round(dt.timestamp(), 1),
+            "setup": cfg["setup"],
+            "source": "ZoneWanderers",
+            "kind": "fight",
+            "factions": [s["faction"] for s in disp],
+            "location": None,
+            "dead": lost if lost_all or lost else 0,
+            "weight": weight,
+            "text": text[:240],
+            "zw_event": "battle",
+            "activity": activity,
+            "sides": disp,
+            "fielded": fielded,
+            "counts_source": "ZoneWanderersAsi.log",
+            "pos_source": pos_source,
+            "t_source": "log",
+        }
+        if lost_all or lost:
+            ev["lost"] = lost
+        if x is not None:
+            ev["x"] = x
+            ev["y"] = y
+            ev["coord_space"] = "wanderers_m"
+            ev["approximate"] = calibration(cfg)[0] is None
+            placed.append(ev)
+        else:
+            unplaced.append(ev)
+    return placed, unplaced
 
 
 DEATH_WORDS = {"death", "deaths", "dead", "died", "dies", "killed", "kill", "kills", "casualty", "casualties",
@@ -1304,6 +1625,12 @@ def build_data(cfg, snaps) -> dict:
             seen_ids.add(eid)
         unique_events.append(e)
     events = unique_events
+    zw_battles, zw_unplaced = build_wanderers_battles(cfg)
+    use_merged = bool(zw_battles or zw_unplaced)
+    if use_merged:
+        events = [e for e in events if e.get("source") != "ZoneWanderers"]
+        events.extend(zw_battles)
+        events.extend(zw_unplaced)
     conflicts, unplaced = [], []
     wars = defaultdict(lambda: {"dead": 0, "events": 0, "last": 0.0})
     for e in events:
@@ -1333,6 +1660,18 @@ def build_data(cfg, snaps) -> dict:
             row["zw_event"] = e["zw_event"]
         if e.get("activity"):
             row["activity"] = e["activity"]
+        if e.get("sides"):
+            row["sides"] = e["sides"]
+        if e.get("fielded") is not None:
+            row["fielded"] = e["fielded"]
+        if e.get("lost") is not None:
+            row["lost"] = e["lost"]
+        if e.get("counts_source"):
+            row["counts_source"] = e["counts_source"]
+        if e.get("pos_source"):
+            row["pos_source"] = e["pos_source"]
+        if e.get("t_source"):
+            row["t_source"] = e["t_source"]
         # only mark fight positions approximate when no calib_points affine exists
         if e.get("coord_space") == "wanderers_m" and not m:
             row["approximate"] = True
@@ -1428,7 +1767,7 @@ def update_once(cfg, reader: DLFRReader, verbose=True):
                   f"dead={e['dead']}  {e['text'][:60]}")
         fights = sum(1 for c in data["conflicts"] if c.get("kind") == "fight" and c.get("source") == "ZoneWanderers")
         print(f"[{stamp}] data.json: {len(data['conflicts'])} placed / {len(data['unplaced'])} unplaced events, "
-              f"{fights} wanderers fights, {len(data['groups'])} groups, {len(data['fronts'])} fronts"
+              f"{fights} wanderers battles, {len(data['groups'])} groups, {len(data['fronts'])} fronts"
               + ("" if data["map"]["calibrated"] else " (map not calibrated yet)")
               + (" (fight positions approximate)" if data["map"].get("wanderers_approximate") and fights else ""))
     return out
@@ -1438,9 +1777,11 @@ def cmd_run(cfg, once=False, push_every=0.0):
     reader = DLFRReader(cfg)
     files = reader.files()
     zw = expand(cfg.get("wanderers_events_file") or DEFAULTS["wanderers_events_file"])
+    zwlog = expand(cfg.get("wanderers_log_file") or DEFAULTS["wanderers_log_file"])
     print(f"Setup '{cfg['setup']}': {len(files)} DLFR file(s) found; ZoneSensor file "
           f"{'found' if expand(cfg['zonesensor_file']).exists() else 'not found yet'}; "
-          f"Wanderers events {'found' if zw.exists() else 'not found yet'}; output {expand(cfg['output'])}")
+          f"Wanderers events {'found' if zw.exists() else 'not found yet'}; "
+          f"Wanderers log {'found' if zwlog.exists() else 'not found yet'}; output {expand(cfg['output'])}")
     if not files:
         print("  No DLFR files yet - run 'python logger_to_json.py discover' after playing a few minutes with DLFR.")
     if push_every and push_every < 6:
