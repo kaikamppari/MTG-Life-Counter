@@ -148,7 +148,7 @@ h4 { margin: 10px 0 6px; font-size: 12px; letter-spacing: .08em; text-transform:
 .lg-fade { width: 34px; height: 8px; border-radius: 4px; border: 1px solid #111;
   background: linear-gradient(90deg, rgba(212,163,92,.25), #d4a35c); }
 .lg-pie { width: 13px; height: 13px; border-radius: 50%; margin: 0 10px; flex: 0 0 13px;
-  background: conic-gradient(#a1795e 0 55%, #d64545 55% 100%); border: 1px solid #111; box-shadow: inset 0 0 0 3px var(--panel); }
+  background: conic-gradient(#C0723A 0 55%, #FF4E6A 55% 100%); border: 1px solid #111; box-shadow: inset 0 0 0 3px var(--panel); }
 
 .fight-mark { position: relative; width: 100%; height: 100%; filter: drop-shadow(0 0 2px rgba(0,0,0,.85)); }
 .fight-mark svg { display: block; width: 100%; height: 100%; }
@@ -282,20 +282,37 @@ const DATA_URL = new URLSearchParams(location.search).get("data") || "data.json"
 const REFRESH_MS = 60000;
 const WINDOW_STEPS_H = [0.25, 0.5, 1, 2, 3, 6, 12, 24, 48, 72, 168, null]; // null = all time
 
+// High-contrast palette for the dark PDA map. Human factions each get a distinct
+// color (Okabe-Ito / Tol-inspired, with extra lightness separation on the warm
+// side so red-green colorblind viewers can still tell Duty, Mutants, and Bandits
+// apart). Every non-human species shares the Mutants color; popups still use the
+// species name.
 const FACTION_COLORS = {
-  Loners: "#d9a441", Duty: "#d64545", Freedom: "#47b26b", Bandits: "#a1795e", Monolith: "#e8e8e8",
-  Mercenaries: "#4a90d9", Ward: "#8fae3c", Scientists: "#26c6da", Spark: "#ffd54f", Noon: "#ab47bc",
-  Corps: "#90a4ae", Scavengers: "#bcaaa4", Renegades: "#f06292", Mutants: "#ff7043", Unknown: "#bdbdbd"
+  Loners: "#E0A63A", Duty: "#FF4E6A", Freedom: "#1ED99A", Bandits: "#C0723A",
+  Mercenaries: "#3A96FF", Monolith: "#F4F0E8", Ward: "#B5E04A", Spark: "#FFF59A",
+  Noon: "#D85EF0", Scientists: "#2ADDE8", Corps: "#8BA3D9", Scavengers: "#E0C48A",
+  Renegades: "#FF7AAD", Mutants: "#FF6B00", Unknown: "#9AA0A6"
 };
-const FACTION_ALIASES = { Neutrals: "Loners", Varta: "Ward", Militaries: "Ward", Military: "Ward" };
-const MUTANT_TYPES = new Set(["Mutants","Flesh","Boar","Blinddog","MoldyBlinddog","Pseudodog","Bloodsucker",
-  "Snork","Tushkan","Zombie","Poltergeist","Bayun","Pseudogiant","Burer","Rat","Controller"]);
+const FACTION_ALIASES = {
+  Neutrals: "Loners", Neutral: "Loners", Loner: "Loners",
+  Varta: "Ward", Militaries: "Ward", Military: "Ward", Army: "Ward",
+  Iskra: "Spark",
+  Corpus: "Corps", Korpus: "Corps",
+  Ecologists: "Scientists", Ecologist: "Scientists", Scientist: "Scientists",
+  Merc: "Mercenaries", Mercs: "Mercenaries", Mercenary: "Mercenaries",
+  Bandit: "Bandits"
+};
+function factionKey(f) {
+  if (!f) return "Unknown";
+  if (Object.prototype.hasOwnProperty.call(FACTION_COLORS, f)) return f;
+  if (FACTION_ALIASES[f]) return FACTION_ALIASES[f];
+  return "Mutants";
+}
 function facColor(f) {
-  const canon = FACTION_COLORS[f] ? f : (FACTION_ALIASES[f] || f);
-  if (FACTION_COLORS[canon]) return FACTION_COLORS[canon];
-  let h = 0; for (const c of String(f)) h = (h * 31 + c.charCodeAt(0)) >>> 0;
-  if (MUTANT_TYPES.has(f) || MUTANT_TYPES.has(canon)) return `hsl(${12 + (h % 38)} 72% ${48 + (h % 16)}%)`;
-  return `hsl(${h % 360} 55% 60%)`;
+  return FACTION_COLORS[factionKey(f)] || FACTION_COLORS.Unknown;
+}
+function facHidden(f) {
+  return S.hidden.has(factionKey(f));
 }
 
 /* =====================================================================
@@ -486,7 +503,7 @@ function windowSince(now) {
   const h = windowH();
   return h == null ? -Infinity : now - h * 3600;
 }
-const visibleFac = (list) => !list || !list.length || list.some(f => !S.hidden.has(f));
+const visibleFac = (list) => !list || !list.length || list.some(f => !facHidden(f));
 const fmtAgo = (s) => s < 90 ? `${Math.round(s)} s` : s < 5400 ? `${Math.round(s / 60)} min` : s < 172800 ? `${(s / 3600).toFixed(1)} h` : `${Math.round(s / 86400)} d`;
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
@@ -582,7 +599,7 @@ function render() {
   const gStale = gAge > 180;
   if (S.layers.groups) {
     for (const g of d.groups) {
-      if (S.hidden.has(g.faction)) continue;
+      if (facHidden(g.faction)) continue;
       const col = facColor(g.faction);
       const circle = L.circle(ll(g.u, g.v), { radius: Math.max(g.r || 20, 12) * S.scale, color: col, weight: g.combat ? 3 : 2,
         dashArray: g.mutant ? "6 6" : null, fillColor: col, fillOpacity: gStale ? 0.05 : 0.16, opacity: gStale ? 0.45 : 0.95 });
@@ -597,7 +614,7 @@ function render() {
   layer.actors.clearLayers();
   if (S.layers.actors) {
     for (const a of d.actors) {
-      if (S.hidden.has(a.faction)) continue;
+      if (facHidden(a.faction)) continue;
       layer.actors.addLayer(L.circleMarker(ll(a.u, a.v), { radius: 4, color: "#000", weight: 1, fillColor: facColor(a.faction), fillOpacity: 0.95 })
         .bindPopup(`${esc(a.faction)} ${esc(a.kind || "")}${a.cls ? "<br><small>" + esc(a.cls) + "</small>" : ""}`));
     }
@@ -611,7 +628,11 @@ function render() {
     for (const c of d.conflicts) {
       if (c.kind !== "fight" || c.t < since || c.u == null || c.v == null || !visibleFac(c.factions)) continue;
       const sides = (c.sides && c.sides.length) ? c.sides : (c.factions || []).map(f => ({ faction: f }));
-      sides.forEach(s => { if (s.faction && !seenFac.has(s.faction)) { seenFac.add(s.faction); fightFacs.push(s.faction); } });
+      sides.forEach(s => {
+        if (!s.faction) return;
+        const key = factionKey(s.faction);
+        if (!seenFac.has(key)) { seenFac.add(key); fightFacs.push(key); }
+      });
       const age = now - (c.t || now);
       const icon = battleIcon(sides, c.fielded, age);
       const html = battlePopup(c, now, d);
@@ -711,8 +732,9 @@ function updateStatus() {
 
 function buildChips() {
   const d = S.data; const seen = new Set();
-  for (const c of d.conflicts.concat(d.unplaced)) (c.factions || []).forEach(f => seen.add(f));
-  d.groups.forEach(g => seen.add(g.faction)); d.actors.forEach(a => seen.add(a.faction));
+  for (const c of d.conflicts.concat(d.unplaced)) (c.factions || []).forEach(f => seen.add(factionKey(f)));
+  d.groups.forEach(g => { if (g.faction) seen.add(factionKey(g.faction)); });
+  d.actors.forEach(a => { if (a.faction) seen.add(factionKey(a.faction)); });
   const order = Object.keys(FACTION_COLORS);
   const facs = [...seen].filter(Boolean).sort((a, b) => ((order.indexOf(a) + 1 || 99) - (order.indexOf(b) + 1 || 99)) || a.localeCompare(b));
   const el = document.getElementById("chips");
