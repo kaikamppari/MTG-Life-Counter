@@ -155,11 +155,47 @@ h4 { margin: 10px 0 6px; font-size: 12px; letter-spacing: .08em; text-transform:
   border-radius: 4px; padding: 8px 12px; min-height: 36px; font: 700 12px/1 var(--display);
   letter-spacing: .1em; text-transform: uppercase; }
 #btn-back[hidden] { display: none; }
+body.region-view #legend { display: none; }
+body.region-view #fabs { bottom: calc(128px + var(--safe-b) + var(--region-card-h, 180px)); }
+#region-card { position: fixed; left: 10px; right: 10px; bottom: calc(120px + var(--safe-b));
+  z-index: 820; background: var(--panel); border: 1px solid var(--line); border-top: 2px solid var(--accent);
+  border-radius: 10px; padding: 10px 12px 11px; max-height: min(42vh, 360px); overflow: auto;
+  -webkit-overflow-scrolling: touch; box-shadow: 0 8px 28px rgba(0,0,0,.5); }
+#region-card[hidden] { display: none; }
+.rc-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+.rc-name { font: 700 16px/1.1 var(--display); letter-spacing: .08em; text-transform: uppercase; color: var(--text); }
+.rc-sub { font: 600 11px/1.3 var(--mono); color: var(--muted); letter-spacing: .04em; margin-top: 3px; }
+.rc-metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 0 0 8px; }
+.rc-metric { background: rgba(0,0,0,.28); border: 1px solid var(--line); border-radius: 6px; padding: 6px 7px 5px; }
+.rc-metric b { display: block; font: 700 16px/1.1 var(--mono); color: var(--text); }
+.rc-metric span { display: block; font: 600 10px/1.2 var(--display); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-top: 3px; }
+.rc-h { font: 700 10px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--accent); margin: 8px 0 5px; }
+.rc-bar { display: grid; grid-template-columns: 78px 1fr auto; gap: 6px; align-items: center; margin: 3px 0; }
+.rc-bar-lab { font: 700 11px/1 var(--display); text-transform: uppercase; letter-spacing: .03em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rc-bar-track { height: 7px; background: #1a1c16; border: 1px solid #111; border-radius: 4px; overflow: hidden; }
+.rc-bar-fill { height: 100%; border-radius: 4px; }
+.rc-bar-n { font: 600 10px/1 var(--mono); color: var(--muted); white-space: nowrap; }
+.rc-rivals { font: 600 12px/1.45 var(--display); color: var(--text); }
+.rc-rivals div { display: flex; justify-content: space-between; gap: 8px; }
+.rc-rivals .n { color: var(--muted); font-family: var(--mono); font-size: 11px; }
+.rc-note { font: 600 10px/1.35 var(--display); color: var(--muted); margin-top: 6px; }
+.rc-battles { display: flex; flex-direction: column; gap: 4px; }
+.rc-battle { appearance: none; display: block; width: 100%; text-align: left; background: rgba(0,0,0,.28);
+  border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; color: var(--text); font: 600 12px/1.25 var(--display); }
+.rc-battle .meta { font: 600 10px/1.3 var(--mono); color: var(--muted); margin-top: 2px; }
+.rc-battle.on { border-color: var(--accent); background: rgba(212,163,92,.12); }
+.poi-label { position: absolute; left: 0; top: 0; transform: translate(-50%, -110%);
+  font: 600 9px/1.1 var(--display); letter-spacing: .06em; text-transform: uppercase;
+  color: rgba(200, 196, 178, .42); text-shadow: 0 1px 2px rgba(0,0,0,.7);
+  white-space: nowrap; pointer-events: none; }
+.leaflet-poi-pane { z-index: 450; pointer-events: none; }
+.fight-ico.hl .fight-mark::after { content: ""; position: absolute; inset: -6px; border-radius: 50%;
+  border: 2px solid var(--accent); pointer-events: none; animation: none; }
 .theater-mark { position: relative; width: 100%; height: 100%; filter: drop-shadow(0 0 3px rgba(0,0,0,.9)); }
 .theater-mark svg { display: block; width: 100%; height: 100%; }
 .theater-label-ico { overflow: visible; background: none; border: 0; }
 .theater-name { position: absolute; left: 0; top: 0; transform: translate(-50%, 0);
-  font: 700 9px/1.15 var(--display); letter-spacing: .05em; text-transform: uppercase;
+  font: 700 8.5px/1.15 var(--display); letter-spacing: .04em; height: 16px; box-sizing: border-box; line-height: 10px; text-transform: uppercase;
   color: var(--text); background: rgba(11,12,10,.82); border: 1px solid rgba(212,163,92,.4);
   border-radius: 3px; padding: 2px 5px; white-space: nowrap; pointer-events: none; }
 .lg-factions .outlined i, .chip.outlined i { box-shadow: 0 0 0 1px #FFD9C8; }
@@ -177,6 +213,9 @@ h4 { font: 700 11px/1 var(--mono); }
   .brand-name { font-size: 13px; letter-spacing: .16em; }
   #legend { font-size: 10px; }
 }
+#legend .lg-title { background: none; border: 0; padding: 4px 2px; cursor: pointer; display: block; }
+#legend.collapsed { padding: 4px 8px; }
+#legend.collapsed > :not(.lg-title) { display: none !important; }
 </style>
 </head>
 <body>
@@ -196,6 +235,7 @@ h4 { font: 700 11px/1 var(--mono); }
   <button type="button" data-tf="all">All</button>
 </div>
 <button type="button" id="btn-back" hidden>← Theaters</button>
+<aside id="region-card" hidden></aside>
 <div id="banner" hidden></div>
 
 <div id="fabs">
@@ -204,9 +244,9 @@ h4 { font: 700 11px/1 var(--mono); }
   <button id="btn-pick" class="fab" aria-label="Pick coordinates" title="Pick coordinates">✛</button>
 </div>
 
-<div id="legend">
-  <div class="lg-title">The Zone</div>
-  <div class="lg-row" id="lg-fights-row"><span class="lg-pie"></span><span id="lg-fights-label">theater · size = fighters</span></div>
+<div id="legend" class="collapsed">
+  <button type="button" class="lg-title" id="lg-toggle" aria-expanded="false">Key ▸</button>
+  <div class="lg-row" id="lg-fights-row"><span class="lg-pie"></span><span id="lg-fights-label">region · size = how much fighting there</span></div>
   <div class="lg-row"><span class="lg-fade"></span><span>older ← → recent</span></div>
   <div class="lg-row"><span class="lg-ring"></span><span>group (count)</span></div>
   <div class="lg-row"><span class="lg-ring dashed"></span><span>mutant pack</span></div>
@@ -321,6 +361,7 @@ function facHidden(f) {
   return S.hidden.has(factionKey(f));
 }
 const THEATERS = [{"id":"prypiat","name":"Pripyat","u":490.0,"v":186.5,"ring":[[414.9,173.6],[441.2,208.4],[403.3,231.3],[482.4,284.2],[601.4,209.0],[569.8,167.6],[569.1,138.7],[553.6,125.8],[431.2,122.7],[418.6,132.3],[437.3,161.2],[414.9,173.6]]},{"id":"generators","name":"Generators","u":700.7,"v":237.5,"ring":[[572.0,315.2],[655.8,282.8],[827.2,284.9],[828.7,226.2],[813.7,199.6],[790.5,189.9],[715.9,190.5],[688.0,198.6],[628.3,191.4],[534.6,254.4],[572.0,315.2]]},{"id":"jupiter","name":"Jupiter","u":440.3,"v":297.5,"ring":[[487.4,341.4],[521.2,321.2],[572.0,315.2],[534.6,254.4],[482.4,284.2],[403.3,231.3],[369.4,244.2],[349.7,263.8],[298.7,340.8],[303.1,354.6],[487.4,341.4]]},{"id":"cnpp","name":"Chornobyl NPP","u":757.3,"v":364.0,"ring":[[572.0,315.2],[620.5,386.0],[619.2,417.2],[842.0,419.7],[857.7,417.8],[865.7,410.9],[871.3,285.5],[655.8,282.8],[572.0,315.2]]},{"id":"yanov","name":"Yaniv","u":430.7,"v":381.5,"ring":[[311.4,437.8],[342.5,419.3],[370.8,413.8],[441.3,425.2],[492.3,413.8],[525.0,398.4],[571.4,395.9],[620.5,386.0],[572.0,315.2],[521.2,321.2],[487.4,341.4],[303.1,354.6],[300.6,381.5],[283.7,394.4],[275.4,424.4],[274.7,446.6],[311.4,437.8]]},{"id":"red_forest","name":"Red Forest","u":451.0,"v":450.0,"ring":[[274.2,468.2],[278.2,504.2],[295.9,533.8],[373.5,498.8],[599.0,501.5],[634.5,495.9],[624.1,464.2],[618.9,422.2],[620.5,386.0],[571.4,395.9],[525.0,398.4],[492.3,413.8],[441.3,425.2],[370.8,413.8],[342.5,419.3],[311.4,437.8],[274.7,446.6],[274.2,468.2]]},{"id":"cooling_towers","name":"Cooling Towers","u":956.7,"v":476.6,"ring":[[839.0,489.3],[1030.2,572.3],[1049.5,575.6],[1060.1,546.0],[1079.3,534.6],[1084.3,521.5],[1059.5,484.4],[1051.5,464.4],[1030.2,450.6],[954.3,430.9],[938.9,411.9],[865.7,410.9],[857.7,417.8],[842.0,419.7],[839.0,489.3]]},{"id":"iron_forest","name":"Iron Forest","u":697.1,"v":471.4,"ring":[[618.9,422.2],[624.1,464.2],[634.5,495.9],[660.1,502.4],[838.3,504.3],[842.0,419.7],[619.2,417.2],[618.9,422.2]]},{"id":"cement_factory","name":"Cement Factory","u":967.7,"v":600.6,"ring":[[838.3,504.3],[830.3,677.6],[980.0,679.7],[1065.4,674.0],[1040.3,625.3],[1035.9,607.2],[1049.5,575.6],[1030.2,572.3],[839.0,489.3],[838.3,504.3]]},{"id":"rostok","name":"Rostok","u":578.8,"v":574.2,"ring":[[618.4,674.0],[641.0,664.8],[653.5,645.3],[660.1,502.4],[634.5,495.9],[599.0,501.5],[516.5,500.6],[478.2,584.6],[470.2,672.2],[618.4,674.0]]},{"id":"yantar","name":"Yantar","u":371.2,"v":590.5,"ring":[[313.3,556.5],[350.1,566.3],[348.0,612.9],[330.3,627.4],[352.1,670.7],[470.2,672.2],[478.2,584.6],[516.5,500.6],[373.5,498.8],[295.9,533.8],[313.3,556.5]]},{"id":"garbage","name":"Garbage","u":709.3,"v":719.5,"ring":[[653.5,645.3],[641.0,664.8],[618.4,674.0],[616.5,715.0],[629.6,739.7],[641.5,736.7],[650.1,750.7],[657.2,753.7],[680.6,752.0],[692.4,760.3],[715.3,759.6],[764.6,767.9],[789.3,768.7],[827.1,749.2],[838.3,504.3],[660.1,502.4],[653.5,645.3]]},{"id":"malachite","name":"Malachite","u":202.4,"v":698.9,"ring":[[94.4,634.7],[99.8,648.5],[80.6,716.4],[82.5,739.4],[88.3,755.3],[107.1,755.8],[126.5,765.1],[135.3,793.5],[147.1,804.7],[162.0,810.6],[216.1,804.6],[300.6,805.4],[302.3,775.3],[315.1,753.2],[319.8,702.2],[352.1,670.7],[330.3,627.4],[284.3,623.8],[234.5,609.5],[129.6,608.4],[123.7,622.3],[95.1,622.1],[94.4,634.7]]},{"id":"sircaa","name":"SIRCAA","u":1203.3,"v":700.8,"ring":[[1167.5,655.8],[1150.7,672.7],[1145.9,697.4],[1147.6,738.1],[1167.6,745.7],[1206.3,750.4],[1247.9,745.0],[1269.5,736.1],[1277.0,699.6],[1269.8,677.8],[1208.2,651.4],[1187.8,649.5],[1167.5,655.8]]},{"id":"wild_island","name":"Wild Island","u":895.5,"v":812.3,"ring":[[980.0,679.7],[830.3,677.6],[827.1,749.2],[789.3,768.7],[797.6,777.2],[804.5,796.4],[827.8,809.2],[835.3,821.9],[825.3,863.1],[842.2,870.0],[858.1,870.5],[863.6,861.5],[890.5,852.9],[941.8,853.6],[957.7,860.8],[978.5,895.8],[1088.4,767.5],[1128.1,730.4],[1065.4,674.0],[980.0,679.7]]},{"id":"chemical_plant","name":"Chemical Plant","u":533.1,"v":789.1,"ring":[[623.9,847.6],[632.1,832.5],[632.6,820.7],[608.9,801.8],[599.0,768.7],[604.6,759.8],[625.7,756.4],[629.6,739.7],[616.5,715.0],[618.4,674.0],[352.1,670.7],[319.8,702.2],[315.1,753.2],[302.3,775.3],[300.6,805.4],[372.5,846.5],[527.1,848.3],[552.1,859.3],[581.5,863.1],[608.4,855.4],[622.6,857.0],[623.9,847.6]]},{"id":"zaton","name":"Zaton","u":1208.0,"v":928.3,"ring":[[1240.8,1103.8],[1256.4,1077.9],[1288.0,1049.3],[1324.1,1045.0],[1359.8,1063.2],[1420.9,1071.0],[1428.0,1045.0],[1425.3,1010.2],[1400.9,941.5],[1384.5,912.8],[1374.6,853.1],[1379.2,788.4],[1364.0,768.6],[1269.5,736.1],[1247.9,745.0],[1206.3,750.4],[1167.6,745.7],[1128.1,730.4],[1088.4,767.5],[978.5,895.8],[988.8,910.3],[979.7,946.9],[998.4,964.7],[1025.8,980.7],[1064.4,994.3],[1085.2,1019.0],[1144.9,1069.1],[1159.5,1096.6],[1191.9,1114.4],[1209.2,1131.6],[1240.8,1103.8]]},{"id":"lesser_zone","name":"Lesser Zone","u":714.1,"v":862.1,"ring":[[604.6,759.8],[599.0,768.7],[605.5,795.9],[632.6,820.7],[622.6,857.0],[641.2,867.8],[642.0,908.3],[666.2,935.1],[668.3,949.2],[662.5,956.3],[617.4,970.6],[616.6,989.9],[630.3,1008.2],[643.7,1014.4],[747.5,1015.1],[752.4,1009.4],[753.3,994.4],[782.2,947.5],[818.6,920.1],[818.4,885.8],[835.3,821.9],[827.8,809.2],[804.5,796.4],[797.6,777.2],[789.3,768.7],[692.4,760.3],[680.6,752.0],[657.2,753.7],[637.1,736.3],[629.6,739.7],[625.7,756.4],[604.6,759.8]]},{"id":"duga","name":"Duga","u":277.9,"v":935.8,"ring":[[168.8,835.0],[163.9,850.0],[151.4,859.7],[154.4,886.0],[173.9,901.4],[190.2,925.2],[208.0,914.8],[324.6,1057.0],[338.6,1049.0],[349.2,1060.9],[358.9,1055.4],[371.4,1036.3],[396.0,1025.2],[392.3,989.1],[367.4,956.7],[372.5,846.5],[300.6,805.4],[216.1,804.6],[162.0,810.6],[168.8,835.0]]},{"id":"orbita","name":"Orbita","u":555.2,"v":942.5,"ring":[[367.4,956.7],[392.3,989.1],[396.0,1025.2],[432.0,1019.7],[457.3,1007.0],[495.0,1001.5],[540.9,1005.4],[561.6,977.9],[603.6,978.0],[610.7,971.4],[662.5,956.3],[668.3,949.2],[666.2,935.1],[642.0,908.3],[641.2,867.8],[622.6,857.0],[608.4,855.4],[581.5,863.1],[552.1,859.3],[527.1,848.3],[372.5,846.5],[367.4,956.7]]},{"id":"cordon","name":"Cordon","u":825.9,"v":971.6,"ring":[[821.2,871.7],[818.6,920.1],[782.2,947.5],[753.3,994.4],[745.1,1026.0],[747.5,1035.4],[776.8,1050.1],[796.9,1070.0],[843.8,1070.5],[851.0,1021.2],[911.5,996.7],[907.6,971.2],[920.2,943.6],[917.8,935.5],[878.9,914.7],[875.0,888.6],[859.6,882.1],[858.1,870.5],[842.2,870.0],[825.3,863.1],[821.2,871.7]]},{"id":"swamp","name":"Swamps","u":1345.1,"v":1156.4,"ring":[[1359.8,1063.2],[1324.1,1045.0],[1288.0,1049.3],[1256.4,1077.9],[1240.8,1103.8],[1209.2,1131.6],[1213.2,1160.6],[1227.5,1174.3],[1249.5,1183.6],[1305.5,1220.9],[1377.1,1221.9],[1418.2,1237.0],[1428.1,1229.6],[1419.9,1198.5],[1433.3,1165.2],[1431.3,1149.6],[1412.9,1108.7],[1412.2,1089.1],[1420.9,1071.0],[1359.8,1063.2]]}];
+const POIS = [{"name":"Hangar","kind":"landmark","u":852.8,"v":530.5,"theater":"cement_factory"},{"name":"Cement Factory","kind":"base","u":912.0,"v":546.0,"theater":"cement_factory"},{"name":"Temporary Warehouse","kind":"landmark","u":995.1,"v":589.3,"theater":"cement_factory"},{"name":"Machine Tractor Station","kind":"landmark","u":918.6,"v":653.8,"theater":"cement_factory"},{"name":"Eastern Tunnel","kind":"landmark","u":971.1,"v":666.6,"theater":"cement_factory"},{"name":"Central Elevator","kind":"landmark","u":550.0,"v":716.3,"theater":"chemical_plant"},{"name":"Promin CMD Factory","kind":"landmark","u":357.6,"v":765.6,"theater":"chemical_plant"},{"name":"Chemical Plant","kind":"base","u":560.0,"v":775.0,"theater":"chemical_plant"},{"name":"Bloodsucker Village","kind":"landmark","u":428.5,"v":783.0,"theater":"chemical_plant"},{"name":"Chemical Tanks","kind":"landmark","u":574.3,"v":831.2,"theater":"chemical_plant"},{"name":"Substation #3","kind":"landmark","u":714.5,"v":313.5,"theater":"cnpp"},{"name":"Spirit Depot","kind":"landmark","u":847.1,"v":334.3,"theater":"cnpp"},{"name":"Water Purification Facility","kind":"base","u":772.8,"v":339.8,"theater":"cnpp"},{"name":"Unit 4","kind":"landmark","u":697.8,"v":363.5,"theater":"cnpp"},{"name":"Transport Checkpoint","kind":"landmark","u":736.5,"v":414.4,"theater":"cnpp"},{"name":"Unit Pumping Station","kind":"landmark","u":867.0,"v":453.8,"theater":"cooling_towers"},{"name":"Cooling Towers","kind":"landmark","u":1000.0,"v":463.0,"theater":"cooling_towers"},{"name":"Burning Fire Depot","kind":"landmark","u":923.2,"v":493.4,"theater":"cooling_towers"},{"name":"Field Radiobiology Base","kind":"landmark","u":1040.2,"v":541.5,"theater":"cooling_towers"},{"name":"Outer Checkpoint","kind":"landmark","u":849.0,"v":874.6,"theater":"cordon"},{"name":"Abandoned Farmstead","kind":"landmark","u":865.9,"v":929.7,"theater":"cordon"},{"name":"Lokomotyv Vehicle Station","kind":"landmark","u":861.7,"v":991.6,"theater":"cordon"},{"name":"Rookie Village","kind":"base","u":801.6,"v":1011.7,"theater":"cordon"},{"name":"Tech Zone Checkpoint","kind":"landmark","u":275.4,"v":849.7,"theater":"duga"},{"name":"Pioneer Camp Bus Stop","kind":"landmark","u":349.7,"v":871.9,"theater":"duga"},{"name":"Duga Substation","kind":"landmark","u":239.8,"v":930.2,"theater":"duga"},{"name":"Military Unit","kind":"landmark","u":290.4,"v":976.3,"theater":"duga"},{"name":"School","kind":"landmark","u":323.4,"v":1039.2,"theater":"duga"},{"name":"Commissary","kind":"landmark","u":801.0,"v":533.7,"theater":"garbage"},{"name":"Slag Heap","kind":"landmark","u":765.0,"v":598.0,"theater":"garbage"},{"name":"Plant","kind":"landmark","u":756.1,"v":672.8,"theater":"garbage"},{"name":"Depot","kind":"landmark","u":654.7,"v":704.0,"theater":"garbage"},{"name":"Detention Center","kind":"landmark","u":809.8,"v":731.2,"theater":"garbage"},{"name":"SWYD-West Checkpoint","kind":"landmark","u":664.5,"v":427.6,"theater":"iron_forest"},{"name":"Monitoring Spot","kind":"landmark","u":751.8,"v":439.5,"theater":"iron_forest"},{"name":"Kurin","kind":"base","u":821.2,"v":450.1,"theater":"iron_forest"},{"name":"Chief's Bunker","kind":"base","u":712.0,"v":477.8,"theater":"iron_forest"},{"name":"SWYD-South Checkpoint","kind":"landmark","u":760.6,"v":502.3,"theater":"iron_forest"},{"name":"Fluoridation Station","kind":"landmark","u":428.2,"v":254.8,"theater":"jupiter"},{"name":"Science Campus Checkpoint","kind":"landmark","u":541.6,"v":284.8,"theater":"jupiter"},{"name":"Prypiat Substation","kind":"landmark","u":337.8,"v":310.0,"theater":"jupiter"},{"name":"Bread Factory","kind":"landmark","u":425.9,"v":318.0,"theater":"jupiter"},{"name":"Market","kind":"landmark","u":481.8,"v":321.4,"theater":"jupiter"},{"name":"POL Depot","kind":"landmark","u":665.4,"v":784.8,"theater":"lesser_zone"},{"name":"Zalissya","kind":"base","u":735.0,"v":822.0,"theater":"lesser_zone"},{"name":"Eastern Checkpoint","kind":"landmark","u":819.5,"v":856.0,"theater":"lesser_zone"},{"name":"Scientists' Bunker","kind":"landmark","u":659.8,"v":965.0,"theater":"lesser_zone"},{"name":"Central Checkpoint","kind":"landmark","u":701.7,"v":1009.5,"theater":"lesser_zone"},{"name":"Troposphere Comm Station","kind":"landmark","u":139.0,"v":620.0,"theater":"malachite"},{"name":"Brain Scorcher","kind":"landmark","u":222.5,"v":631.7,"theater":"malachite"},{"name":"VPC Mirror","kind":"landmark","u":129.8,"v":683.4,"theater":"malachite"},{"name":"Malachite","kind":"base","u":204.7,"v":695.1,"theater":"malachite"},{"name":"Energiya Vehicle Station","kind":"landmark","u":285.3,"v":727.0,"theater":"malachite"},{"name":"Distribution Substation","kind":"landmark","u":533.0,"v":867.2,"theater":"orbita"},{"name":"Repair Station","kind":"landmark","u":606.2,"v":870.6,"theater":"orbita"},{"name":"Kazkovyi Camp","kind":"base","u":467.3,"v":912.4,"theater":"orbita"},{"name":"Orbita Station","kind":"landmark","u":527.2,"v":939.3,"theater":"orbita"},{"name":"Helicopter Base","kind":"landmark","u":405.2,"v":942.5,"theater":"orbita"},{"name":"Music School","kind":"landmark","u":510.7,"v":148.6,"theater":"prypiat"},{"name":"Enerhetyk","kind":"base","u":455.0,"v":175.0,"theater":"prypiat"},{"name":"Industrial Hospital \u2116126","kind":"landmark","u":556.7,"v":178.7,"theater":"prypiat"},{"name":"Bookstore","kind":"landmark","u":538.9,"v":236.2,"theater":"prypiat"},{"name":"Friendship Kindergarten","kind":"landmark","u":490.1,"v":252.8,"theater":"prypiat"},{"name":"Symbiont","kind":"landmark","u":469.7,"v":432.9,"theater":"red_forest"},{"name":"Quarry","kind":"landmark","u":360.2,"v":444.6,"theater":"red_forest"},{"name":"Bridge to Lymansk","kind":"landmark","u":279.8,"v":475.3,"theater":"red_forest"},{"name":"Forest Cemetery","kind":"landmark","u":553.1,"v":488.6,"theater":"red_forest"},{"name":"Pipe Yard","kind":"landmark","u":309.7,"v":515.8,"theater":"red_forest"},{"name":"Buryakivka","kind":"landmark","u":622.0,"v":521.6,"theater":"rostok"},{"name":"Volkhov SAM","kind":"landmark","u":537.5,"v":542.5,"theater":"rostok"},{"name":"Underpass Exit","kind":"landmark","u":490.2,"v":589.0,"theater":"rostok"},{"name":"Rostok","kind":"base","u":590.0,"v":600.0,"theater":"rostok"},{"name":"Chystohalivka","kind":"landmark","u":615.3,"v":656.2,"theater":"rostok"},{"name":"SIRCAA","kind":"base","u":1218.0,"v":720.0,"theater":"sircaa"},{"name":"Trailer Camp","kind":"landmark","u":1281.0,"v":1102.1,"theater":"swamp"},{"name":"Old Church","kind":"landmark","u":1367.7,"v":1113.5,"theater":"swamp"},{"name":"Pumping Station","kind":"landmark","u":1330.5,"v":1158.4,"theater":"swamp"},{"name":"Clear Sky Base","kind":"landmark","u":1411.8,"v":1213.4,"theater":"swamp"},{"name":"Polissya Collective Farm","kind":"landmark","u":1030.2,"v":687.2,"theater":"wild_island"},{"name":"Waste Processing Station","kind":"landmark","u":965.9,"v":691.9,"theater":"wild_island"},{"name":"Pontoon Depot","kind":"landmark","u":937.0,"v":771.1,"theater":"wild_island"},{"name":"Shelter","kind":"base","u":883.4,"v":780.9,"theater":"wild_island"},{"name":"Sand Mine","kind":"landmark","u":1003.3,"v":832.9,"theater":"wild_island"},{"name":"Yaniv Station","kind":"base","u":415.4,"v":355.2,"theater":"yanov"},{"name":"Lisovyi","kind":"landmark","u":547.1,"v":365.4,"theater":"yanov"},{"name":"Offloading Terminal","kind":"landmark","u":322.7,"v":373.9,"theater":"yanov"},{"name":"Bog Poppers","kind":"landmark","u":484.0,"v":378.5,"theater":"yanov"},{"name":"Scientist Bunker","kind":"landmark","u":351.5,"v":528.4,"theater":"yantar"},{"name":"Agricultural Workshop","kind":"landmark","u":471.9,"v":552.8,"theater":"yantar"},{"name":"Choppers Field","kind":"landmark","u":424.6,"v":607.8,"theater":"yantar"},{"name":"Tunnel under Lake","kind":"landmark","u":356.4,"v":644.4,"theater":"yantar"},{"name":"Rozsokha Station","kind":"landmark","u":424.4,"v":664.4,"theater":"yantar"},{"name":"Hydrodynamics Lab","kind":"landmark","u":1315.4,"v":817.0,"theater":"zaton"},{"name":"Icarus","kind":"base","u":1098.0,"v":952.0,"theater":"zaton"},{"name":"Sultansk","kind":"base","u":1195.4,"v":954.0,"theater":"zaton"},{"name":"Ranger Station","kind":"landmark","u":1338.5,"v":973.0,"theater":"zaton"},{"name":"Shevchenko","kind":"base","u":1158.5,"v":1000.9,"theater":"zaton"}];
 function pointInRing(u, v, ring) {
   let inside = false;
   for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
@@ -438,8 +479,12 @@ const S = {
    ===================================================================== */
 const map = L.map("map", { crs: L.CRS.Simple, minZoom: -6, maxZoom: 4, zoomSnap: 0.25, zoomDelta: 0.5,
   attributionControl: false, zoomControl: false, bounceAtZoomLimits: false, preferCanvas: true });
+map.createPane("poiPane");
+map.getPane("poiPane").style.zIndex = 450;
+map.getPane("poiPane").style.pointerEvents = "none";
 const layer = { base: null, groups: L.layerGroup().addTo(map), actors: L.layerGroup().addTo(map),
   fights: L.layerGroup().addTo(map), theaters: L.layerGroup().addTo(map), outlines: L.layerGroup().addTo(map),
+  mask: L.layerGroup().addTo(map), pois: L.layerGroup().addTo(map),
   fronts: L.layerGroup().addTo(map), player: L.layerGroup().addTo(map), pick: L.layerGroup().addTo(map) };
 
 // data pixel (u right, v down) -> Leaflet latlng in image pixels
@@ -582,15 +627,74 @@ function battlePopup(c, now, d) {
     (when ? `<div class="when">${esc(when)}</div>` : "") +
     (bits.length ? `<div class="meta">${bits.join(" · ")}</div>` : "") + `</div>`;
 }
-function battleVisualSize(fielded, sides) {
-  const counts = (sides || []).map(s => Math.max(1, Number(s.fielded) || 1));
-  const total = fielded || counts.reduce((a, b) => a + b, 0) || (sides || []).length || 1;
-  return Math.round(Math.max(16, Math.min(26, 14 + Math.sqrt(Math.max(total, 1)) * 2.8)));
+function battleFielded(fielded, sides) {
+  if (fielded != null) return fielded;
+  const counts = (sides || []).map(s => Number(s.fielded));
+  if (counts.length && counts.every(n => n > 0 || n === 0)) return counts.reduce((a, b) => a + (b || 0), 0);
+  return (sides || []).length || 1;
 }
-function battleIcon(sides, fielded, age) {
+function battleVisualSize(fielded, sides, maxFielded) {
+  const total = Math.max(1, battleFielded(fielded, sides));
+  if (maxFielded && maxFielded > 0) {
+    return Math.round(16 + (28 - 16) * Math.sqrt(total / maxFielded));
+  }
+  return Math.round(Math.max(16, Math.min(26, 14 + Math.sqrt(total) * 2.8)));
+}
+function pixelsPerMeter() {
+  const ppm = S.data && S.data.map && S.data.map.pixels_per_meter;
+  return ppm || 0.175;
+}
+function nearestPoi(u, v, theaterId) {
+  let best = null, bd = Infinity;
+  for (const p of POIS) {
+    if (theaterId && p.theater && p.theater !== theaterId) continue;
+    const d = Math.hypot(u - p.u, v - p.v);
+    if (d < bd) { bd = d; best = p; }
+  }
+  if (!best) return null;
+  return { poi: best, distPx: bd, distM: bd / pixelsPerMeter() };
+}
+function fmtDist(m) {
+  if (m < 10) return "at";
+  if (m < 1000) return `${Math.round(m)} m`;
+  return `${(m / 1000).toFixed(1)} km`;
+}
+function battleLine(c) {
+  const sides = (c.sides && c.sides.length) ? c.sides : (c.factions || []).map(f => ({ faction: f }));
+  return sides.map(s => {
+    const name = s.faction || "Unknown";
+    return s.fielded != null ? `${name} ${s.fielded}` : name;
+  }).join(" vs ");
+}
+function highlightFight(id) {
+  document.querySelectorAll(".fight-ico.hl").forEach(el => el.classList.remove("hl"));
+  document.querySelectorAll(".rc-battle.on").forEach(el => el.classList.remove("on"));
+  const rec = (S.fightMarkers || []).find(m => m.id === id);
+  if (!rec) return;
+  const btn = document.querySelector(`.rc-battle[data-id="${id}"]`);
+  if (btn) btn.classList.add("on");
+  rec.marker.openPopup();
+  const el = rec.marker.getElement();
+  if (el) el.classList.add("hl");
+  map.panTo(rec.marker.getLatLng());
+}
+function drawRegionPois(theater) {
+  layer.pois.clearLayers();
+  if (!theater) return;
+  for (const p of POIS) {
+    if (p.theater && p.theater !== theater.id) continue;
+    if (!p.theater && !pointInRing(p.u, p.v, theater.ring)) continue;
+    layer.pois.addLayer(L.marker(ll(p.u, p.v), {
+      icon: L.divIcon({ className: "poi-ico", iconSize: [0, 0], iconAnchor: [0, 0],
+        html: `<div class="poi-label">${esc(p.name)}</div>` }),
+      interactive: false, keyboard: false, pane: "poiPane", zIndexOffset: -200
+    }));
+  }
+}
+function battleIcon(sides, fielded, age, visualSize) {
   const counts = sides.map(s => Math.max(1, Number(s.fielded) || 1));
   const total = fielded || counts.reduce((a, b) => a + b, 0) || sides.length || 1;
-  const visual = battleVisualSize(fielded, sides);
+  const visual = visualSize || battleVisualSize(fielded, sides);
   const size = Math.max(visual, 28);
   const r = 12, cx = 16, cy = 16;
   let acc = 0;
@@ -620,10 +724,18 @@ function battleIcon(sides, fielded, age) {
   const html = `<div class="fight-mark" style="opacity:${op};width:${visual}px;height:${visual}px;margin:${pad}px"><svg viewBox="0 0 32 32" aria-hidden="true">${slices.join("")}<circle cx="16" cy="16" r="6.2" fill="#0b0c0a" fill-opacity=".55"/></svg></div>`;
   return L.divIcon({ className: "fight-ico" + (recent ? " recent" : ""), iconSize: [size, size], iconAnchor: [size / 2, size / 2], html });
 }
-function shouldShowTheaters() {
-  if (S.focusedTheater) return false;
-  if (S.fitZoom == null) return true;
-  return map.getZoom() <= S.fitZoom + 0.85;
+function inFocusedTheater(u, v) {
+  if (!S.focusedTheater) return true;
+  const t = theaterOf(u, v);
+  return !!(t && t.id === S.focusedTheater);
+}
+function regionFitOptions(animate) {
+  return {
+    paddingTopLeft: [16, 108],
+    paddingBottomRight: [16, 260],
+    maxZoom: 2.2,
+    animate: animate !== false
+  };
 }
 function visibleEvents(d, since) {
   return d.conflicts.filter(c => c.t >= since && c.u != null && c.v != null && visibleFac(c.factions));
@@ -685,13 +797,13 @@ function theaterPopup(rec, now) {
     (bits.length ? `<div class="when">${esc(bits.join(" · "))}</div>` : "") +
     `<div class="meta">${lines}</div>` +
     (when ? `<div class="meta">${esc(when)}</div>` : "") +
-    `<div class="meta">Tap to zoom in</div></div>`;
+    `<div class="meta">Tap to open this region</div></div>`;
 }
-function theaterIcon(rec, now) {
+function theaterIcon(rec, now, visualOverride) {
   const sides = Object.values(rec.sides);
   const counts = sides.map(s => Math.max(1, s.fielded || s.fights || 1));
   const total = rec.fielded || rec.fights || counts.reduce((a, b) => a + b, 0);
-  const visual = Math.round(Math.max(20, Math.min(32, 16 + Math.sqrt(Math.max(total, 1)) * 2.4)));
+  const visual = visualOverride || theaterVisualSize(rec);
   const size = Math.max(visual, 32);
   const r = 12, cx = 16, cy = 16;
   let acc = 0, sum = counts.reduce((a, b) => a + b, 0), slices = [];
@@ -724,64 +836,252 @@ function openTheater(id, opts) {
   S.focusedTheater = id;
   const back = document.getElementById("btn-back");
   if (back) back.hidden = false;
-  S.programmaticZoom = true;
-  map.fitBounds(theaterBounds(t), { padding: [28, 28], maxZoom: 1.25, animate: !opts || opts.animate !== false });
-  setTimeout(() => { S.programmaticZoom = false; }, 400);
+  const sheet = document.getElementById("sheet");
+  if (sheet) sheet.classList.add("collapsed");
+  map.closePopup();
+  map.fitBounds(theaterBounds(t), regionFitOptions(!opts || opts.animate !== false));
   render();
 }
 function closeTheaters() {
   S.focusedTheater = null;
   const back = document.getElementById("btn-back");
   if (back) back.hidden = true;
-  if (S.imgW) {
-    S.programmaticZoom = true;
-    map.fitBounds(L.latLngBounds([-S.imgH, 0], [0, S.imgW]));
-    setTimeout(() => { S.programmaticZoom = false; }, 400);
-  }
+  const card = document.getElementById("region-card");
+  if (card) card.hidden = true;
+  document.body.classList.remove("region-view");
+  document.body.style.removeProperty("--region-card-h");
+  if (S.imgW) map.fitBounds(L.latLngBounds([-S.imgH, 0], [0, S.imgW]));
   render();
+}
+function regionStats(d, theater, since, now) {
+  const fights = [], chronicle = [];
+  for (const c of d.conflicts) {
+    if (c.t < since || c.u == null || c.v == null || !visibleFac(c.factions)) continue;
+    const th = theaterOf(c.u, c.v);
+    if (!th || th.id !== theater.id) continue;
+    if (c.kind === "fight" && c.source === "ZoneWanderers") fights.push(c);
+    else chronicle.push(c);
+  }
+  let fielded = 0, lost = 0, last = 0, approx = false, fieldedKnown = false, lostKnown = false;
+  const byFac = {}, rivalries = {};
+  for (const c of fights) {
+    last = Math.max(last, c.t || 0);
+    if (c.approximate) approx = true;
+    if (c.fielded != null) { fielded += c.fielded; fieldedKnown = true; }
+    if (c.lost != null) { lost += c.lost; lostKnown = true; }
+    const sides = (c.sides && c.sides.length) ? c.sides : (c.factions || []).map(f => ({ faction: f }));
+    for (const s of sides) {
+      const k = factionKey(s.faction);
+      const row = byFac[k] || (byFac[k] = { faction: k, fielded: 0, lost: 0, fights: 0, fieldedKnown: false, lostKnown: false });
+      row.fights += 1;
+      if (s.fielded != null) { row.fielded += s.fielded; row.fieldedKnown = true; }
+      if (s.lost != null) { row.lost += s.lost; row.lostKnown = true; }
+    }
+    const keys = [...new Set(sides.map(s => factionKey(s.faction)))].sort();
+    for (let i = 0; i < keys.length; i++) {
+      for (let j = i + 1; j < keys.length; j++) {
+        const k = keys[i] + " vs " + keys[j];
+        rivalries[k] = (rivalries[k] || 0) + 1;
+      }
+    }
+  }
+  let dlfrDead = 0, dlfrLast = 0;
+  for (const c of chronicle) {
+    dlfrDead += c.dead || 0;
+    dlfrLast = Math.max(dlfrLast, c.t || 0);
+    last = Math.max(last, c.t || 0);
+  }
+  let groupN = 0, groupCount = 0;
+  const groupsByFac = {};
+  for (const g of (d.groups || [])) {
+    if (g.u == null || g.v == null || facHidden(g.faction)) continue;
+    if (!pointInRing(g.u, g.v, theater.ring)) continue;
+    groupCount += 1;
+    groupN += g.n || 0;
+    const k = factionKey(g.faction);
+    groupsByFac[k] = (groupsByFac[k] || 0) + (g.n || 0);
+  }
+  if (d.map && d.map.wanderers_approximate) approx = true;
+  return {
+    fights: fights.length, fielded, lost, last, lastFight: fights.reduce((m, c) => Math.max(m, c.t || 0), 0),
+    fieldedKnown, lostKnown, byFac, rivalries, approx,
+    dlfrIncidents: chronicle.length, dlfrDead, dlfrLast,
+    hasGroupSnap: d.groups_t != null, groupsT: d.groups_t, groupN, groupCount, groupsByFac
+  };
+}
+function renderRegionCard(d, since, now) {
+  const card = document.getElementById("region-card");
+  if (!card) return;
+  if (!S.focusedTheater) {
+    card.hidden = true;
+    document.body.classList.remove("region-view");
+    document.body.style.removeProperty("--region-card-h");
+    return;
+  }
+  const t = THEATERS.find(x => x.id === S.focusedTheater);
+  if (!t) { card.hidden = true; return; }
+  const st = regionStats(d, t, since, now);
+  const facOrder = Object.keys(FACTION_COLORS);
+  const bars = Object.values(st.byFac).sort((a, b) => (b.fielded - a.fielded) || (b.fights - a.fights) || ((facOrder.indexOf(a.faction) + 1 || 99) - (facOrder.indexOf(b.faction) + 1 || 99)));
+  const maxP = Math.max(1, ...bars.map(b => b.fieldedKnown ? b.fielded : b.fights));
+  const barHtml = bars.length ? bars.map(b => {
+    const val = b.fieldedKnown ? b.fielded : b.fights;
+    const pct = Math.max(4, Math.round(100 * val / maxP));
+    const n = b.fieldedKnown
+      ? `${b.fielded} fielded${b.lostKnown ? ` · ${b.lost} lost` : ""}`
+      : `${b.fights} battle${b.fights === 1 ? "" : "s"} · counts not in the log`;
+    const outline = OUTLINED_FACTIONS.has(b.faction) ? `box-shadow:inset 0 0 0 1px ${OUTLINE_COLOR};` : "";
+    return `<div class="rc-bar"><span class="rc-bar-lab" style="color:${facColor(b.faction)}">${esc(b.faction)}</span>` +
+      `<div class="rc-bar-track"><div class="rc-bar-fill" style="width:${pct}%;background:${facColor(b.faction)};${outline}"></div></div>` +
+      `<span class="rc-bar-n">${esc(n)}</span></div>`;
+  }).join("") : '<div class="rc-note">No faction battle counts in this window.</div>';
+  const rivals = Object.entries(st.rivalries).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, 3);
+  const rivalHtml = rivals.length
+    ? rivals.map(([k, n]) => {
+        const parts = k.split(" vs ");
+        const lab = parts.map(f => `<span style="color:${facColor(f)}">${esc(f)}</span>`).join(" vs ");
+        return `<div>${lab}<span class="n">${n} battle${n === 1 ? "" : "s"}</span></div>`;
+      }).join("")
+    : "";
+  const lastFight = st.lastFight
+    ? `${fmtAgo(now - st.lastFight)} ago`
+    : (st.dlfrLast ? `no battles · last DLFR ${fmtAgo(now - st.dlfrLast)} ago` : "none in this window");
+  const notes = [];
+  if (st.fieldedKnown) notes.push("Fielded and lost are sums in this window, not a live headcount.");
+  if (st.hasGroupSnap) {
+    notes.push(st.groupCount
+      ? `On the map now: ${st.groupN} in ${st.groupCount} group${st.groupCount === 1 ? "" : "s"}` + (st.groupsT ? ` · snapshot ${fmtAgo(now - st.groupsT)} ago` : "")
+      : "On the map now: no groups in this region.");
+  } else {
+    notes.push("No current group snapshot in the data.");
+  }
+  if (st.dlfrIncidents) notes.push(`Chronicle: ${st.dlfrIncidents} incident${st.dlfrIncidents === 1 ? "" : "s"}, ${st.dlfrDead} dead (DLFR, not battle losses).`);
+  if (st.approx) notes.push("Some fight positions are approximate.");
+  const fights = (S.regionFights || []).slice().sort((a, b) => (b.fielded - a.fielded) || (a.age - b.age));
+  const top = fights.filter(it => it.fielded > 0 || (it.c.sides && it.c.sides.some(s => s.fielded != null))).slice(0, 5);
+  const maxF = fights.reduce((m, it) => Math.max(m, it.fielded || 0), 0);
+  const battleHtml = top.map(it => {
+    const near = nearestPoi(it.u, it.v, t.id);
+    let where;
+    if (near) {
+      const dm = near.distM;
+      where = dm < 15 ? `at ${near.poi.name}` : `near ${near.poi.name}, ${fmtDist(dm)}`;
+    } else {
+      where = `in ${t.name}`;
+    }
+    return `<button type="button" class="rc-battle" data-id="${esc(it.id)}"><div>${esc(battleLine(it.c))}</div>` +
+      `<div class="meta">${esc(where)} · ${fmtAgo(it.age)} ago</div></button>`;
+  }).join("");
+  card.innerHTML =
+    `<div class="rc-head"><div><div class="rc-name">${esc(t.name)}</div>` +
+    `<div class="rc-sub">Last fight ${esc(lastFight)}</div></div></div>` +
+    `<div class="rc-metrics">` +
+    `<div class="rc-metric"><b>${st.fights}</b><span>battles</span></div>` +
+    `<div class="rc-metric"><b>${st.fieldedKnown ? st.fielded : "—"}</b><span>fielded in window</span></div>` +
+    `<div class="rc-metric"><b>${st.lostKnown ? st.lost : "—"}</b><span>lost</span></div>` +
+    `</div>` +
+    (maxF ? `<div class="rc-sub" style="margin:-2px 0 8px">Rings: largest = ${maxF} fighters</div>` : "") +
+    (battleHtml ? `<div class="rc-h">Major battles</div><div class="rc-battles">${battleHtml}</div>` : "") +
+    (bars.length ? `<div class="rc-h">Presence in battles</div>${barHtml}` : "") +
+    (rivalHtml ? `<div class="rc-h">Top rivalries</div><div class="rc-rivals">${rivalHtml}</div>` : "") +
+    `<div class="rc-note">${notes.map(n => esc(n)).join("<br>")}</div>`;
+  card.querySelectorAll(".rc-battle").forEach(btn => {
+    btn.onclick = ev => { ev.preventDefault(); highlightFight(btn.dataset.id); };
+  });
+  document.body.classList.add("region-view");
+  card.hidden = false;
+  requestAnimationFrame(() => {
+    document.body.style.setProperty("--region-card-h", Math.ceil(card.getBoundingClientRect().height) + "px");
+  });
+}
+function addTheaterOutline(t, opts) {
+  const poly = L.polygon(t.ring.map(p => ll(p[0], p[1])), Object.assign({
+    color: "rgba(212,163,92,.5)", weight: 1, fillColor: "#d4a35c", fillOpacity: 0.04, interactive: true
+  }, opts || {}));
+  poly.on("click", ev => { L.DomEvent.stopPropagation(ev); openTheater(t.id); });
+  layer.outlines.addLayer(poly);
+}
+function addRegionMask(t) {
+  layer.mask.clearLayers();
+  const pad = 120;
+  const outer = [ll(-pad, -pad), ll(S.imgW + pad, -pad), ll(S.imgW + pad, S.imgH + pad), ll(-pad, S.imgH + pad)];
+  const hole = t.ring.map(p => ll(p[0], p[1]));
+  layer.mask.addLayer(L.polygon([outer, hole], {
+    fillColor: "#05060a", fillOpacity: 0.72, color: "rgba(212,163,92,.85)", weight: 1.6,
+    fillRule: "evenodd", interactive: false, pane: "overlayPane"
+  }));
 }
 function mapScale() {
   return Math.pow(2, map.getZoom());
 }
-function theaterVisualSize(rec) {
-  const total = rec.fielded || rec.fights || 1;
-  return Math.round(Math.max(20, Math.min(32, 16 + Math.sqrt(Math.max(total, 1)) * 2.4)));
+let THEATER_MAX = 1;
+function theaterWeight(rec) {
+  // "how much fighting": fighters fielded plus extra weight for losses
+  return Math.max(1, (rec.fielded || rec.fights || 1) + (rec.lost || 0));
 }
-function separateTheaters(recs) {
-  const scale = mapScale();
-  const placed = recs.map(r => {
-    const visual = theaterVisualSize(r);
-    return { rec: r, u: r.theater.u, v: r.theater.v, ou: r.theater.u, ov: r.theater.v, visual };
-  });
-  const gap = 5;
-  const maxNudge = 40;
-  for (let iter = 0; iter < 16; iter++) {
-    let moved = false;
-    for (let i = 0; i < placed.length; i++) {
-      for (let j = i + 1; j < placed.length; j++) {
-        const a = placed[i], b = placed[j];
-        let du = b.u - a.u, dv = b.v - a.v;
-        const dist = Math.hypot(du, dv) || 0.01;
-        const need = (a.visual + b.visual) / 2 / scale + gap / scale;
-        if (dist < need) {
-          const push = (need - dist) / 2;
-          const ux = du / dist, uy = dv / dist;
-          a.u -= ux * push; a.v -= uy * push;
-          b.u += ux * push; b.v += uy * push;
-          moved = true;
+function theaterVisualSize(rec) {
+  const frac = Math.sqrt(theaterWeight(rec)) / Math.sqrt(Math.max(THEATER_MAX, 1));
+  return Math.round(14 + Math.min(1, frac) * 22);
+}
+const SHORT_NAMES = { "Chornobyl NPP": "NPP", "Cement Factory": "Cement", "Cooling Towers": "Towers",
+  "Chemical Plant": "Chem Plant", "Lesser Zone": "Lesser Zone", "Wild Island": "Wild Isl." };
+function shortName(t) { return SHORT_NAMES[t.name] || t.name; }
+function layoutTheaters(recs) {
+  // Greedy screen-space layout: busiest regions first. Each wheel stays close
+  // to its region centre; its name goes beside it only if it fits cleanly.
+  // Nothing (wheel or name) may overlap anything already placed.
+  const scale = mapScale() * (S.scale || 1);
+  const gap = 3, lh = 16;
+  const boxes = [];
+  const hits = (b) => boxes.some(o => b.x0 < o.x1 + gap && b.x1 + gap > o.x0 && b.y0 < o.y1 + gap && b.y1 + gap > o.y0);
+  const order = recs.slice().sort((a, b) => theaterWeight(b) - theaterWeight(a));
+  const out = [];
+  const spiral = (maxRad, fn) => {
+    for (let k = 0; k < 80; k++) {
+      const rad = k === 0 ? 0 : 2 + k * 0.9;
+      if (rad > maxRad) return null;
+      const ang = k * 2.399963229728653;
+      const res = fn(rad * Math.cos(ang), rad * Math.sin(ang));
+      if (res) return res;
+    }
+    return null;
+  };
+  for (const rec of order) {
+    const full = theaterVisualSize(rec);
+    const cx0 = rec.theater.u * scale, cy0 = rec.theater.v * scale;
+    const lw = Math.round(shortName(rec.theater).length * 6.0 + 12);
+    let pick = null;
+    // 1) wheel + label, shrinking the wheel a little if needed
+    for (let visual = full; visual >= Math.max(10, full - 14) && !pick; visual -= 2) {
+      const r = visual / 2;
+const spots = [[0, r + 2 + lh / 2], [0, -(r + 2 + lh / 2)], [r + 3 + lw / 2, 0], [-(r + 3 + lw / 2), 0]];
+      pick = spiral(16, (dx, dy) => {
+        const cx = cx0 + dx, cy = cy0 + dy;
+        const wb = { x0: cx - r, x1: cx + r, y0: cy - r, y1: cy + r };
+        if (hits(wb)) return null;
+        for (const [lx, ly] of spots) {
+          const lb = { x0: cx + lx - lw / 2, x1: cx + lx + lw / 2, y0: cy + ly - lh / 2, y1: cy + ly + lh / 2 };
+          if (!hits(lb)) return { cx, cy, wb, lb, lx, ly, visual };
         }
-      }
+        return null;
+      });
     }
-    for (const p of placed) {
-      const nd = Math.hypot(p.u - p.ou, p.v - p.ov);
-      if (nd > maxNudge) {
-        p.u = p.ou + (p.u - p.ou) * maxNudge / nd;
-        p.v = p.ov + (p.v - p.ov) * maxNudge / nd;
-      }
+    // 2) wheel only (name shows when the region is tapped)
+    for (let visual = full; visual >= 10 && !pick; visual -= 2) {
+      const r = visual / 2;
+      pick = spiral(40, (dx, dy) => {
+        const cx = cx0 + dx, cy = cy0 + dy;
+        const wb = { x0: cx - r, x1: cx + r, y0: cy - r, y1: cy + r };
+        return hits(wb) ? null : { cx, cy, wb, visual };
+      });
     }
-    if (!moved) break;
+    if (!pick) continue; // no clean spot at this zoom; zoom in to see it
+    boxes.push(pick.wb);
+    if (pick.lb) boxes.push(pick.lb);
+    out.push({ rec, visual: pick.visual, u: pick.cx / scale, v: pick.cy / scale,
+      label: pick.lb ? { x: pick.lx, y: pick.ly } : null });
   }
-  return placed;
+  return out;
 }
 function spreadBattles(items) {
   const scale = mapScale();
@@ -814,7 +1114,7 @@ function render() {
   const d = S.data; if (!d) return;
   const now = clockNow();
   const since = windowSince(now);
-  const showTheaters = shouldShowTheaters();
+  const showTheaters = !S.focusedTheater;
 
   // --- groups
   layer.groups.clearLayers();
@@ -822,7 +1122,7 @@ function render() {
   const gStale = gAge > 180;
   if (S.layers.groups) {
     for (const g of d.groups) {
-      if (facHidden(g.faction)) continue;
+      if (facHidden(g.faction) || !inFocusedTheater(g.u, g.v)) continue;
       const col = facColor(g.faction);
       const circle = L.circle(ll(g.u, g.v), { radius: Math.max(g.r || 20, 12) * S.scale, color: col, weight: g.combat ? 3 : 2,
         dashArray: g.mutant ? "6 6" : null, fillColor: col, fillOpacity: gStale ? 0.05 : 0.16, opacity: gStale ? 0.45 : 0.95 });
@@ -837,7 +1137,7 @@ function render() {
   layer.actors.clearLayers();
   if (S.layers.actors) {
     for (const a of d.actors) {
-      if (facHidden(a.faction)) continue;
+      if (facHidden(a.faction) || !inFocusedTheater(a.u, a.v)) continue;
       layer.actors.addLayer(L.circleMarker(ll(a.u, a.v), { radius: 4, color: "#000", weight: 1, fillColor: facColor(a.faction), fillOpacity: 0.95 })
         .bindPopup(`${esc(a.faction)} ${esc(a.kind || "")}${a.cls ? "<br><small>" + esc(a.cls) + "</small>" : ""}`));
     }
@@ -847,67 +1147,75 @@ function render() {
   layer.fights.clearLayers();
   layer.theaters.clearLayers();
   layer.outlines.clearLayers();
+  layer.mask.clearLayers();
+  layer.pois.clearLayers();
+  S.fightMarkers = [];
+  S.regionFights = [];
   const fightFacs = [];
   const seenFac = new Set();
   const noteFac = (f) => { if (f && !seenFac.has(f)) { seenFac.add(f); fightFacs.push(f); } };
   if (S.layers.fights) {
     if (showTheaters) {
-      const placed = separateTheaters(aggregateTheaters(d, since, now));
+      for (const t of THEATERS) addTheaterOutline(t);
+      const recsT = aggregateTheaters(d, since, now);
+      THEATER_MAX = recsT.reduce((m, r) => Math.max(m, theaterWeight(r)), 1);
+      const placed = layoutTheaters(recsT);
       for (const p of placed) {
         const rec = p.rec;
         Object.keys(rec.sides).forEach(noteFac);
-        const icon = theaterIcon(rec, now);
+        const icon = theaterIcon(rec, now, p.visual);
         const marker = L.marker(ll(p.u, p.v), {
           icon, keyboard: true, zIndexOffset: 800
-        }).bindPopup(theaterPopup(rec, now), { maxWidth: 300, className: "fight-popup" });
+        });
         marker.on("click", () => openTheater(rec.theater.id));
         layer.theaters.addLayer(marker);
-        const half = (icon.options.visual || p.visual) / 2 + 4;
+        if (!p.label) continue;
         const label = L.marker(ll(p.u, p.v), {
           icon: L.divIcon({ className: "theater-label-ico", iconSize: [0, 0], iconAnchor: [0, 0],
-            html: `<div class="theater-name" style="opacity:${recencyOpacity(rec.last ? now - rec.last : 1e12)};transform:translate(-50%,${half}px)">${esc(rec.theater.name)}</div>` }),
+            html: `<div class="theater-name" style="opacity:${Math.max(0.75, recencyOpacity(rec.last ? now - rec.last : 1e12))};left:${p.label.x.toFixed(1)}px;top:${p.label.y.toFixed(1)}px;transform:translate(-50%,-50%)">${esc(shortName(rec.theater))}</div>` }),
           interactive: false, keyboard: false, zIndexOffset: 2500
         });
         layer.theaters.addLayer(label);
-        const ring = rec.theater.ring.map(pt => ll(pt[0], pt[1]));
-        layer.outlines.addLayer(L.polygon(ring, {
-          color: "rgba(212,163,92,.55)", weight: 1, fillColor: "#d4a35c", fillOpacity: 0.04, interactive: false
-        }));
       }
     } else {
+      const focused = THEATERS.find(x => x.id === S.focusedTheater);
+      if (focused) addRegionMask(focused);
+      if (focused) drawRegionPois(focused);
       const pending = [];
       for (const c of d.conflicts) {
         if (c.kind !== "fight" || c.t < since || c.u == null || c.v == null || !visibleFac(c.factions)) continue;
-        if (S.focusedTheater) {
-          const th = theaterOf(c.u, c.v);
-          if (!th || th.id !== S.focusedTheater) continue;
-        }
+        if (!inFocusedTheater(c.u, c.v)) continue;
         const sides = (c.sides && c.sides.length) ? c.sides : (c.factions || []).map(f => ({ faction: f }));
         sides.forEach(s => noteFac(factionKey(s.faction)));
-        pending.push({ c, sides, visual: battleVisualSize(c.fielded, sides), u: c.u, v: c.v, age: now - (c.t || now) });
+        pending.push({
+          c, sides, u: c.u, v: c.v, age: now - (c.t || now),
+          fielded: battleFielded(c.fielded, sides),
+          id: "f" + pending.length
+        });
       }
+      const maxFielded = pending.reduce((m, it) => Math.max(m, it.fielded || 0), 0);
+      for (const it of pending) it.visual = battleVisualSize(it.fielded, it.sides, maxFielded);
       pending.sort((a, b) => a.age - b.age);
       spreadBattles(pending);
+      S.regionFights = pending;
+      S.fightMarkers = [];
       for (const it of pending) {
-        layer.fights.addLayer(L.marker(ll(it.pu, it.pv), {
-          icon: battleIcon(it.sides, it.c.fielded, it.age), keyboard: true,
+        const marker = L.marker(ll(it.pu, it.pv), {
+          icon: battleIcon(it.sides, it.c.fielded, it.age, it.visual), keyboard: true,
           zIndexOffset: Math.round(1000 - Math.min(it.age, 200000) / 200)
-        }).bindPopup(battlePopup(it.c, now, d), { maxWidth: 280, className: "fight-popup" }));
-      }
-      if (S.focusedTheater) {
-        const t = THEATERS.find(x => x.id === S.focusedTheater);
-        if (t) layer.outlines.addLayer(L.polygon(t.ring.map(p => ll(p[0], p[1])), {
-          color: "rgba(212,163,92,.7)", weight: 1.5, fillColor: "#d4a35c", fillOpacity: 0.05, interactive: false
-        }));
+        }).bindPopup(battlePopup(it.c, now, d), { maxWidth: 280, className: "fight-popup" });
+        layer.fights.addLayer(marker);
+        S.fightMarkers.push({ id: it.id, marker, it });
       }
     }
   }
+  renderRegionCard(d, since, now);
   const facBox = document.getElementById("lg-factions");
   const approxNote = document.getElementById("lg-approx");
   const fightsRow = document.getElementById("lg-fights-row");
   const fightsLabel = document.getElementById("lg-fights-label");
   if (fightsRow) fightsRow.hidden = !S.layers.fights;
-  if (fightsLabel) fightsLabel.textContent = showTheaters ? "theater · size = fighters" : "battle · size = fighters";
+  if (fightsLabel) fightsLabel.textContent = showTheaters ? "region · size = how much fighting there" : "battle · size is relative in this region";
   if (facBox) {
     facBox.hidden = !S.layers.fights || !fightFacs.length;
     const order = Object.keys(FACTION_COLORS);
@@ -923,7 +1231,7 @@ function render() {
   layer.fronts.clearLayers();
   if (S.layers.fronts) {
     for (const f of d.fronts) {
-      if (f.u == null || f.v == null || !visibleFac(f.factions)) continue;
+      if (f.u == null || f.v == null || !visibleFac(f.factions) || !inFocusedTheater(f.u, f.v)) continue;
       layer.fronts.addLayer(L.marker(ll(f.u, f.v), { icon: L.divIcon({ className: "front-ico", iconSize: [0, 0],
         html: `<div class="ring"></div><div class="lbl">#${f.rank} ${esc(f.name)}</div>` }) })
         .bindPopup(`<b>Front #${f.rank}: ${esc(f.name)}</b><br>${esc((f.factions || []).join(" vs "))}${f.heat != null ? "<br>heat " + f.heat : ""}`));
@@ -1079,7 +1387,14 @@ fileIn.onchange = async () => {
   try { const d = validate(JSON.parse(await f.text())); S.isSample = false; S.sourceLabel = "file: " + f.name; S.auto = false; auto.checked = false; hideBanner(); await setData(d); }
   catch (e) { showBanner("That file isn't a valid data.json: " + e.message); }
 };
-document.getElementById("btn-fit").onclick = () => map.fitBounds(L.latLngBounds([-S.imgH, 0], [0, S.imgW]));
+document.getElementById("btn-fit").onclick = () => {
+  if (S.focusedTheater) {
+    const t = THEATERS.find(x => x.id === S.focusedTheater);
+    if (t) map.fitBounds(theaterBounds(t), regionFitOptions(true));
+  } else if (S.imgW) {
+    map.fitBounds(L.latLngBounds([-S.imgH, 0], [0, S.imgW]));
+  }
+};
 document.getElementById("btn-player").onclick = () => {
   const p = S.data && S.data.player;
   if (p) map.setView(ll(p.u, p.v), Math.max(map.getZoom(), 0)); else showBanner("No player position in the data yet (needs ZoneSensor + calibration).");
@@ -1090,6 +1405,15 @@ const pickBtn = document.getElementById("btn-pick"), pp = document.getElementByI
 pickBtn.onclick = () => { S.picking = !S.picking; pickBtn.classList.toggle("on", S.picking);
   if (!S.picking) { pp.hidden = true; layer.pick.clearLayers(); } else { showBanner("Pick mode: tap a spot on the map."); } };
 document.getElementById("pp-close").onclick = () => { pp.hidden = true; layer.pick.clearLayers(); S.picking = false; pickBtn.classList.remove("on"); };
+let _zoomT = null;
+map.on("zoomend", () => { if (S.focusedTheater) return; clearTimeout(_zoomT); _zoomT = setTimeout(render, 60); });
+document.getElementById("lg-toggle").addEventListener("click", (ev) => {
+  ev.stopPropagation();
+  const lg = document.getElementById("legend");
+  const open = lg.classList.toggle("collapsed") === false;
+  ev.currentTarget.textContent = open ? "Key ▾" : "Key ▸";
+  ev.currentTarget.setAttribute("aria-expanded", String(open));
+});
 map.on("click", (e) => {
   if (!S.picking) { sheet.classList.add("collapsed"); return; }
   hideBanner();
@@ -1111,12 +1435,6 @@ document.querySelectorAll("[data-copy]").forEach(b => b.onclick = async () => {
   setTimeout(() => { b.textContent = "Copy"; }, 1500);
 });
 
-map.on("zoomend", () => {
-  if (S.programmaticZoom) return;
-  const atOverview = shouldShowTheaters();
-  if (S.focusedTheater && atOverview) closeTheaters();
-  else render();
-});
 const backBtn = document.getElementById("btn-back");
 if (backBtn) backBtn.onclick = () => closeTheaters();
 

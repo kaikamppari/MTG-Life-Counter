@@ -1,0 +1,684 @@
+{
+  "pois": [
+    {
+      "name": "Hangar",
+      "kind": "landmark",
+      "u": 852.8,
+      "v": 530.5,
+      "theater": "cement_factory"
+    },
+    {
+      "name": "Cement Factory",
+      "kind": "base",
+      "u": 912.0,
+      "v": 546.0,
+      "theater": "cement_factory"
+    },
+    {
+      "name": "Temporary Warehouse",
+      "kind": "landmark",
+      "u": 995.1,
+      "v": 589.3,
+      "theater": "cement_factory"
+    },
+    {
+      "name": "Machine Tractor Station",
+      "kind": "landmark",
+      "u": 918.6,
+      "v": 653.8,
+      "theater": "cement_factory"
+    },
+    {
+      "name": "Eastern Tunnel",
+      "kind": "landmark",
+      "u": 971.1,
+      "v": 666.6,
+      "theater": "cement_factory"
+    },
+    {
+      "name": "Central Elevator",
+      "kind": "landmark",
+      "u": 550.0,
+      "v": 716.3,
+      "theater": "chemical_plant"
+    },
+    {
+      "name": "Promin CMD Factory",
+      "kind": "landmark",
+      "u": 357.6,
+      "v": 765.6,
+      "theater": "chemical_plant"
+    },
+    {
+      "name": "Chemical Plant",
+      "kind": "base",
+      "u": 560.0,
+      "v": 775.0,
+      "theater": "chemical_plant"
+    },
+    {
+      "name": "Bloodsucker Village",
+      "kind": "landmark",
+      "u": 428.5,
+      "v": 783.0,
+      "theater": "chemical_plant"
+    },
+    {
+      "name": "Chemical Tanks",
+      "kind": "landmark",
+      "u": 574.3,
+      "v": 831.2,
+      "theater": "chemical_plant"
+    },
+    {
+      "name": "Substation #3",
+      "kind": "landmark",
+      "u": 714.5,
+      "v": 313.5,
+      "theater": "cnpp"
+    },
+    {
+      "name": "Spirit Depot",
+      "kind": "landmark",
+      "u": 847.1,
+      "v": 334.3,
+      "theater": "cnpp"
+    },
+    {
+      "name": "Water Purification Facility",
+      "kind": "base",
+      "u": 772.8,
+      "v": 339.8,
+      "theater": "cnpp"
+    },
+    {
+      "name": "Unit 4",
+      "kind": "landmark",
+      "u": 697.8,
+      "v": 363.5,
+      "theater": "cnpp"
+    },
+    {
+      "name": "Transport Checkpoint",
+      "kind": "landmark",
+      "u": 736.5,
+      "v": 414.4,
+      "theater": "cnpp"
+    },
+    {
+      "name": "Unit Pumping Station",
+      "kind": "landmark",
+      "u": 867.0,
+      "v": 453.8,
+      "theater": "cooling_towers"
+    },
+    {
+      "name": "Cooling Towers",
+      "kind": "landmark",
+      "u": 1000.0,
+      "v": 463.0,
+      "theater": "cooling_towers"
+    },
+    {
+      "name": "Burning Fire Depot",
+      "kind": "landmark",
+      "u": 923.2,
+      "v": 493.4,
+      "theater": "cooling_towers"
+    },
+    {
+      "name": "Field Radiobiology Base",
+      "kind": "landmark",
+      "u": 1040.2,
+      "v": 541.5,
+      "theater": "cooling_towers"
+    },
+    {
+      "name": "Outer Checkpoint",
+      "kind": "landmark",
+      "u": 849.0,
+      "v": 874.6,
+      "theater": "cordon"
+    },
+    {
+      "name": "Abandoned Farmstead",
+      "kind": "landmark",
+      "u": 865.9,
+      "v": 929.7,
+      "theater": "cordon"
+    },
+    {
+      "name": "Lokomotyv Vehicle Station",
+      "kind": "landmark",
+      "u": 861.7,
+      "v": 991.6,
+      "theater": "cordon"
+    },
+    {
+      "name": "Rookie Village",
+      "kind": "base",
+      "u": 801.6,
+      "v": 1011.7,
+      "theater": "cordon"
+    },
+    {
+      "name": "Tech Zone Checkpoint",
+      "kind": "landmark",
+      "u": 275.4,
+      "v": 849.7,
+      "theater": "duga"
+    },
+    {
+      "name": "Pioneer Camp Bus Stop",
+      "kind": "landmark",
+      "u": 349.7,
+      "v": 871.9,
+      "theater": "duga"
+    },
+    {
+      "name": "Duga Substation",
+      "kind": "landmark",
+      "u": 239.8,
+      "v": 930.2,
+      "theater": "duga"
+    },
+    {
+      "name": "Military Unit",
+      "kind": "landmark",
+      "u": 290.4,
+      "v": 976.3,
+      "theater": "duga"
+    },
+    {
+      "name": "School",
+      "kind": "landmark",
+      "u": 323.4,
+      "v": 1039.2,
+      "theater": "duga"
+    },
+    {
+      "name": "Commissary",
+      "kind": "landmark",
+      "u": 801.0,
+      "v": 533.7,
+      "theater": "garbage"
+    },
+    {
+      "name": "Slag Heap",
+      "kind": "landmark",
+      "u": 765.0,
+      "v": 598.0,
+      "theater": "garbage"
+    },
+    {
+      "name": "Plant",
+      "kind": "landmark",
+      "u": 756.1,
+      "v": 672.8,
+      "theater": "garbage"
+    },
+    {
+      "name": "Depot",
+      "kind": "landmark",
+      "u": 654.7,
+      "v": 704.0,
+      "theater": "garbage"
+    },
+    {
+      "name": "Detention Center",
+      "kind": "landmark",
+      "u": 809.8,
+      "v": 731.2,
+      "theater": "garbage"
+    },
+    {
+      "name": "SWYD-West Checkpoint",
+      "kind": "landmark",
+      "u": 664.5,
+      "v": 427.6,
+      "theater": "iron_forest"
+    },
+    {
+      "name": "Monitoring Spot",
+      "kind": "landmark",
+      "u": 751.8,
+      "v": 439.5,
+      "theater": "iron_forest"
+    },
+    {
+      "name": "Kurin",
+      "kind": "base",
+      "u": 821.2,
+      "v": 450.1,
+      "theater": "iron_forest"
+    },
+    {
+      "name": "Chief's Bunker",
+      "kind": "base",
+      "u": 712.0,
+      "v": 477.8,
+      "theater": "iron_forest"
+    },
+    {
+      "name": "SWYD-South Checkpoint",
+      "kind": "landmark",
+      "u": 760.6,
+      "v": 502.3,
+      "theater": "iron_forest"
+    },
+    {
+      "name": "Fluoridation Station",
+      "kind": "landmark",
+      "u": 428.2,
+      "v": 254.8,
+      "theater": "jupiter"
+    },
+    {
+      "name": "Science Campus Checkpoint",
+      "kind": "landmark",
+      "u": 541.6,
+      "v": 284.8,
+      "theater": "jupiter"
+    },
+    {
+      "name": "Prypiat Substation",
+      "kind": "landmark",
+      "u": 337.8,
+      "v": 310.0,
+      "theater": "jupiter"
+    },
+    {
+      "name": "Bread Factory",
+      "kind": "landmark",
+      "u": 425.9,
+      "v": 318.0,
+      "theater": "jupiter"
+    },
+    {
+      "name": "Market",
+      "kind": "landmark",
+      "u": 481.8,
+      "v": 321.4,
+      "theater": "jupiter"
+    },
+    {
+      "name": "POL Depot",
+      "kind": "landmark",
+      "u": 665.4,
+      "v": 784.8,
+      "theater": "lesser_zone"
+    },
+    {
+      "name": "Zalissya",
+      "kind": "base",
+      "u": 735.0,
+      "v": 822.0,
+      "theater": "lesser_zone"
+    },
+    {
+      "name": "Eastern Checkpoint",
+      "kind": "landmark",
+      "u": 819.5,
+      "v": 856.0,
+      "theater": "lesser_zone"
+    },
+    {
+      "name": "Scientists' Bunker",
+      "kind": "landmark",
+      "u": 659.8,
+      "v": 965.0,
+      "theater": "lesser_zone"
+    },
+    {
+      "name": "Central Checkpoint",
+      "kind": "landmark",
+      "u": 701.7,
+      "v": 1009.5,
+      "theater": "lesser_zone"
+    },
+    {
+      "name": "Troposphere Comm Station",
+      "kind": "landmark",
+      "u": 139.0,
+      "v": 620.0,
+      "theater": "malachite"
+    },
+    {
+      "name": "Brain Scorcher",
+      "kind": "landmark",
+      "u": 222.5,
+      "v": 631.7,
+      "theater": "malachite"
+    },
+    {
+      "name": "VPC Mirror",
+      "kind": "landmark",
+      "u": 129.8,
+      "v": 683.4,
+      "theater": "malachite"
+    },
+    {
+      "name": "Malachite",
+      "kind": "base",
+      "u": 204.7,
+      "v": 695.1,
+      "theater": "malachite"
+    },
+    {
+      "name": "Energiya Vehicle Station",
+      "kind": "landmark",
+      "u": 285.3,
+      "v": 727.0,
+      "theater": "malachite"
+    },
+    {
+      "name": "Distribution Substation",
+      "kind": "landmark",
+      "u": 533.0,
+      "v": 867.2,
+      "theater": "orbita"
+    },
+    {
+      "name": "Repair Station",
+      "kind": "landmark",
+      "u": 606.2,
+      "v": 870.6,
+      "theater": "orbita"
+    },
+    {
+      "name": "Kazkovyi Camp",
+      "kind": "base",
+      "u": 467.3,
+      "v": 912.4,
+      "theater": "orbita"
+    },
+    {
+      "name": "Orbita Station",
+      "kind": "landmark",
+      "u": 527.2,
+      "v": 939.3,
+      "theater": "orbita"
+    },
+    {
+      "name": "Helicopter Base",
+      "kind": "landmark",
+      "u": 405.2,
+      "v": 942.5,
+      "theater": "orbita"
+    },
+    {
+      "name": "Music School",
+      "kind": "landmark",
+      "u": 510.7,
+      "v": 148.6,
+      "theater": "prypiat"
+    },
+    {
+      "name": "Enerhetyk",
+      "kind": "base",
+      "u": 455.0,
+      "v": 175.0,
+      "theater": "prypiat"
+    },
+    {
+      "name": "Industrial Hospital \u2116126",
+      "kind": "landmark",
+      "u": 556.7,
+      "v": 178.7,
+      "theater": "prypiat"
+    },
+    {
+      "name": "Bookstore",
+      "kind": "landmark",
+      "u": 538.9,
+      "v": 236.2,
+      "theater": "prypiat"
+    },
+    {
+      "name": "Friendship Kindergarten",
+      "kind": "landmark",
+      "u": 490.1,
+      "v": 252.8,
+      "theater": "prypiat"
+    },
+    {
+      "name": "Symbiont",
+      "kind": "landmark",
+      "u": 469.7,
+      "v": 432.9,
+      "theater": "red_forest"
+    },
+    {
+      "name": "Quarry",
+      "kind": "landmark",
+      "u": 360.2,
+      "v": 444.6,
+      "theater": "red_forest"
+    },
+    {
+      "name": "Bridge to Lymansk",
+      "kind": "landmark",
+      "u": 279.8,
+      "v": 475.3,
+      "theater": "red_forest"
+    },
+    {
+      "name": "Forest Cemetery",
+      "kind": "landmark",
+      "u": 553.1,
+      "v": 488.6,
+      "theater": "red_forest"
+    },
+    {
+      "name": "Pipe Yard",
+      "kind": "landmark",
+      "u": 309.7,
+      "v": 515.8,
+      "theater": "red_forest"
+    },
+    {
+      "name": "Buryakivka",
+      "kind": "landmark",
+      "u": 622.0,
+      "v": 521.6,
+      "theater": "rostok"
+    },
+    {
+      "name": "Volkhov SAM",
+      "kind": "landmark",
+      "u": 537.5,
+      "v": 542.5,
+      "theater": "rostok"
+    },
+    {
+      "name": "Underpass Exit",
+      "kind": "landmark",
+      "u": 490.2,
+      "v": 589.0,
+      "theater": "rostok"
+    },
+    {
+      "name": "Rostok",
+      "kind": "base",
+      "u": 590.0,
+      "v": 600.0,
+      "theater": "rostok"
+    },
+    {
+      "name": "Chystohalivka",
+      "kind": "landmark",
+      "u": 615.3,
+      "v": 656.2,
+      "theater": "rostok"
+    },
+    {
+      "name": "SIRCAA",
+      "kind": "base",
+      "u": 1218.0,
+      "v": 720.0,
+      "theater": "sircaa"
+    },
+    {
+      "name": "Trailer Camp",
+      "kind": "landmark",
+      "u": 1281.0,
+      "v": 1102.1,
+      "theater": "swamp"
+    },
+    {
+      "name": "Old Church",
+      "kind": "landmark",
+      "u": 1367.7,
+      "v": 1113.5,
+      "theater": "swamp"
+    },
+    {
+      "name": "Pumping Station",
+      "kind": "landmark",
+      "u": 1330.5,
+      "v": 1158.4,
+      "theater": "swamp"
+    },
+    {
+      "name": "Clear Sky Base",
+      "kind": "landmark",
+      "u": 1411.8,
+      "v": 1213.4,
+      "theater": "swamp"
+    },
+    {
+      "name": "Polissya Collective Farm",
+      "kind": "landmark",
+      "u": 1030.2,
+      "v": 687.2,
+      "theater": "wild_island"
+    },
+    {
+      "name": "Waste Processing Station",
+      "kind": "landmark",
+      "u": 965.9,
+      "v": 691.9,
+      "theater": "wild_island"
+    },
+    {
+      "name": "Pontoon Depot",
+      "kind": "landmark",
+      "u": 937.0,
+      "v": 771.1,
+      "theater": "wild_island"
+    },
+    {
+      "name": "Shelter",
+      "kind": "base",
+      "u": 883.4,
+      "v": 780.9,
+      "theater": "wild_island"
+    },
+    {
+      "name": "Sand Mine",
+      "kind": "landmark",
+      "u": 1003.3,
+      "v": 832.9,
+      "theater": "wild_island"
+    },
+    {
+      "name": "Yaniv Station",
+      "kind": "base",
+      "u": 415.4,
+      "v": 355.2,
+      "theater": "yanov"
+    },
+    {
+      "name": "Lisovyi",
+      "kind": "landmark",
+      "u": 547.1,
+      "v": 365.4,
+      "theater": "yanov"
+    },
+    {
+      "name": "Offloading Terminal",
+      "kind": "landmark",
+      "u": 322.7,
+      "v": 373.9,
+      "theater": "yanov"
+    },
+    {
+      "name": "Bog Poppers",
+      "kind": "landmark",
+      "u": 484.0,
+      "v": 378.5,
+      "theater": "yanov"
+    },
+    {
+      "name": "Scientist Bunker",
+      "kind": "landmark",
+      "u": 351.5,
+      "v": 528.4,
+      "theater": "yantar"
+    },
+    {
+      "name": "Agricultural Workshop",
+      "kind": "landmark",
+      "u": 471.9,
+      "v": 552.8,
+      "theater": "yantar"
+    },
+    {
+      "name": "Choppers Field",
+      "kind": "landmark",
+      "u": 424.6,
+      "v": 607.8,
+      "theater": "yantar"
+    },
+    {
+      "name": "Tunnel under Lake",
+      "kind": "landmark",
+      "u": 356.4,
+      "v": 644.4,
+      "theater": "yantar"
+    },
+    {
+      "name": "Rozsokha Station",
+      "kind": "landmark",
+      "u": 424.4,
+      "v": 664.4,
+      "theater": "yantar"
+    },
+    {
+      "name": "Hydrodynamics Lab",
+      "kind": "landmark",
+      "u": 1315.4,
+      "v": 817.0,
+      "theater": "zaton"
+    },
+    {
+      "name": "Icarus",
+      "kind": "base",
+      "u": 1098.0,
+      "v": 952.0,
+      "theater": "zaton"
+    },
+    {
+      "name": "Sultansk",
+      "kind": "base",
+      "u": 1195.4,
+      "v": 954.0,
+      "theater": "zaton"
+    },
+    {
+      "name": "Ranger Station",
+      "kind": "landmark",
+      "u": 1338.5,
+      "v": 973.0,
+      "theater": "zaton"
+    },
+    {
+      "name": "Shevchenko",
+      "kind": "base",
+      "u": 1158.5,
+      "v": 1000.9,
+      "theater": "zaton"
+    }
+  ],
+  "note": "Major bases and landmarks for the Zone heat map. Coordinates are on map.jpg (u right, v down). Hubs and 9 calibration landmarks, plus a few named locations per region from joric/stalker (Unlicense)."
+}
