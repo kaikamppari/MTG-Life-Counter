@@ -337,10 +337,23 @@ body.live-mode #legend .lg-live { display: block; }
 .lp-h .badge { display: inline-block; min-width: 15px; padding: 1px 4px; margin-left: 6px; border-radius: 8px; background: #c8352a; color: #fff; font: 700 9.5px/1.2 var(--mono); letter-spacing: 0; text-align: center; }
 .lp-fights { display: flex; flex-direction: column; gap: 3px; max-height: none; overflow-y: auto; overscroll-behavior: contain; }
 @media (max-width: 699px) {
-  #live-panel { padding: 5px 8px 6px; }
-  #live-panel .lp-row { padding: 4px 7px; min-height: 28px; }
-  #live-panel .lp-row.msg { padding: 3px 7px; min-height: 26px; }
-  #live-panel .lp-body { gap: 2px; }
+  #live-panel { max-width: none; left: 10px; right: 10px; padding: 8px 10px 8px; }
+  #live-panel .lp-title { font-size: 15px; }
+  #live-panel .lp-upd { font-size: 12px; }
+  #live-panel .lp-h { font-size: 13px; margin: 4px 0 5px; }
+  #live-panel .lp-row { gap: 8px; padding: 8px 10px; min-height: 44px; font-size: 20px; line-height: 1.35; }
+  #live-panel .lp-row.msg { padding: 7px 10px; min-height: 42px; font-size: 19px; }
+  #live-panel .lp-row.msg.sub { padding: 5px 10px; min-height: 34px; font-size: 17px; }
+  #live-panel .lp-t { font-size: 15px; margin-top: 4px; }
+  #live-panel .lp-where, #live-panel .lp-txt .m { font-size: 0.92em; }
+  #live-panel .mi { width: 28px; height: 28px; flex-basis: 28px; }
+  #live-panel .lp-row .dot { width: 14px; height: 14px; flex-basis: 14px; }
+  #live-panel .rglyph, #live-panel .rglyph svg { width: 22px; height: 22px; }
+  #live-panel .rglyph { flex-basis: 22px; }
+  #live-panel .rbadge { font-size: 12px; padding: 3px 6px; }
+  #live-panel .lp-moreradio { font-size: 13px; padding: 8px; min-height: 36px; }
+  #live-panel .lp-note { font-size: 16px; }
+  #live-panel .lp-body { gap: 4px; }
 }
 .rglyph { display: inline-flex; width: 13px; height: 13px; margin-right: 4px; vertical-align: -2px; color: #ffb020; flex: 0 0 13px; }
 .rglyph.both { color: #d4b070; }
@@ -420,22 +433,54 @@ body.live-mode #legend .lg-live { display: block; }
 #lv-alert .al-x { appearance: none; background: none; border: 0; color: #ffcfc4; font-size: 18px; padding: 0 2px 0 6px; cursor: pointer; }
 @media (min-width: 700px) {
   #topbar, #filters, #fabs, #legend, #sheet, #btn-back, #lv-alert, #banner { zoom: var(--z, 1); }
-  /* Keep #live-panel at zoom 1: width stays ≤270px (Kai), and zoomed flex rows were painting wrapped text over the next row. */
+  /* Keep #live-panel at zoom 1 so row wrap heights stay correct (zoomed flex rows used to paint over the next row). */
   #live-panel { zoom: 1; }
-  /* narrow panel (Kai t1478: width, not height): ~270 px at zoom 1; rows grow to wrap */
-  #live-panel { max-width: min(270px, calc(100vw / var(--z, 1) - 96px)); padding: 5px 7px 6px; }
+  /* Mid widths: cap the panel so it still fits with FABs/Key. */
+  #live-panel { max-width: min(540px, calc(100vw / var(--z, 1) - 120px)); padding: 8px 10px 8px; }
   /* tall panel: radio list takes leftover height and scrolls */
-  #live-panel:not(.min) .lp-fights { max-height: min(28vh, 220px); flex: 0 1 auto; }
-  #live-panel .lp-row { gap: 5px; min-height: 26px; padding: 3px 6px; font-size: 12px; }
-  #live-panel .lp-row.msg { min-height: 24px; padding: 3px 6px; font-size: 11.5px; }
-  #live-panel .lp-row.msg.sub { margin-left: 12px; width: calc(100% - 12px); min-height: 20px; padding: 1px 6px; font-size: 11px; }
-  #live-panel .lp-head { gap: 4px; }
-  #live-panel .lp-title { letter-spacing: .06em; }
-  #live-panel .lp-t { font-size: 10.5px; }
+  #live-panel:not(.min) .lp-fights { max-height: min(32vh, 360px); flex: 0 1 auto; }
+  #live-panel .lp-head { gap: 6px; }
+  #live-panel .lp-title { letter-spacing: .06em; font-size: 15px; }
+  #live-panel .lp-upd { font-size: 12px; }
+  #live-panel .lp-h { font-size: 13px; margin: 4px 0 6px; }
+  /* Mid (700-899): large but not full 2x, so the capped panel still fits. */
+  #live-panel .lp-row { gap: 8px; min-height: 44px; padding: 7px 10px; font-size: 18px; line-height: 1.35; }
+  #live-panel .lp-row.msg { min-height: 42px; padding: 6px 10px; font-size: 17px; }
+  #live-panel .lp-row.msg.sub { margin-left: 14px; width: calc(100% - 14px); min-height: 34px; padding: 5px 10px; font-size: 16px; }
+  #live-panel .lp-t { font-size: 14px; }
+  #live-panel .mi { width: 26px; height: 26px; flex-basis: 26px; }
+  #live-panel .lp-row .dot { width: 14px; height: 14px; flex-basis: 14px; }
+  #live-panel .rglyph, #live-panel .rglyph svg { width: 22px; height: 22px; }
+  #live-panel .rglyph { flex-basis: 22px; }
+  #live-panel .rbadge { font-size: 12px; padding: 3px 6px; }
+  #live-panel .lp-note { font-size: 15px; }
+  #live-panel .lp-moreradio { font-size: 13px; padding: 8px; min-height: 34px; }
+  #live-panel .lp-msgs::-webkit-scrollbar,
+  #live-panel .lp-fights::-webkit-scrollbar { width: 12px; }
   /* caps in real screen px: zoomed elements multiply their own lengths, so divide by --z (= the zoom) */
   #sheet { max-height: calc(64vh / var(--z, 1)); }
   body.region-view #sheet { max-height: calc(45vh / var(--z, 1)); }
   #banner { right: auto; width: min(560px, calc((100vw - 20px) / var(--z, 1))); }
+}
+@media (min-width: 900px) {
+  /* Desktop: double the previous 270px panel and roughly double row type/icons. */
+  #live-panel { max-width: 540px; padding: 10px 12px 10px; }
+  #live-panel .lp-title { font-size: 18px; }
+  #live-panel .lp-upd { font-size: 13px; }
+  #live-panel .lp-h { font-size: 14px; }
+  #live-panel .lp-row { gap: 10px; min-height: 52px; padding: 8px 12px; font-size: 24px; line-height: 1.35; }
+  #live-panel .lp-row.msg { min-height: 48px; padding: 8px 12px; font-size: 23px; }
+  #live-panel .lp-row.msg.sub { margin-left: 18px; width: calc(100% - 18px); min-height: 40px; padding: 6px 12px; font-size: 20px; }
+  #live-panel .lp-t { font-size: 18px; }
+  #live-panel .mi { width: 32px; height: 32px; flex-basis: 32px; }
+  #live-panel .lp-row .dot { width: 18px; height: 18px; flex-basis: 18px; }
+  #live-panel .rglyph, #live-panel .rglyph svg { width: 26px; height: 26px; }
+  #live-panel .rglyph { flex-basis: 26px; }
+  #live-panel .rbadge { font-size: 14px; padding: 4px 8px; }
+  #live-panel .lp-note { font-size: 18px; }
+  #live-panel .lp-moreradio { font-size: 14px; padding: 10px; min-height: 40px; }
+  #live-panel .lp-msgs::-webkit-scrollbar,
+  #live-panel .lp-fights::-webkit-scrollbar { width: 14px; }
 }
 @media (max-width: 699.98px) {
   /* region view: the round buttons sit in one row above the bottom card, clear of the top bar */
@@ -1145,6 +1190,7 @@ function visRect(sel) {
 }
 function regionFitOptions(animate) {
   // padding (viewport px) from the panels actually on screen, so the region is fitted into the free part of the map
+  if (typeof positionLivePanel === "function" && typeof LV !== "undefined" && LV.on) positionLivePanel();
   const W = window.innerWidth, H = window.innerHeight, wide = W >= 700;
   const z = ZOOM;
   let top = 60, left = 16, right = 16, bottom = 16;
@@ -1154,10 +1200,15 @@ function regionFitOptions(animate) {
   const sheet = visRect("#sheet");
   if (sheet) bottom = Math.max(bottom, H - sheet.top + 8);
   if (wide) {
-    left = card ? card.right + 14 : Math.round((W >= 1280 ? 380 * Math.min(UI, 1.35) : 300 * Math.min(UI, 1.1))) + 24;
-    if (lp && lp.left < left - 20) top = Math.max(top, lp.bottom + 8);   // panel still in the left column
-    else if (lp) top = Math.max(top, lp.bottom + 8);
-    const fabs = visRect("#fabs"); if (fabs) right = Math.max(right, W - fabs.left + 8);
+    // The live panel is a tall left column (now ~540px): pad the map from its right edge, not its bottom.
+    if (lp) left = Math.max(left, lp.right + 14);
+    if (card) left = Math.max(left, card.right + 14);
+    const fabs = visRect("#fabs");
+    if (fabs && !(fabs.width > 120 && fabs.height < 90)) right = Math.max(right, W - fabs.left + 8);
+    const leg = visRect("#legend");
+    if (leg && leg.left > W * 0.45) right = Math.max(right, W - leg.left + 8);
+    const minMap = W >= 1400 ? 380 : W >= 900 ? 280 : 200;
+    if (left + right + minMap > W) left = Math.max(16, W - right - minMap);
   } else {
     if (lp) top = Math.max(top, lp.bottom + 8);
     const cardTop = card ? card.top : H - (Math.min(0.42 * H, 360) + 120) * (W >= 700 ? z : 1);
@@ -1179,16 +1230,22 @@ function refitRegion() {
   const opts = regionFitOptions(false);
   map.fitBounds(theaterBounds(t), opts);
   render();
-  // wheels get nudged apart around their spots: if that pushed some past the fitted area, fit those too (once)
+  // wheels get nudged apart around their spots: if that pushed some past the fitted area, fit those too (once).
+  // Skip when the free map strip is tight (2x live panel + region card): zooming out or recentering
+  // the extended bounds at minZoom pulls the region back under the card.
   const pts = (S.regionFights || []).filter(it => it.pu != null).map(it => ll(it.pu, it.pv));
-  if (pts.length && window.innerWidth >= 900) {   // narrow screens: zooming out only bunches the wheels up more
+  const lpNow = visRect("#live-panel");
+  const tightPanel = lpNow && lpNow.width >= 400 && lpNow.height > 120 && !document.getElementById("live-panel").classList.contains("min");
+  if (pts.length && window.innerWidth >= 900 && !tightPanel) {
     const b = theaterBounds(t), all = L.latLngBounds(b.getSouthWest(), b.getNorthEast());
     pts.forEach(p => all.extend(p));
     if (!b.contains(all)) { map.fitBounds(all, opts); render(); }
   }
-  // then pan (no zoom change, so the wheel layout stays) to bring every wheel into the free part of the map
-  const marks = [...document.querySelectorAll("#map .fight-mark")].map(e => e.getBoundingClientRect()).filter(r => r.width);
-  if (marks.length) {
+  // pan after layout so we use fresh wheel positions (fitBounds may apply on the next frame)
+  const panWheels = () => {
+    if (S.focusedTheater !== t.id) return;
+    const marks = [...document.querySelectorAll("#map .fight-mark")].map(e => e.getBoundingClientRect()).filter(r => r.width);
+    if (!marks.length) return;
     const c = map.getContainer().getBoundingClientRect();
     const x0 = Math.min(...marks.map(r => r.left)) - c.left, x1 = Math.max(...marks.map(r => r.right)) - c.left;
     const y0 = Math.min(...marks.map(r => r.top)) - c.top, y1 = Math.max(...marks.map(r => r.bottom)) - c.top;
@@ -1198,7 +1255,8 @@ function refitRegion() {
     const shift = (a0, a1, f0, f1) => (a1 - a0 > f1 - f0) ? ((f0 + f1) - (a0 + a1)) / 2 : a0 < f0 ? f0 - a0 : a1 > f1 ? f1 - a1 : 0;
     const dx = shift(x0, x1, fx0, fx1), dy = shift(y0, y1, fy0, fy1);
     if (Math.abs(dx) > 1 || Math.abs(dy) > 1) map.panBy([-dx, -dy], { animate: false });
-  }
+  };
+  requestAnimationFrame(() => requestAnimationFrame(panWheels));
 }
 function visibleEvents(d, since) {
   return d.conflicts.filter(c => c.t >= since && c.u != null && c.v != null && visibleFac(c.factions));
@@ -1302,8 +1360,9 @@ function openTheater(id, opts) {
   const sheet = document.getElementById("sheet");
   if (sheet) sheet.classList.add("collapsed");
   map.closePopup();
-  map.fitBounds(theaterBounds(t), regionFitOptions(!opts || opts.animate !== false));
   render();
+  if (typeof positionLivePanel === "function" && typeof LV !== "undefined" && LV.on) positionLivePanel();
+  map.fitBounds(theaterBounds(t), regionFitOptions(!opts || opts.animate !== false));
   let done = false;
   const again = () => { if (done || S.focusedTheater !== id) return; done = true; requestAnimationFrame(refitRegion); };
   map.once("moveend", again);
@@ -2194,6 +2253,38 @@ function liveTopInset() {
   const lp = document.getElementById("live-panel");
   return lp && !lp.hidden ? Math.round(lp.getBoundingClientRect().bottom + 8) : 0;
 }
+function liveMapPad() {
+  // Viewport inset so fly-to / popups land in the free map, not under the 2x live panel or region card.
+  const W = window.innerWidth, H = window.innerHeight;
+  const lp = visRect("#live-panel"), card = visRect("#region-card");
+  const fabs = visRect("#fabs"), sheet = visRect("#sheet");
+  const fl = visRect("#filters") || visRect("#topbar .brand");
+  let left = 16, top = fl ? fl.bottom + 8 : 80, right = 16, bottom = 16;
+  if (lp && lp.height > 80) {
+    if (lp.width < W * 0.6) left = Math.max(left, lp.right + 14);   // desktop left column
+    else top = Math.max(top, lp.bottom + 8);                      // phone full-width sheet
+  }
+  if (card && card.width < W * 0.6) left = Math.max(left, card.right + 14);
+  if (fabs && !(fabs.width > 120 && fabs.height < 90)) right = Math.max(right, W - fabs.left + 8);
+  if (sheet) bottom = Math.max(bottom, H - sheet.top + 8);
+  if (left + right + 160 > W) left = Math.max(16, W - right - 160);
+  if (top + bottom + 140 > H) top = Math.max(16, H - bottom - 140);
+  return { left, top, right, bottom };
+}
+function livePanPoint(latlng) {
+  if (!latlng || typeof map === "undefined") return;
+  const pad = liveMapPad(), p = map.latLngToContainerPoint(latlng), size = map.getSize();
+  const fx0 = pad.left, fy0 = pad.top, fx1 = size.x - pad.right, fy1 = size.y - pad.bottom;
+  if (fx1 - fx0 < 80 || fy1 - fy0 < 80) return;
+  const tx = (p.x < fx0 || p.x > fx1) ? (fx0 + fx1) / 2 : p.x;
+  const ty = (p.y < fy0 || p.y > fy1) ? (fy0 + fy1) / 2 : p.y;
+  const dx = p.x - tx, dy = p.y - ty;
+  if (Math.abs(dx) > 2 || Math.abs(dy) > 2) map.panBy([dx, dy], { animate: false });
+}
+function liveAutoPanPad() {
+  const pad = liveMapPad();
+  return { autoPanPaddingTopLeft: L.point(pad.left, Math.max(60, pad.top)), autoPanPaddingBottomRight: L.point(pad.right, pad.bottom) };
+}
 function lvSidesHtml(f) {
   const n = (s) => f.source === "radio" || !s.fielded ? "" : ` ${s.fielded}`;   // radio reports carry no head count
   return (f.sides || []).map(s => `<span style="color:${lvTextColor(s.faction)}">${esc(s.faction)}</span>${n(s)}`).join(" <span class='m'>vs</span> ");
@@ -2412,9 +2503,10 @@ function msgFocus(id) {
   const z = Math.max(map.getZoom(), (S.fitZoom != null ? S.fitZoom : 0) + 1.5);
   map.flyTo(ll(m.u, m.v), Math.min(z, map.getMaxZoom()), { duration: 0.6 });
   map.once("moveend", () => {
+    livePanPoint(ll(m.u, m.v));
     renderLive();
     const mk = LV.msgMarkers.get(root.id);
-    if (mk) { mk.getPopup().options.autoPanPaddingTopLeft = L.point(10, Math.max(60, liveTopInset())); mk.setPopupContent(msgPopup(root)); mk.openPopup(); }
+    if (mk) { Object.assign(mk.getPopup().options, liveAutoPanPad()); mk.setPopupContent(msgPopup(root)); mk.openPopup(); }
   });
 }
 function alertFocus(a) {
@@ -2423,7 +2515,7 @@ function alertFocus(a) {
   if (a.fight_id && LV.markers.has(a.fight_id)) return lvFocus(a.fight_id);
   const mid = (a.msg_ids || [])[0];
   if (mid != null && LV.msgById.has(mid)) return msgFocus(mid);
-  if (a.u != null) return map.flyTo(ll(a.u, a.v), Math.max(map.getZoom(), (S.fitZoom || 0) + 1.5), { duration: 0.6 });
+  if (a.u != null) { const llv = ll(a.u, a.v); map.flyTo(llv, Math.max(map.getZoom(), (S.fitZoom || 0) + 1.5), { duration: 0.6 }); map.once("moveend", () => livePanPoint(llv)); return; }
   lvShowRadio(mid);
 }
 function lvShowRadio(mid) {
@@ -2500,9 +2592,17 @@ function lvAlertPlace() {
   const lp = document.getElementById("live-panel");
   const lpr = lp && !lp.hidden ? lp.getBoundingClientRect() : fl;
   const fabs = visRect("#fabs");
+  const card = visRect("#region-card");
+  const brand = visRect("#topbar .brand"), st = visRect("#status"), back = visRect("#btn-back");
+  const topBand = Math.max(fl.bottom, brand ? brand.bottom : 0, st ? st.bottom : 0, back ? back.bottom : 0) + 8;
+  const colLeft = Math.max(lpr.right, card ? card.right : 0) + 8;
   const rightEdge = fabs ? fabs.left - 8 : W - 10;
-  const cands = [[(W - w) / 2, 8], [(W - w) / 2, fl.top], [lpr.right + 8, lpr.top], [lpr.right + 8, fl.top], [lpr.left, lpr.bottom + 8],
-    [rightEdge - w, lpr.bottom + 8], [10, fl.bottom + 8], [(W - w) / 2, lpr.bottom + 8]];
+  const cands = [
+    [colLeft, topBand], [colLeft, Math.max(lpr.top, topBand)],
+    [(W - w) / 2, topBand], [rightEdge - w, topBand],
+    [lpr.right + 8, Math.max(lpr.top, topBand)], [lpr.left, lpr.bottom + 8],
+    [rightEdge - w, lpr.bottom + 8], [10, topBand], [(W - w) / 2, lpr.bottom + 8]
+  ];
   if (fabs) cands.push([10, fabs.bottom + 8], [Math.max(10, (W - w) / 2), fabs.bottom + 8]);
   // covering the region card / bottom sheet (just content) beats covering a control or the live panel
   const soft = new Set([visRect("#region-card"), visRect("#sheet")].filter(Boolean).map(r => r.left + "," + r.top));
@@ -2513,6 +2613,10 @@ function lvAlertPlace() {
   for (const [x, y] of cands) {
     if (x < 0 || x + w > W || y + hgt > window.innerHeight) continue;
     if (sheetR && y + hgt > sheetR.top + 4 && y < sheetR.bottom - 4) continue;
+    // Never sit the banner on the filters / top bar, even as a fallback.
+    const onFilters = (x < fl.right + 4 && x + w > fl.left - 4 && y < fl.bottom + 4 && y + hgt > fl.top - 4);
+    const onBrand = [brand, st, back].some(r => r && x < r.right + 4 && x + w > r.left - 4 && y < r.bottom + 4 && y + hgt > r.top - 4);
+    if (onFilters || onBrand) continue;
     const n = count(x, y);
     if (n === 0) { pick = [x, y]; break; }
     if (n < best) { best = n; pick = [x, y]; }
@@ -2805,13 +2909,61 @@ function positionLivePanel() {
   const wide = window.innerWidth >= 700;
   const expanded = !lp.hidden && !lp.classList.contains("min");
   if (!expanded && leg) leg.style.left = "";
-  if (lp.hidden) { lp.style.height = ""; lp.style.maxHeight = ""; if (leg) leg.style.left = ""; return; }
   const rc = document.getElementById("region-card");
-  const rcr = rc && !rc.hidden && wide ? rc.getBoundingClientRect() : null;
-  // wide screens in region view: the region card owns the left column, so the live panel sits right of it
-  lp.style.left = rcr && rcr.width ? Math.round((rcr.right + 10) / z) + "px" : "";
+  if (lp.hidden) {
+    lp.style.height = ""; lp.style.maxHeight = ""; lp.style.left = ""; lp.style.maxWidth = "";
+    if (leg) leg.style.left = "";
+    if (rc) { rc.style.left = ""; rc.style.maxWidth = ""; }
+    return;
+  }
+  const cardOn = rc && !rc.hidden && wide;
+  // The (now wider) live panel stays in the left column. Shift the region card to its right
+  // when both are visible, and cap widths so they don't cover FABs / the Key.
+  lp.style.left = "";
+  lp.style.maxWidth = "";
+  if (rc && !cardOn) { rc.style.left = ""; rc.style.maxWidth = ""; }
   const top = fl.getBoundingClientRect().bottom + 6;
   lp.style.top = Math.round(top / z) + "px";
+  if (cardOn && expanded) {
+    const zc = parseFloat(getComputedStyle(rc).zoom) || 1;
+    const W = window.innerWidth;
+    const fab = visRect("#fabs");
+    // A vertical FAB column is a right wall; a bottom row is not.
+    let fabLeft = W - 10;
+    if (fab && !(fab.width > 120 && fab.height < 90)) fabLeft = fab.left;
+    const rightLimit = fabLeft - 10;
+    // Leave a usable map strip to the right of the card so fitBounds can show the region.
+    const mapGutter = W >= 1400 ? 400 : W >= 900 ? 300 : 200;
+    let lr0 = lp.getBoundingClientRect();
+    let cardLeft = lr0.right + 10;
+    let cardMax = rightLimit - mapGutter - cardLeft;
+    if (cardMax < 220) {
+      const wantCard = 240;
+      const panelMaxPx = Math.max(200, rightLimit - mapGutter - wantCard - 10 - lr0.left);
+      lp.style.maxWidth = Math.round(panelMaxPx / z) + "px";
+      lr0 = lp.getBoundingClientRect();
+      cardLeft = lr0.right + 10;
+      cardMax = rightLimit - mapGutter - cardLeft;
+    }
+    if (cardMax >= 180) {
+      rc.style.left = Math.round(cardLeft / zc) + "px";
+      rc.style.maxWidth = Math.round(cardMax / zc) + "px";
+    } else {
+      // Too tight to sit the card beside a left panel: card keeps the left column, panel sits to its right.
+      rc.style.left = "";
+      rc.style.maxWidth = "";
+      const rcr = rc.getBoundingClientRect();
+      if (rcr.width) {
+        lp.style.left = Math.round((rcr.right + 10) / z) + "px";
+        const remain = rightLimit - mapGutter - (rcr.right + 10);
+        if (remain > 160) lp.style.maxWidth = Math.round(remain / z) + "px";
+      }
+    }
+  } else if (rc) {
+    // Panel collapsed or no card-on-desktop: put the region card back in its default left column.
+    rc.style.left = "";
+    rc.style.maxWidth = "";
+  }
   const lr = lp.getBoundingClientRect();
   let lim = Infinity;
   if (wide && expanded) {
@@ -2852,13 +3004,20 @@ function positionLivePanel() {
   }
   // the panel is a flex column: Fights and Radio lists shrink and scroll inside it
   lp.style.overflowY = "hidden";
-  if (lim < Infinity) {
+  if (!expanded) {
+    lp.style.maxHeight = "";
+    lp.style.height = "";
+  } else if (lim < Infinity) {
     const h = Math.max(80, Math.floor((lim - 8 - top) / z));
     lp.style.maxHeight = h + "px";
-    lp.style.height = expanded ? h + "px" : "";
+    lp.style.height = h + "px";
   } else {
     lp.style.maxHeight = "";
     lp.style.height = "";
+  }
+  if (typeof lvAlertPlace === "function") {
+    const al = document.getElementById("lv-alert");
+    if (al && !al.hidden) lvAlertPlace();
   }
 }
 function lpSameShape(a, b) {
@@ -2888,10 +3047,11 @@ function renderLivePanel() {
   btn.classList.toggle("on", LV.on);
   btn.setAttribute("aria-pressed", String(LV.on));
   if (!LV.on) return;
-  // region view is busy (region card below): show just the header unless opened
-  if (S.focusedTheater !== LV._lastTheater) {   // entering a region: phones start collapsed, desks as last left
+  // region view is busy on phone: start collapsed. On desktop the 2x panel stays open
+  // and the region card shifts to its right, so both can be read at once.
+  if (S.focusedTheater !== LV._lastTheater) {
     LV._lastTheater = S.focusedTheater;
-    if (S.focusedTheater && !LV._regionPinned) LV.regionOpen = lpNarrow() ? !!store.get("liveRegionOpen", false) : false;
+    if (S.focusedTheater && !LV._regionPinned) LV.regionOpen = lpNarrow() ? true : !!store.get("liveRegionOpen", false);
   }
   LV._regionPinned = false;
   const compact = S.focusedTheater ? !LV.regionOpen : !!LV.min;
@@ -2963,11 +3123,11 @@ function renderLivePanel() {
   }
   const html = `<button type="button" class="lp-head" id="lp-head" aria-expanded="${!compact}">${title}<span class="lp-upd">${upd}<span class="lp-chev">${compact ? "▸" : "▾"}</span></span></button><div class="lp-body">${body}</div>`;
   // called every second: if only the times changed, patch the text in place (keeps scroll, focus and hover)
-  if (html === LV._panelHtml) return;
+  if (html === LV._panelHtml) { positionLivePanel(); return; }
   const tpl = document.createElement("div"); tpl.innerHTML = html;
   const LVshape = LV._panelHtml != null && lpSameShape(lp, tpl);
   LV._panelHtml = html;
-  if (LVshape) { lpPatchText(lp, tpl); lvAlertPlace(); return; }
+  if (LVshape) { lpPatchText(lp, tpl); positionLivePanel(); lvAlertPlace(); return; }
   lp.innerHTML = html;
   positionLivePanel();
   lp.querySelector("#lp-head").onclick = () => {
@@ -2989,7 +3149,7 @@ function lvFocus(id) {
   if (S.focusedTheater && !inFocusedTheater(f.u, f.v)) closeTheaters();
   const z = Math.max(map.getZoom(), (S.fitZoom != null ? S.fitZoom : 0) + 1.5);
   map.flyTo(ll(f.u, f.v), Math.min(z, map.getMaxZoom()), { duration: 0.6 });
-  map.once("moveend", () => { renderLive(); if (rec.marker) { rec.marker.getPopup().options.autoPanPaddingTopLeft = L.point(10, Math.max(160, liveTopInset())); rec.marker.setPopupContent(lvPopup(rec.fight, lvState(rec))); rec.marker.openPopup(); } });
+  map.once("moveend", () => { livePanPoint(ll(f.u, f.v)); renderLive(); if (rec.marker) { Object.assign(rec.marker.getPopup().options, liveAutoPanPad()); rec.marker.setPopupContent(lvPopup(rec.fight, lvState(rec))); rec.marker.openPopup(); } });
 }
 function lvApply(d) {
   const seen = new Set();
