@@ -194,10 +194,13 @@ body.region-view #fabs { bottom: calc(128px + var(--safe-b) + var(--region-card-
 .theater-mark { position: relative; width: 100%; height: 100%; filter: drop-shadow(0 0 3px rgba(0,0,0,.9)); }
 .theater-mark svg { display: block; width: 100%; height: 100%; }
 .theater-label-ico { overflow: visible; background: none; border: 0; }
+.theater-leader { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
+.theater-leader line { stroke: rgba(212,163,92,.7); stroke-width: 1.15; }
 .theater-name { position: absolute; left: 0; top: 0; transform: translate(-50%, 0);
   font: 700 calc(8.5px * var(--ui, 1))/1.15 var(--display); letter-spacing: .04em; height: calc(16px * var(--ui, 1)); box-sizing: border-box; line-height: calc(10px * var(--ui, 1)); text-transform: uppercase;
   color: var(--text); background: rgba(11,12,10,.82); border: 1px solid rgba(212,163,92,.4);
   border-radius: 3px; padding: calc(2px * var(--ui, 1)) calc(5px * var(--ui, 1)); white-space: nowrap; pointer-events: none; }
+.theater-name.compact { font-size: calc(7px * var(--ui, 1)); height: calc(13px * var(--ui, 1)); line-height: calc(9px * var(--ui, 1)); padding: calc(1px * var(--ui, 1)) calc(3px * var(--ui, 1)); letter-spacing: .02em; }
 .lg-factions .outlined i, .chip.outlined i { box-shadow: 0 0 0 1px #FFD9C8; }
 
 .fight-mark { position: relative; width: 100%; height: 100%; filter: drop-shadow(0 0 2px rgba(0,0,0,.85)); }
@@ -230,11 +233,11 @@ h4 { font: 700 11px/1 var(--mono); }
 #live-panel[hidden] { display: none; }
 #live-panel:not([hidden]) { display: flex; flex-direction: column; box-sizing: border-box; }
 #live-panel .lp-head { flex: 0 0 auto; }
-#live-panel .lp-body { min-height: 0; flex: 0 1 auto; overflow: hidden; }
+#live-panel .lp-body { min-height: 0; flex: 1 1 auto; overflow: hidden; }
 #live-panel .lp-sec { display: flex; flex-direction: column; min-height: 0; }
 #live-panel .lp-sec:first-child { flex: 0 1 auto; }
-#live-panel .lp-sec + .lp-sec { flex: 0 1 auto; min-height: 60px; }
-#live-panel .lp-fights, #live-panel .lp-msgs { min-height: 0; flex: 0 1 auto; }
+#live-panel .lp-sec + .lp-sec { flex: 1 1 auto; min-height: 80px; }
+#live-panel .lp-fights, #live-panel .lp-msgs { min-height: 0; flex: 1 1 auto; }
 .lp-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; appearance: none; width: 100%;
   background: none; border: 0; padding: 2px 0; color: var(--text); text-align: left; }
 .lp-title { font: 700 11px/1.2 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: #ff8a70; white-space: nowrap; }
@@ -243,7 +246,7 @@ h4 { font: 700 11px/1 var(--mono); }
 .lp-chev { color: var(--muted); font-size: 11px; margin-left: 4px; }
 #live-panel.min .lp-body { display: none; }
 .lp-body { margin-top: 4px; display: flex; flex-direction: column; gap: 3px; }
-.lp-row { appearance: none; display: flex; align-items: center; gap: 7px; width: 100%; text-align: left; min-height: 30px;
+.lp-row { appearance: none; display: flex; align-items: flex-start; gap: 7px; width: 100%; text-align: left; min-height: 30px;
   background: rgba(0,0,0,.3); border: 1px solid var(--line); border-radius: 6px; padding: 5px 8px; color: var(--text);
   font: 600 12.5px/1.2 var(--display); }
 .lp-row .dot { width: 9px; height: 9px; border-radius: 50%; flex: 0 0 9px; background: #e2553f; box-shadow: 0 0 0 0 rgba(226,85,63,.7);
@@ -251,9 +254,11 @@ h4 { font: 700 11px/1 var(--mono); }
 .lp-row.ended { opacity: .55; }
 .lp-row.ended .dot { background: var(--muted); animation: none; }
 .lp-row.new { border-color: #e2553f; background: rgba(200,53,42,.18); }
-.lp-txt { min-width: 0; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lp-row { height: auto; overflow: hidden; } /* Chrome: a flex button only grows with wrapped lines if overflow is not visible */
+.lp-txt { min-width: 0; flex: 1 1 auto; white-space: normal; overflow: hidden; overflow-wrap: anywhere; line-height: 1.25; height: auto; }
 .lp-txt .m { color: var(--muted); font-weight: 600; }
-.lp-t { font: 600 11px/1 var(--mono); color: #ffb9ab; white-space: nowrap; }
+.lp-t { font: 600 11px/1 var(--mono); color: #ffb9ab; white-space: nowrap; flex: 0 0 auto; margin-top: 3px; }
+#live-panel .mi, #live-panel .dot, #live-panel .rbadge { flex: 0 0 auto; margin-top: 2px; }
 .lp-row.ended .lp-t { color: var(--muted); }
 .lp-note { font: 600 11.5px/1.35 var(--display); color: var(--muted); padding: 2px 0; }
 .lp-note b { color: var(--text); font-family: var(--mono); font-weight: 600; user-select: all; -webkit-user-select: all; }
@@ -327,7 +332,7 @@ body.live-mode #legend .lg-live { display: block; }
 .lp-sec + .lp-sec { margin-top: 5px; }
 .lp-h { font: 700 10px/1.2 var(--mono); letter-spacing: .14em; color: var(--accent); text-transform: uppercase; margin: 3px 0 3px; display: flex; align-items: center; }
 .lp-h .badge { display: inline-block; min-width: 15px; padding: 1px 4px; margin-left: 6px; border-radius: 8px; background: #c8352a; color: #fff; font: 700 9.5px/1.2 var(--mono); letter-spacing: 0; text-align: center; }
-.lp-fights { display: flex; flex-direction: column; gap: 3px; max-height: max(190px, 34vh); overflow-y: auto; overscroll-behavior: contain; }
+.lp-fights { display: flex; flex-direction: column; gap: 3px; max-height: none; overflow-y: auto; overscroll-behavior: contain; }
 @media (max-width: 699px) {
   #live-panel { padding: 5px 8px 6px; }
   #live-panel .lp-row { padding: 4px 7px; min-height: 28px; }
@@ -345,7 +350,7 @@ body.live-mode #legend .lg-live { display: block; }
 .lp-moreradio { appearance: none; margin-top: 3px; width: 100%; background: rgba(0,0,0,.3); border: 1px solid var(--line); border-radius: 5px; color: var(--muted);
   font: 700 10.5px/1 var(--mono); letter-spacing: .08em; padding: 6px; min-height: 26px; }
 @media (max-width: 699px) { .lp-fights { max-height: none; } }
-.lp-msgs { display: flex; flex-direction: column; gap: 3px; max-height: 214px; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
+.lp-msgs { display: flex; flex-direction: column; gap: 3px; max-height: none; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
 .lp-row.msg { min-height: 28px; padding: 4px 7px; font-size: 12px; }
 .lp-row.msg.lvl0 { opacity: .62; }
 .lp-row.msg.lvl3 { border-color: #6b2a20; }
@@ -390,9 +395,13 @@ body.live-mode #legend .lg-live { display: block; }
 #lv-alert .al-m { font: 600 11.5px/1.2 var(--display); color: #e8cfc8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 #lv-alert .al-x { appearance: none; background: none; border: 0; color: #ffcfc4; font-size: 18px; padding: 0 2px 0 6px; cursor: pointer; }
 @media (min-width: 700px) {
-  #topbar, #filters, #fabs, #legend, #sheet, #btn-back, #live-panel, #lv-alert, #banner { zoom: var(--z, 1); }
+  #topbar, #filters, #fabs, #legend, #sheet, #btn-back, #lv-alert, #banner { zoom: var(--z, 1); }
+  /* Keep #live-panel at zoom 1: width stays ≤270px (Kai), and zoomed flex rows were painting wrapped text over the next row. */
+  #live-panel { zoom: 1; }
   /* narrow panel (Kai t1478: width, not height): ~270 px at zoom 1, rows are one short line each */
   #live-panel { max-width: min(270px, calc(100vw / var(--z, 1) - 96px)); padding: 5px 7px 6px; }
+  /* tall panel: radio list takes leftover height and scrolls */
+  #live-panel:not(.min) .lp-fights { max-height: min(28vh, 220px); flex: 0 1 auto; }
   #live-panel .lp-row { gap: 5px; min-height: 26px; padding: 3px 6px; font-size: 12px; }
   #live-panel .lp-row.msg { min-height: 24px; padding: 3px 6px; font-size: 11.5px; }
   #live-panel .lp-row.msg.sub { margin-left: 12px; width: calc(100% - 12px); min-height: 20px; padding: 1px 6px; font-size: 11px; }
@@ -1473,19 +1482,58 @@ function theaterVisualSize(rec) {
 }
 const SHORT_NAMES = { "Chornobyl NPP": "NPP", "Cement Factory": "Cement", "Cooling Towers": "Towers",
   "Chemical Plant": "Chem Plant", "Lesser Zone": "Lesser Zone", "Wild Island": "Wild Isl." };
+const TINY_NAMES = { "Chornobyl NPP": "NPP", "Cement Factory": "Cement", "Cooling Towers": "Towers",
+  "Chemical Plant": "Chem", "Lesser Zone": "Lesser", "Wild Island": "Wild", "Iron Forest": "Iron F.",
+  "Red Forest": "Red F.", "Cooling Towers": "Towers" };
 function shortName(t) { return SHORT_NAMES[t.name] || t.name; }
+function tinyName(t) { return TINY_NAMES[t.name] || shortName(t); }
 function layoutTheaters(recs) {
   // Greedy screen-space layout: busiest regions first. Each wheel stays close
-  // to its region centre; its name goes beside it only if it fits cleanly.
-  // Nothing (wheel or name) may overlap anything already placed.
+  // to its region centre. A name is always placed: beside the wheel if it
+  // fits cleanly, otherwise a leader-line callout (smaller type or a short
+  // abbreviation if needed). Names are never dropped.
   const scale = mapScale() * (S.scale || 1);
-  const gap = 3 * UI, lh = 16 * UI;
+  const gap = 3 * UI;
   const boxes = [];
-  const hits = (b) => boxes.some(o => b.x0 < o.x1 + gap && b.x1 + gap > o.x0 && b.y0 < o.y1 + gap && b.y1 + gap > o.y0);
+  // keep names (and wheels) off the on-screen chrome: filters, top bar, sheet, FABs, legend
+  const mapRect = map.getContainer().getBoundingClientRect();
+  const clientToImg = (left, top, right, bottom) => {
+    const a = toData(map.containerPointToLatLng(L.point(left - mapRect.left, top - mapRect.top)));
+    const b = toData(map.containerPointToLatLng(L.point(right - mapRect.left, bottom - mapRect.top)));
+    return { x0: Math.min(a.u, b.u) * scale, x1: Math.max(a.u, b.u) * scale,
+             y0: Math.min(a.v, b.v) * scale, y1: Math.max(a.v, b.v) * scale };
+  };
+  const addUiBox = (sel, pad) => {
+    const el = document.querySelector(sel);
+    if (!el || el.hidden) return;
+    const cs = getComputedStyle(el);
+    if (cs.display === "none" || cs.visibility === "hidden" || +cs.opacity === 0) return;
+    const r = el.getBoundingClientRect();
+    const p = pad == null ? 6 : pad;
+    const left = Math.max(0, r.left) - p, top = Math.max(0, r.top) - p;
+    const right = Math.min(window.innerWidth, r.right) + p, bottom = Math.min(window.innerHeight, r.bottom) + p;
+    if (right - left < 4 || bottom - top < 4) return;
+    uiBoxes.push(clientToImg(left, top, right, bottom));
+  };
+  const uiBoxes = [];
+  // only the top/side chrome: the sheet and live panel are large and would
+  // shove names onto other map markers if treated as hard obstacles
+  addUiBox("#topbar"); addUiBox("#filters"); addUiBox("#legend");
+  addUiBox("#fabs"); addUiBox("#banner"); addUiBox("#status");
+  // wheels stay near their region centres (UI chrome must not shove them onto other markers);
+  // names also avoid the on-screen chrome so callouts don't slip under the filters or sheet
+  const hits = (b, extra) => (extra ? boxes.concat(extra) : boxes).some(o => b.x0 < o.x1 + gap && b.x1 + gap > o.x0 && b.y0 < o.y1 + gap && b.y1 + gap > o.y0);
+  const hitsLabel = (b) => hits(b, uiBoxes);
+  const overlapArea = (a, b) => {
+    const x = Math.max(0, Math.min(a.x1, b.x1) - Math.max(a.x0, b.x0));
+    const y = Math.max(0, Math.min(a.y1, b.y1) - Math.max(a.y0, b.y0));
+    return x * y;
+  };
+  const hitScore = (b) => boxes.concat(uiBoxes).reduce((s, o) => s + overlapArea(b, o), 0);
   const order = recs.slice().sort((a, b) => theaterWeight(b) - theaterWeight(a));
   const out = [];
-  const spiral = (maxRad, fn) => {
-    for (let k = 0; k < 80; k++) {
+  const spiral = (maxRad, steps, fn) => {
+    for (let k = 0; k < steps; k++) {
       const rad = k === 0 ? 0 : (2 + k * 0.9) * UI;
       if (rad > maxRad * UI) return null;
       const ang = k * 2.399963229728653;
@@ -1494,41 +1542,106 @@ function layoutTheaters(recs) {
     }
     return null;
   };
+  const nameBox = (cx, cy, lx, ly, lw, lh) => ({
+    x0: cx + lx - lw / 2, x1: cx + lx + lw / 2, y0: cy + ly - lh / 2, y1: cy + ly + lh / 2
+  });
+  const variantsFor = (t) => {
+    const full = shortName(t), tiny = tinyName(t);
+    const list = [
+      { text: full, font: 8.5, lh: 16 },
+      { text: full, font: 7, lh: 13 },
+      { text: tiny, font: 7, lh: 13 }
+    ];
+    return list.filter((v, i) => list.findIndex(x => x.text === v.text && x.font === v.font) === i);
+  };
+  const measure = (text, font) => Math.round((text.length * (font >= 8 ? 6.0 : 5.2) + (font >= 8 ? 12 : 10)) * UI);
+
   for (const rec of order) {
-    const full = theaterVisualSize(rec);
+    const fullVis = theaterVisualSize(rec);
     const cx0 = rec.theater.u * scale, cy0 = rec.theater.v * scale;
-    const lw = Math.round((shortName(rec.theater).length * 6.0 + 12) * UI);
+    const lw0 = measure(shortName(rec.theater), 8.5), lh0 = 16 * UI;
     let pick = null;
-    // 1) wheel + label, shrinking the wheel a little if needed
-    for (let visual = full; visual >= Math.max(10 * UI, full - 14 * UI) && !pick; visual -= 2) {
+
+    // 1) same as the previous layout: wheel + short name on a side, maybe a
+    // slightly smaller wheel. This keeps already-fitting names where they were.
+    for (let visual = fullVis; visual >= Math.max(10 * UI, fullVis - 14 * UI) && !pick; visual -= 2) {
       const r = visual / 2;
-const spots = [[0, r + 2 + lh / 2], [0, -(r + 2 + lh / 2)], [r + 3 + lw / 2, 0], [-(r + 3 + lw / 2), 0]];
-      pick = spiral(16, (dx, dy) => {
+      const spots = [[0, r + 2 + lh0 / 2], [0, -(r + 2 + lh0 / 2)], [r + 3 + lw0 / 2, 0], [-(r + 3 + lw0 / 2), 0]];
+      pick = spiral(16, 80, (dx, dy) => {
         const cx = cx0 + dx, cy = cy0 + dy;
         const wb = { x0: cx - r, x1: cx + r, y0: cy - r, y1: cy + r };
         if (hits(wb)) return null;
         for (const [lx, ly] of spots) {
-          const lb = { x0: cx + lx - lw / 2, x1: cx + lx + lw / 2, y0: cy + ly - lh / 2, y1: cy + ly + lh / 2 };
-          if (!hits(lb)) return { cx, cy, wb, lb, lx, ly, visual };
+          const lb = nameBox(cx, cy, lx, ly, lw0, lh0);
+          if (!hits(lb)) return { cx, cy, wb, lb, lx, ly, visual, text: shortName(rec.theater), font: 8.5, leader: false };
         }
         return null;
       });
     }
-    // 2) wheel only (name shows when the region is tapped)
-    for (let visual = full; visual >= 10 * UI && !pick; visual -= 2) {
-      const r = visual / 2;
-      pick = spiral(40, (dx, dy) => {
-        const cx = cx0 + dx, cy = cy0 + dy;
-        const wb = { x0: cx - r, x1: cx + r, y0: cy - r, y1: cy + r };
-        return hits(wb) ? null : { cx, cy, wb, visual };
-      });
+
+    // 2) park the wheel near its centre if a name would not fit beside it
+    if (!pick) {
+      for (let visual = fullVis; visual >= 10 * UI && !pick; visual -= 2) {
+        const r = visual / 2;
+        pick = spiral(40, 80, (dx, dy) => {
+          const cx = cx0 + dx, cy = cy0 + dy;
+          const wb = { x0: cx - r, x1: cx + r, y0: cy - r, y1: cy + r };
+          return hits(wb) ? null : { cx, cy, wb, visual, lb: null };
+        });
+      }
     }
-    if (!pick) continue; // no clean spot at this zoom; zoom in to see it
+    if (!pick) continue; // no clean spot for even the wheel; zoom in to see it
     boxes.push(pick.wb);
     if (pick.lb) boxes.push(pick.lb);
     out.push({ rec, visual: pick.visual, u: pick.cx / scale, v: pick.cy / scale,
-      label: pick.lb ? { x: pick.lx, y: pick.ly } : null });
+      label: pick.lb ? { x: pick.lx, y: pick.ly, text: pick.text, font: pick.font, leader: false, wr: pick.visual / 2 } : null,
+      _cx: pick.cx, _cy: pick.cy, _wb: pick.wb });
   }
+
+  // 3) every remaining wheel gets a leader-line callout — never drop a name
+  for (const p of out) {
+    if (p.label) continue;
+    const cx = p._cx, cy = p._cy, r = p.visual / 2;
+    const variants = variantsFor(p.rec.theater);
+    let lab = null;
+    for (const v of variants) {
+      const lw = measure(v.text, v.font), lh = v.lh * UI;
+      lab = spiral(110, 200, (dx, dy) => {
+        const lx = dx, ly = dy;
+        if (Math.hypot(lx, ly) < r + lh * 0.65) return null;
+        const lb = nameBox(cx, cy, lx, ly, lw, lh);
+        if (hitsLabel(lb)) return null;
+        return { lb, lx, ly, text: v.text, font: v.font, leader: true };
+      });
+      if (lab) break;
+    }
+    if (!lab) {
+      const v = variants[variants.length - 1];
+      const lw = measure(v.text, v.font), lh = v.lh * UI;
+      let best = null, bestScore = Infinity;
+      for (let i = 0; i < 24; i++) {
+        const ang = (i / 24) * Math.PI * 2 + 0.15;
+        for (let k = 1; k <= 12; k++) {
+          const dist = r + 6 * UI + k * 8 * UI;
+          const lx = Math.cos(ang) * dist, ly = Math.sin(ang) * dist;
+          const lb = nameBox(cx, cy, lx, ly, lw, lh);
+          const score = hitScore(lb);
+          if (score < bestScore) { bestScore = score; best = { lx, ly, lb }; }
+          if (score === 0) break;
+        }
+        if (bestScore === 0) break;
+      }
+      if (!best) {
+        const ly = -(r + 14 * UI);
+        best = { lx: 0, ly, lb: nameBox(cx, cy, 0, ly, lw, lh) };
+      }
+      lab = Object.assign({ text: v.text, font: v.font, leader: true }, best);
+    }
+    boxes.push(lab.lb);
+    p.label = { x: lab.lx, y: lab.ly, text: lab.text, font: lab.font, leader: true, wr: r };
+  }
+  for (const p of out) { delete p._cx; delete p._cy; delete p._wb; }
+
   return out;
 }
 function poiLabelBoxes(scale) {
@@ -1646,9 +1759,18 @@ function render() {
         marker.on("click", () => openTheater(rec.theater.id));
         layer.theaters.addLayer(marker);
         if (!p.label) continue;
+        const nm = p.label.text || shortName(rec.theater);
+        const compact = p.label.font && p.label.font < 8 ? " compact" : "";
+        let lead = "";
+        if (p.label.leader) {
+          const ang = Math.atan2(p.label.y, p.label.x);
+          const wr = p.label.wr || 0;
+          const x1 = Math.cos(ang) * wr, y1 = Math.sin(ang) * wr;
+          lead = `<svg class="theater-leader" width="0" height="0" overflow="visible" aria-hidden="true"><line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${p.label.x.toFixed(1)}" y2="${p.label.y.toFixed(1)}"/></svg>`;
+        }
         const label = L.marker(ll(p.u, p.v), {
           icon: L.divIcon({ className: "theater-label-ico", iconSize: [0, 0], iconAnchor: [0, 0],
-            html: `<div class="theater-name" style="opacity:${Math.max(0.75, recencyOpacity(rec.last ? now - rec.last : 1e12))};left:${p.label.x.toFixed(1)}px;top:${p.label.y.toFixed(1)}px;transform:translate(-50%,-50%)">${esc(shortName(rec.theater))}</div>` }),
+            html: `${lead}<div class="theater-name${compact}" style="opacity:${Math.max(0.75, recencyOpacity(rec.last ? now - rec.last : 1e12))};left:${p.label.x.toFixed(1)}px;top:${p.label.y.toFixed(1)}px;transform:translate(-50%,-50%)">${esc(nm)}</div>` }),
           interactive: false, keyboard: false, zIndexOffset: 2500
         });
         layer.theaters.addLayer(label);
@@ -2119,10 +2241,25 @@ function msgWhere(m) {
   const n = lvNear(m), r = msgRegion(m);
   return n && r && !n.endsWith(r) ? `${n} (${r})` : (n || r);
 }
+function msgSpoken(m) {
+  // Prefer the logger's actual radio line (m.text / m.raw / m.body) over our kind summary.
+  if (!m) return "";
+  const t = m.text || m.raw || m.body;
+  return t != null && String(t).trim() ? String(t).trim() : "";
+}
+function msgLine(m) {
+  const spoken = msgSpoken(m);
+  if (spoken) return spoken;
+  const who = m && m.speaker_faction && !/^Faction \d+$/.test(m.speaker_faction) && !/^Unknown \(/.test(m.speaker_faction) ? m.speaker_faction : "";
+  const lab = (m && (m.label || m.kind)) || "";
+  return (who && lab && !lab.toLowerCase().startsWith(who.toLowerCase())) ? (who + ": " + lab) : lab;
+}
 function msgLabelHtml(m) {
-  // faction names in the label get their colours
-  let h = esc(m.label || m.kind);
-  for (const f of (m.factions || [])) {
+  // faction names in the line get their colours
+  let h = esc(msgLine(m));
+  const facs = [...((m && m.factions) || [])];
+  if (m && m.speaker_faction && !facs.includes(m.speaker_faction)) facs.unshift(m.speaker_faction);
+  for (const f of facs) {
     if (/^Faction \d+$/.test(f) || /^Unknown \(/.test(f)) continue;
     h = h.split(esc(f)).join(`<span style="color:${lvTextColor(f)}">${esc(f)}</span>`);
   }
@@ -2159,7 +2296,7 @@ function evPinHtml(m, age, hot) {
   const k = String(m.kind || "");
   if (!(window.EVENT_KIND_CATEGORY || {})[k] && !/^(antw_|kanal_|emi)/.test(k)) return null;
   const w = Math.round((window.innerWidth < 700 ? 14 : 20) * Math.min(UI, 1.5) * (m.level >= 3 ? 1.15 : 1)), h = Math.round(w * 30 / 24);
-  return { w, h, html: `<div class="ev-wrap${hot ? " hot" : ""}" title="${esc(m.label)}">${window.eventIcon(k, age, { size: w })}</div>` };
+  return { w, h, html: `<div class="ev-wrap${hot ? " hot" : ""}" title="${esc(msgLine(m))}">${window.eventIcon(k, age, { size: w })}</div>` };
 }
 function msgSize(m) { return Math.round((m.level >= 3 ? 20 : 16) * Math.min(UI, 1.8)); }
 function mapObstacleRects() {
@@ -2285,7 +2422,7 @@ function renderMsgList(opt) {
     if (nar) {
       const cls = `lvl${m.level}${msgHot(m) ? " hot" : ""}${m.fight_id && LV.markers.has(m.fight_id) ? " linked" : ""}`;
       const where = m.u == null ? "Zone-wide" : msgRegion(m);
-      h += `<button type="button" class="lp-row msg ${cls}" data-mid="${m.id}" title="${esc((m.label || m.kind) + " · " + where)}"><span class="mi">${msgSvg(m)}</span>` +
+      h += `<button type="button" class="lp-row msg ${cls}" data-mid="${m.id}" title="${esc(msgLine(m) + " · " + where)}"><span class="mi">${msgSvg(m)}</span>` +
         `<span class="lp-txt">${msgLabelHtml(m)}</span><span class="lp-t">${fmtShort(msgAge(m))}</span></button>`;
       continue;
     }
@@ -2304,7 +2441,7 @@ function lvAlertHide() {
   clearTimeout(LV.alertTimer);
   if (el.hidden) return;
   el.classList.add("out");
-  setTimeout(() => { if (el.classList.contains("out")) { el.hidden = true; el.classList.remove("out"); } }, 380);
+  setTimeout(() => { if (el.classList.contains("out")) { el.hidden = true; el.classList.remove("out"); if (typeof positionLivePanel === "function") positionLivePanel(); } }, 380);
 }
 function lvAlertPlace() {
   // first spot that covers no control: top centre (wide screens), else under the live panel, else under the filters
@@ -2331,8 +2468,10 @@ function lvAlertPlace() {
   const count = (x, y) => obs.filter(r => x < r.right + 4 && x + w > r.left - 4 && y < r.bottom + 4 && y + hgt > r.top - 4)
     .reduce((n, r) => n + (soft.has(r.left + "," + r.top) ? 0.3 : 1), 0);
   let pick = null, best = Infinity;
+  const sheetR = visRect("#sheet");
   for (const [x, y] of cands) {
     if (x < 0 || x + w > W || y + hgt > window.innerHeight) continue;
+    if (sheetR && y + hgt > sheetR.top + 4 && y < sheetR.bottom - 4) continue;
     const n = count(x, y);
     if (n === 0) { pick = [x, y]; break; }
     if (n < best) { best = n; pick = [x, y]; }
@@ -2374,6 +2513,7 @@ function lvAlertShow(a, more) {
     `<div class="al-l">${msgLabelHtml(a)}</div><div class="al-m">${esc(msgWhere(a))} · tap to see it</div></span><button type="button" class="al-x" aria-label="Dismiss">×</button>`;
   el.classList.remove("out");
   el.hidden = false;
+  if (typeof positionLivePanel === "function") positionLivePanel();
   lvAlertPlace();
   el.onclick = (e) => { if (e.target.closest(".al-x")) { e.stopPropagation(); return lvAlertHide(); } alertFocus(a); };
   clearTimeout(LV.alertTimer);
@@ -2618,27 +2758,67 @@ function renderLive() {
 }
 function positionLivePanel() {
   const fl = document.getElementById("filters"), lp = document.getElementById("live-panel");
+  const leg = document.getElementById("legend");
   if (!fl || !lp) return;
   const z = parseFloat(getComputedStyle(lp).zoom) || 1;
+  const wide = window.innerWidth >= 700;
+  const expanded = !lp.hidden && !lp.classList.contains("min");
+  if (!expanded && leg) leg.style.left = "";
+  if (lp.hidden) { lp.style.height = ""; lp.style.maxHeight = ""; if (leg) leg.style.left = ""; return; }
   const rc = document.getElementById("region-card");
-  const rcr = rc && !rc.hidden && window.innerWidth >= 700 ? rc.getBoundingClientRect() : null;
+  const rcr = rc && !rc.hidden && wide ? rc.getBoundingClientRect() : null;
   // wide screens in region view: the region card owns the left column, so the live panel sits right of it
   lp.style.left = rcr && rcr.width ? Math.round((rcr.right + 10) / z) + "px" : "";
   const top = fl.getBoundingClientRect().bottom + 6;
   lp.style.top = Math.round(top / z) + "px";
-  // keep it above the Key button / legend in the same column (short desktop windows)
-  // keep it above whatever sits below it in the same column (legend, map buttons, the sheet)
   const lr = lp.getBoundingClientRect();
   let lim = Infinity;
-  for (const sel of ["#legend", "#fabs", "#sheet", "#region-card"]) {
-    const r = visRect(sel);
-    if (r && r.left < lr.right && r.right > lr.left && r.top > top + 120) lim = Math.min(lim, r.top);
+  if (wide && expanded) {
+    // Dock the Key in the right gutter (left of the FABs) so the tall panel can
+    // run down to the sheet without covering the Key, and the Key doesn't sit on southern names.
+    if (leg) {
+      const lz = parseFloat(getComputedStyle(leg).zoom) || 1;
+      const fab = visRect("#fabs");
+      const legW = leg.getBoundingClientRect().width || 52;
+      const gutterRight = (fab ? fab.left - 10 : window.innerWidth - 10);
+      let left = gutterRight - legW;
+      if (left < lr.right + 8) left = Math.min(left, gutterRight - legW); // keep in the right gutter even if tight
+      if (left < 8) left = 8;
+      leg.style.left = Math.round(left / lz) + "px";
+    }
+    for (const sel of ["#fabs", "#sheet"]) {
+      const r = visRect(sel);
+      if (r && r.left < lr.right + 4 && r.right > lr.left && r.top > top + 80) lim = Math.min(lim, r.top);
+    }
+  } else {
+    if (leg) leg.style.left = "";
+    for (const sel of ["#legend", "#fabs", "#sheet", "#region-card"]) {
+      const r = visRect(sel);
+      if (r && r.left < lr.right && r.right > lr.left && r.top > top + 80) lim = Math.min(lim, r.top);
+    }
   }
-  // phones: fights + radio share one panel; keep it under ~40% of the screen so the map and banners keep room
-  if (window.innerWidth < 700) lim = Math.min(lim, top + Math.max(200, window.innerHeight * 0.4));
-  // the panel is a flex column: the Fights and Radio lists shrink and scroll inside it, nothing spills out
-  lp.style.overflowY = "";
-  lp.style.maxHeight = lim < Infinity ? Math.floor((lim - 8 - top) / z) + "px" : "";
+  // Phone: when the alert banner is up, leave a strip above the Key/sheet so it
+  // stays tappable (not under the sheet) and off the panel. Don't shrink the panel
+  // below a usable fights+radio height (region view is tight).
+  if (!wide) {
+    const al = document.getElementById("lv-alert");
+    if (al && !al.hidden && lim < Infinity) {
+      const ah = al.getBoundingClientRect().height || 72;
+      const reserved = lim - ah - 8;
+      const minBottom = top + Math.max(240, window.innerHeight * 0.32);
+      if (reserved >= minBottom) lim = reserved;
+    }
+  }
+  // the panel is a flex column: Fights and Radio lists shrink and scroll inside it
+  lp.style.overflowY = "hidden";
+  if (lim < Infinity) {
+    const h = Math.max(80, Math.floor((lim - 8 - top) / z));
+    lp.style.maxHeight = h + "px";
+    lp.style.height = expanded ? h + "px" : "";
+  } else {
+    lp.style.maxHeight = "";
+    lp.style.height = "";
+  }
 }
 function lpSameShape(a, b) {
   if (a.childNodes.length !== b.childNodes.length) return false;
@@ -2721,8 +2901,8 @@ function renderLivePanel() {
       // the radio lines about this fight, right under it
       const ms = (f.message_ids || []).map(id => LV.msgById.get(id)).filter(m => m && !m.is_reply).sort((a, b) => b.t - a.t).slice(0, phone ? 1 : 2);
       for (const m of ms) fb += !phone
-        ? `<button type="button" class="lp-row msg sub lvl${m.level}" data-mid="${m.id}" title="${esc(m.label || m.kind)}"><span class="mi">${msgSvg(m)}</span>` +
-          `<span class="lp-txt">${msgShortHtml(m)}</span><span class="lp-t">${fmtShort(msgAge(m))}</span></button>`
+        ? `<button type="button" class="lp-row msg sub lvl${m.level}" data-mid="${m.id}" title="${esc(msgLine(m))}"><span class="mi">${msgSvg(m)}</span>` +
+          `<span class="lp-txt">${msgLabelHtml(m)}</span><span class="lp-t">${fmtShort(msgAge(m))}</span></button>`
         : `<button type="button" class="lp-row msg sub lvl${m.level}" data-mid="${m.id}"><span class="mi">${msgSvg(m)}</span>` +
         `<span class="lp-txt">${msgLabelHtml(m)}</span><span class="lp-t">${fmtDur(msgAge(m))}</span></button>`;
     }
