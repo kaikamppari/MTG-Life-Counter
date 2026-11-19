@@ -2357,13 +2357,23 @@ class LiveTracker:
 #   f9 subject id (the dead, or the one in trouble) | f10 fac_a = subject's / own side | f11 fac_b = other side
 #   (enemy / attacker / killer; >=100 = a mutant type) | f12 place id | f13 unknown | f14 region id | f15 extra
 #   (reward on bitte, 1256 on emi_da) | tags rNNN reply-to, zNNN ZW group, dNNN (bitte only, unknown)
-ZM_FACTIONS_DEFAULT = {   # Zone Messages' own faction indices (not DLFR ids). Only these are backed by the data:
-    0: "Loners",          # Zone Wanderers group 1465 'Neutrals' speaks as faction 0
-    1: "Duty?",           # likely Duty (Gray + Claude: death next to a ZW Duty departure point, gloats over Bandits)
+ZM_FACTIONS_DEFAULT = {   # Zone Messages' own faction indices (not DLFR ids); Gray + Claude + Grok agree on all
+    # (/workspace/stalker2/zm_decode/factions.md). A trailing "?" = low-medium confidence.
+    0: "Loners",          # ZW group 1465 'Neutrals' speaks as faction 0
+    1: "Freedom",         # high-ish (was shown as "Duty?")
+    2: "Duty",            # medium-high
     3: "Bandits",         # kanal_bandits, the player's own channel (Kai plays Bandits), Sultansk
+    4: "Military?",       # low-medium (4 vs 7 is the weakest split)
+    5: "Ward",            # high
+    6: "Spark",           # medium
+    7: "Mercenaries?",    # low-medium
     8: "Scientists",      # all 'wissenschaft' lines, Malachite
-}                         # everything else is shown as "Faction N" (override: zone_messages_factions)
+    9: "Corpus",          # high
+    10: "Noon",           # medium-high
+    11: "Monolith?",      # low-medium
+}                         # anything else shows as "Unknown (N)" (override: zone_messages_factions)
 ZM_AREAS = {0: "Lesser Zone", 1: "Garbage", 2: "Chemical Plant", 3: "Wild Island", 4: "Zaton", 5: "Swamps",
+            6: "SIRCAA",   # loc_07 (Orange/Square, /workspace/stalker_qa_orange/f14_6/findings.md)
             7: "Cooling Towers", 8: "Malachite", 9: "Chemical Plant", 10: "Rostok", 11: "Yantar", 12: "Orbita",
             13: "Cordon", 15: "Yaniv", 16: "Jupiter", 18: "Iron Forest", 21: "Cement Factory"}   # f14, "likely"
 
@@ -2416,8 +2426,13 @@ ZM_LINK_SAME_REGION_M = 100
 ZM_ALERT_S = 600          # an important message counts as "happening now" this long (real seconds)
 ZM_LINK_M = 300           # message <-> live fight: this close in metres ...
 ZM_LINK_BEFORE_S, ZM_LINK_AFTER_S = 180, 240   # ... and within this time of the fight
-ZM_CLUSTER_M, ZM_CLUSTER_S, ZM_CLUSTER_N = 300, 240, 3
+ZM_CLUSTER_M, ZM_CLUSTER_S, ZM_CLUSTER_N = 200, 180, 3   # Square: report pairs are 3-51 m or 290 m+ apart
 ZM_CLUSTER_KINDS = {"gefecht", "zw_gefecht", "todnetz", "leiche", "augenzeuge", "notruf"}
+# radio-reported fights: a firefight / distress report (or 2+ deaths within 200 m / 120 s) with no logger fight nearby
+ZM_RADIO_KINDS = {"gefecht", "zw_gefecht", "notruf"}
+ZM_RADIO_MERGE_M, ZM_RADIO_MERGE_S = 200, 180   # further reports this close join the same radio fight
+ZM_RADIO_EXPIRE_S = 300                          # ... which is dropped this long after its last report
+ZM_RADIO_ACTIVE_S = 180
 
 
 ZM_FIELDS_FACTIONS = {}
@@ -2522,10 +2537,16 @@ class ZoneMessagesReader:
         self.overflow_alert = None
         self.toast_dec = {}      # alert id -> True/False, decided once (rate limits)
         self.toast_log = []      # (wall time, incident key) of banners sent
+        self.fight_alias = {}    # radio fight id -> logger fight that absorbed it (one banner per incident)
         self.overflow = []       # alert ids that lost the rate limit, merged into one "N new" banner
-        names = dict(ZM_FACTIONS_DEFAULT)
         load_zm_fields(cfg)
-        for k, v in (ZM_FIELDS_FACTIONS | (cfg.get("zone_messages_factions") or {})).items():
+        # the confirmed table wins over the older zm_fields.json guesses; the user's config wins over both
+        names = {}
+        for k, v in ZM_FIELDS_FACTIONS.items():
+            if str(k).lstrip("-").isdigit() and v and not str(v).lower().startswith("unknown"):
+                names[int(k)] = str(v)
+        names.update(ZM_FACTIONS_DEFAULT)
+        for k, v in (cfg.get("zone_messages_factions") or {}).items():
             if str(k).lstrip("-").isdigit() and v:
                 names[int(k)] = str(v)
         self.fac_names = names
@@ -2535,7 +2556,7 @@ class ZoneMessagesReader:
             return None
         if i >= 100:
             return "Mutants"
-        return self.fac_names.get(i, f"Faction {i}")
+        return self.fac_names.get(i, f"Unknown ({i})")   # ids past 11 aren't decoded yet
 
     def _find(self, now):
         if self.fixed:
@@ -2631,7 +2652,7 @@ class ZoneMessagesReader:
                         reload_why = f"{Path(self.last_path).parent.name} -> {p.parent.name}"
         if reload_why:
             # an older save was loaded: start over; its backlog goes to the feed only
-            self.store.clear(); self.toast_dec.clear(); self.overflow = []
+            self.store.clear(); self.toast_dec.clear(); self.overflow = []; self.fight_alias.clear()
             self.backlog = set(); self.overflow_alert = None
             self.reloads += 1
             first = True
@@ -2651,6 +2672,140 @@ class ZoneMessagesReader:
 
     ZM_PRIO = {"emi_da": 0, "emi_weg": 1, "notruf": 2, "gefecht": 2, "zw_gefecht": 2,
                "dlfr_krieg": 3, "dlfr_waffenstillstand": 3, "cluster": 4, "todnetz": 5}
+
+    def _radio_fights(self, now, out, fights, by_id, region):
+        """Turn radio reports into fights. Unlinked firefight/distress reports (and todnetz pairs) with a location
+        seed 'radio' fights; later reports within 200 m / 3 min join them; a logger fight nearby absorbs them
+        (source 'both'). Logger fights get the radio factions, report count and latest report."""
+        tr = self.tr
+        def dist(a, b):
+            return math.hypot(a["u"] - b["u"], a["v"] - b["v"]) / tr.ppm
+        roots = [m for m in out if not m.get("is_reply") and "u" in m and m["age_s"] <= 1800]
+        # windows use each report's playtime (f2 secs); replies are not roots, so they never extend an incident
+        def f14(o):     # the message's own region field; logger fights fall back to the map theater
+            a = o.get("area_id")
+            return a if isinstance(a, int) and a >= 0 else None
+        def attacker(m):
+            b = m["fac_ids"][1]
+            return b is not None and b >= 0
+        def seed(m):
+            if m["kind"] == "notruf" and not attacker(m):
+                # a distress call with no attacker is an event, unless another fight report is near (500 m / 10 min)
+                return any(q is not m and (q["kind"] in ("gefecht", "zw_gefecht") or (q["kind"] == "notruf" and attacker(q)))
+                           and abs(q["secs"] - m["secs"]) <= 600 and dist(q, m) <= 500 for q in roots)
+            if m["kind"] in ZM_RADIO_KINDS:
+                return True
+            # a lone death never opens a fight (it can still join one below)
+            return m["kind"] == "todnetz" and any(q is not m and q["kind"] == "todnetz" and "u" in q
+                                                  and abs(q["secs"] - m["secs"]) <= 120 and dist(q, m) <= 200
+                                                  for q in roots)
+        logger = [f for f in fights if "u" in f]
+        clusters = []
+        for m in sorted((m for m in roots if "fight_id" not in m and seed(m)), key=lambda q: (q["secs"], q["id"])):
+            best = None
+            for c in clusters:
+                d = dist(m, c)
+                if (0 <= m["secs"] - c["last_secs"] <= ZM_RADIO_MERGE_S and d <= ZM_RADIO_MERGE_M
+                        and not (f14(m) is not None and c["region"] is not None and f14(m) != c["region"]
+                                 and d > ZM_LINK_SAME_REGION_M)):
+                    best = c
+                    break
+            if best is None:
+                best = {"msgs": [], "first": m, "start": m["t"], "last": m["t"], "u": m["u"], "v": m["v"],
+                        "last_secs": m["secs"], "region": f14(m)}
+                clusters.append(best)
+            best["msgs"].append(m)
+            best["last"] = max(best["last"], m["t"])
+            best["last_secs"] = max(best["last_secs"], m["secs"])
+            best["u"] = sum(q["u"] for q in best["msgs"]) / len(best["msgs"])
+            best["v"] = sum(q["v"] for q in best["msgs"]) / len(best["msgs"])
+        made = []
+        for c in clusters:
+            if now - c["last"] > ZM_RADIO_EXPIRE_S:
+                continue
+            rid = f"radio:{self.reloads}:{c['first']['id']}"
+            # a logger fight close by (and close in time) takes these reports instead of a duplicate marker
+            host = None
+            for f in logger:
+                # an active logger fight within 200 m, or one that overlaps the reports in time
+                if dist(c, f) <= ZM_RADIO_MERGE_M and (f.get("active") or (
+                        f["last"] >= c["start"] - ZM_RADIO_MERGE_S and f["start"] <= c["last"] + ZM_LINK_AFTER_S)):
+                    host = f
+                    break
+            if host is not None:
+                self.fight_alias[rid] = host["id"]
+                for q in c["msgs"]:
+                    q["fight_id"] = host["id"]
+                    q["fight_active"] = bool(host.get("active"))
+                    host["message_ids"].append(q["id"])
+                continue
+            facs = []
+            for q in c["msgs"]:
+                for i in q["fac_ids"][:2]:
+                    nm = self.fac(i)
+                    if nm and nm not in facs:
+                        facs.append(nm)
+            age = now - c["last"]
+            f = {"id": rid, "source": "radio", "start": round(c["start"], 1), "last": round(c["last"], 1),
+                 "age_s": round(age, 1), "elapsed_s": round(now - c["start"], 1), "active": age <= ZM_RADIO_ACTIVE_S,
+                 "sides": [{"faction": nm, "fielded": 0, "lost": 0, "groups": 0} for nm in facs],
+                 "fielded": 0, "lost": 0, "clashes": 0, "group_ids": [], "message_ids": [],
+                 "text": " vs ".join(facs) if facs else "Fighting reported",
+                 "u": round(c["u"], 1), "v": round(c["v"], 1), "pos_source": "radio"}
+            poi = tr._poi(f["u"], f["v"])
+            if poi:
+                f["near"] = poi
+            for q in c["msgs"]:
+                q["fight_id"] = rid
+                f["message_ids"].append(q["id"])
+            made.append(f)
+        # other unlinked reports near a radio fight (deaths, enemy sightings, ...) list under it too
+        for m in roots:
+            if "fight_id" in m:
+                continue
+            gate = ZM_LINK_GATE.get(m["kind"], ZM_LINK_M)
+            for f in made:
+                if (f["start"] - ZM_LINK_BEFORE_S <= m["t"] <= f["last"] + ZM_LINK_AFTER_S and dist(m, f) <= gate
+                        and not (region(m) and region(f) and region(m) != region(f)
+                                 and dist(m, f) > ZM_LINK_SAME_REGION_M)):
+                    m["fight_id"] = f["id"]
+                    f["message_ids"].append(m["id"])
+                    break
+        for m in out:   # replies follow their root
+            src = by_id.get(m["reply_to"]) if m.get("is_reply") else None
+            if src is not None and "fight_id" in src and m.get("fight_id") != src["fight_id"]:
+                m["fight_id"] = src["fight_id"]
+                for f in fights + made:
+                    if f["id"] == src["fight_id"]:
+                        f["message_ids"].append(m["id"])
+        fights.extend(made)
+        # radio summary on every fight
+        for f in fights:
+            f.setdefault("source", "logger")
+            ids = list(dict.fromkeys(f.get("message_ids") or []))
+            f["message_ids"] = ids
+            ms = [by_id[i] for i in ids if i in by_id]
+            if not ms:
+                continue
+            if f["source"] == "logger" and any(q["cat"] in ("fight", "death") or q["kind"] in ZM_RADIO_KINDS
+                                               for q in ms):
+                f["source"] = "both"
+            have = {str(s["faction"]).rstrip("?") for s in f.get("sides") or []}
+            humans = {str(v).rstrip("?") for v in self.fac_names.values()}
+            mut_side = any(h not in humans for h in have)     # e.g. "Bloodsucker" already covers "Mutants"
+            extra = []
+            for q in ms:
+                for i in q["fac_ids"][:2]:
+                    nm = self.fac(i)
+                    if nm == "Mutants" and mut_side:
+                        continue
+                    if nm and nm.rstrip("?") not in have and nm not in extra:
+                        extra.append(nm)
+            rms = [q for q in ms if not q.get("is_reply")] or ms   # replies don't make a fight look fresher
+            latest = max(rms, key=lambda q: (q["t"], q["id"]))
+            f["radio"] = {"count": len(rms), "latest_kind": latest["kind"], "latest_label": latest["label"],
+                          "latest_age_s": latest["age_s"], "factions": extra if f["source"] != "radio" else []}
+        fights.sort(key=lambda f: (not f["active"], -f["last"]))
 
     def _rate_limit(self, now, alerts):
         """Banner budget: 1 per 20 s, 3 per minute, 3-minute cooldown per incident. New alerts are decided most
@@ -2683,9 +2838,14 @@ class ZoneMessagesReader:
         pending.sort(key=lambda a: (self.ZM_PRIO.get(a["kind"], 4), -a["t"]))
         for a in pending:
             k = key(a)
-            if any(k == kk and now - t < ZM_TOAST_COOLDOWN_S for t, kk in self.toast_log):
+            ks = {k}
+            if k.startswith("f:"):
+                fid = k[2:]
+                ks.add("f:" + self.fight_alias.get(fid, fid))
+                ks.update("f:" + r for r, h in self.fight_alias.items() if h == fid)
+            if any(kk in ks and now - t < ZM_TOAST_COOLDOWN_S for t, kk in self.toast_log):
                 ok = False                       # same incident just bannered: feed only
-            elif a["kind"] == "emi_da" or budget_ok():
+            elif a["kind"] in ("emi_da", "emi_weg") or budget_ok():
                 ok = True                        # "emission starting" always gets through
             else:
                 ok = False
@@ -2698,7 +2858,7 @@ class ZoneMessagesReader:
         if self.overflow and budget_ok():
             n = len(self.overflow)
             self.overflow_alert = {"id": f"more:{self.reloads}:{self.overflow[-1]['id']}", "kind": "more", "level": 3,
-                                   "toast": True, "label": f"{n} new report{'s' if n > 1 else ''} - see the Radio tab",
+                                   "toast": True, "label": f"{n} new report{'s' if n > 1 else ''} - see the Radio list",
                                    "t": now, "age_s": 0.0, "factions": [],
                                    "msg_ids": [i for a in self.overflow for i in (a.get("msg_ids") or [])][:20]}
             self.overflow = []
@@ -2749,7 +2909,7 @@ class ZoneMessagesReader:
                  "factions": facs, "speaker_faction": self.fac(r["speaker_fac"]),
                  "fac_ids": [r["fac_a"], r["fac_b"], r["speaker_fac"]], "subject": r["subject"],
                  "reply_to": r["reply_to"], "group": r["group"], "place_id": r["place_id"],
-                 "area": ZM_AREAS.get(r["area"]) if r["area"] is not None else None}
+                 "area": ZM_AREAS.get(r["area"]) if r["area"] is not None else None, "area_id": r["area"]}
             if r["x"] is not None:
                 xm, ym = r["x"] / 100.0, r["y"] / 100.0
                 u, v = tr._uv(xm, ym)
@@ -2806,6 +2966,7 @@ class ZoneMessagesReader:
                 for f in fights:
                     if f["id"] == src["fight_id"]:
                         f["message_ids"].append(m["id"])
+        self._radio_fights(now, out, fights, by_id, region)
         # which messages may raise a banner
         def toastable(m):
             k = m["kind"]

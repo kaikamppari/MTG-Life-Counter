@@ -228,6 +228,13 @@ h4 { font: 700 11px/1 var(--mono); }
   background: var(--panel); border: 1px solid var(--line); border-top: 2px solid #e2553f; border-radius: 10px;
   padding: 6px 10px 7px; box-shadow: 0 8px 24px rgba(0,0,0,.45); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
 #live-panel[hidden] { display: none; }
+#live-panel:not([hidden]) { display: flex; flex-direction: column; box-sizing: border-box; }
+#live-panel .lp-head { flex: 0 0 auto; }
+#live-panel .lp-body { min-height: 0; flex: 0 1 auto; overflow: hidden; }
+#live-panel .lp-sec { display: flex; flex-direction: column; min-height: 0; }
+#live-panel .lp-sec:first-child { flex: 0 1 auto; }
+#live-panel .lp-sec + .lp-sec { flex: 0 1 auto; min-height: 60px; }
+#live-panel .lp-fights, #live-panel .lp-msgs { min-height: 0; flex: 0 1 auto; }
 .lp-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; appearance: none; width: 100%;
   background: none; border: 0; padding: 2px 0; color: var(--text); text-align: left; }
 .lp-title { font: 700 11px/1.2 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: #ff8a70; white-space: nowrap; }
@@ -258,6 +265,7 @@ h4 { font: 700 11px/1 var(--mono); }
 .live-mark svg { position: relative; display: block; width: 100%; height: 100%; filter: drop-shadow(0 0 3px rgba(0,0,0,.95)); }
 .live-mark .pz { position: absolute; inset: 0; border-radius: 50%; border: 2px solid #ff5a3c; animation: lvpulse 1.8s ease-out infinite; pointer-events: none; }
 .live-mark .pz.d2 { animation-delay: .9s; }
+.live-mark .pz.rd { border: 2px dashed #ffb020; animation-duration: 2.6s; }
 .live-mark .n { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); font: 700 11px/1 var(--mono); color: #fff;
   text-shadow: 0 0 3px #000, 0 0 2px #000; pointer-events: none; }
 .live-mark.ended .pz { display: none; }
@@ -291,6 +299,14 @@ body.live-mode #legend .lg-live { display: block; }
 #legend .lg-glyphs, #legend .lg-rings { display: grid; grid-template-columns: repeat(2, auto); gap: 3px 10px; }
 #legend .lg-glyphs span, #legend .lg-rings span { display: inline-flex; align-items: center; gap: 5px; font-size: 10.5px; color: var(--text); white-space: nowrap; }
 #legend .lg-glyphs svg, #legend .lg-rings svg { width: 18px; height: 18px; flex: 0 0 18px; }
+#legend .lg-cats { display: flex; flex-direction: column; gap: 3px; }
+#legend .lg-cat { display: flex; align-items: center; gap: 5px; font-size: 10.5px; color: var(--text); white-space: nowrap; }
+#legend .lg-cat .ic { display: inline-flex; gap: 2px; align-items: center; }
+#legend .lg-cat .ic > svg, #legend .lg-cat .ic .live-mark { width: 20px !important; height: 20px !important; flex: 0 0 20px; }
+#legend .lg-cat .lg-ev { display: inline-block; width: 15px; height: 15px; }
+#legend .lg-cat .lg-ev.pin { width: 14px; height: 18px; }
+#legend .lg-cat .lg-ev.pin svg { display: block; }
+#legend .lg-cat .m { color: var(--muted); font-size: 9.5px; }
 /* ---- Live: radio messages + alerts (Zone Messages) ---- */
 .lp-tabs { display: flex; gap: 4px; margin: 2px 0 3px; }
 .lp-tabs button { appearance: none; flex: 1; background: rgba(0,0,0,.3); border: 1px solid var(--line); border-radius: 5px; color: var(--muted);
@@ -298,6 +314,18 @@ body.live-mode #legend .lg-live { display: block; }
 .lp-tabs button.on { color: var(--text); border-color: #6b2a20; background: rgba(200,53,42,.22); }
 .lp-tabs .badge { display: inline-block; min-width: 15px; padding: 1px 4px; margin-left: 4px; border-radius: 8px; background: #c8352a; color: #fff;
   font: 700 9.5px/1.2 var(--mono); letter-spacing: 0; }
+.lp-sec + .lp-sec { margin-top: 5px; }
+.lp-h { font: 700 10px/1.2 var(--mono); letter-spacing: .14em; color: var(--accent); text-transform: uppercase; margin: 3px 0 3px; display: flex; align-items: center; }
+.lp-h .badge { display: inline-block; min-width: 15px; padding: 1px 4px; margin-left: 6px; border-radius: 8px; background: #c8352a; color: #fff; font: 700 9.5px/1.2 var(--mono); letter-spacing: 0; text-align: center; }
+.lp-fights { display: flex; flex-direction: column; gap: 3px; max-height: max(190px, 34vh); overflow-y: auto; overscroll-behavior: contain; }
+.lp-row.msg.sub { margin-left: 16px; width: calc(100% - 16px); box-sizing: border-box; min-height: 24px; padding: 2px 7px; font-size: 11.5px; border-style: dashed; opacity: .9; }
+.lp-row.radio .dot { background: transparent; border: 2px dashed #ffb020; animation: none; box-sizing: border-box; }
+.rbadge { display: inline-block; font: 700 8.5px/1 var(--mono); letter-spacing: .08em; padding: 2px 4px; margin-right: 5px; border-radius: 3px;
+  border: 1px dashed #ffb020; color: #ffcf70; vertical-align: 1px; }
+.rbadge.both { border-style: solid; border-color: #6b5a30; color: #d4b070; }
+.lp-moreradio { appearance: none; margin-top: 3px; width: 100%; background: rgba(0,0,0,.3); border: 1px solid var(--line); border-radius: 5px; color: var(--muted);
+  font: 700 10.5px/1 var(--mono); letter-spacing: .08em; padding: 6px; min-height: 26px; }
+@media (max-width: 699px) { .lp-fights { max-height: none; } }
 .lp-msgs { display: flex; flex-direction: column; gap: 3px; max-height: 214px; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
 .lp-row.msg { min-height: 28px; padding: 4px 7px; font-size: 12px; }
 .lp-row.msg.lvl0 { opacity: .62; }
@@ -312,10 +340,16 @@ body.live-mode #legend .lg-live { display: block; }
 .lp-row.msg.hot .lp-t, .lp-row.msg.alert .lp-t { color: #ffb9ab; }
 .leaflet-msg-pane { z-index: 655; }
 .msg-ico { transition: opacity 1.5s linear; }
-.msg-mark { position: relative; width: 100%; height: 100%; border-radius: 50%; background: rgba(11,12,10,.82); border: 1.5px solid var(--c, #8e8a78);
-  box-shadow: 0 0 3px rgba(0,0,0,.9); display: flex; align-items: center; justify-content: center; }
-.msg-mark svg { width: 66%; height: 66%; display: block; }
-.msg-mark.hot::before { content: ""; position: absolute; inset: -2px; border-radius: 50%; border: 2px solid var(--c, #e2553f); animation: lvpulse 1.8s ease-out infinite; pointer-events: none; }
+.ev-wrap { position: relative; width: 100%; height: 100%; filter: drop-shadow(0 1px 2px rgba(0,0,0,.9)); }
+.ev-wrap svg { display: block; }
+.ev-wrap.hot::before { content: ""; position: absolute; left: 50%; top: 40%; width: 100%; aspect-ratio: 1; transform: translate(-50%, -50%);
+  border-radius: 50%; border: 2px solid #ffb020; animation: lvpulse 1.8s ease-out infinite; pointer-events: none; }
+/* events = small diamond pins (groups are circles, fights are wheels) */
+.msg-mark { position: relative; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+.msg-mark::after { content: ""; position: absolute; inset: 14%; transform: rotate(45deg); border-radius: 2px; background: rgba(11,12,10,.78);
+  border: 1.4px solid var(--c, #8e8a78); box-shadow: 0 0 3px rgba(0,0,0,.9); }
+.msg-mark svg { position: relative; z-index: 1; width: 58%; height: 58%; display: block; }
+.msg-mark.hot::before { content: ""; position: absolute; inset: 10%; transform: rotate(45deg); border-radius: 2px; border: 2px solid var(--c, #e2553f); animation: lvpulse 1.8s ease-out infinite; pointer-events: none; }
 .fight-pop .pop-msgs { margin-top: 6px; border-top: 1px solid var(--line); padding-top: 5px; display: flex; flex-direction: column; gap: 2px; }
 .fight-pop .pop-msgs .h { font: 700 10px/1.2 var(--mono); letter-spacing: .12em; color: var(--muted); text-transform: uppercase; }
 .pop-msg { appearance: none; display: flex; align-items: center; gap: 6px; background: none; border: 0; padding: 3px 0; color: var(--text);
@@ -460,6 +494,99 @@ body.live-mode #legend .lg-live { display: block; }
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="anonymous"></script>
 <script>
+/* event_icons.js (Square), inlined: teardrop event pins */
+/* Event pins for radio messages on the Stalker 2 live map (companion to faction_icons.js).
+ * Shape: a teardrop pin (point at the bottom = the exact spot), so it never reads as a
+ * group marker (circle + faction glyph + activity ring) or a fight marker (swords/wheel).
+ * Muted fills, dark glyph, thin light outline. Size: 20 px desktop, 14 px phone (width).
+ *   eventIcon(kind, ageSec, {size, phone}) -> SVG string; opacity fades 1 -> 0.35 over 10 min.
+ *   radioFightIcon(ageSec, {size, color}) -> fight marker with dashed outline + radio badge.
+ * Anchor: bottom centre of the SVG (iconAnchor = [w/2, h]).
+ */
+(function () {
+  const FADE_S = 600, MIN_OP = 0.35;
+  // category -> muted pin colour + 24x24 glyph (drawn in the dark ink colour, centred on 12,10)
+  const G = {
+    death:     { name: 'Death',     color: '#b8b09a', glyph: '<path d="M12 4v13M7.5 8.2h9" stroke="I" stroke-width="2.6" stroke-linecap="round"/>' },
+    distress:  { name: 'Distress',  color: '#d99a2b', glyph: '<path d="M12 4.2v8" stroke="I" stroke-width="3.2" stroke-linecap="round"/><circle cx="12" cy="16" r="1.9" fill="I"/>' },
+    mutant:    { name: 'Mutants',   color: '#86b05e', glyph: '<path d="M7.8 5c1.4 3.2 1.4 7-.3 10.5M12.2 4.4c1.4 3.6 1.4 7.6-.3 11.4M16.6 5c1.4 3.2 1.4 7-.3 10.5" stroke="I" stroke-width="2.1" stroke-linecap="round"/>' },
+    emi_warn:  { name: 'Emission warning', color: '#d9a12b', glyph: 'TREFOIL' },
+    emi_now:   { name: 'Emission!',  color: '#d8453a', glyph: 'TREFOIL' },
+    sighting:  { name: 'Sighting',  color: '#c98572', glyph: '<path d="M4.6 10.5s3-4.8 7.4-4.8 7.4 4.8 7.4 4.8-3 4.8-7.4 4.8-7.4-4.8-7.4-4.8z" stroke="I" stroke-width="1.9"/><circle cx="12" cy="10.5" r="2.3" fill="I"/>' },
+    heard:     { name: 'Heard',     color: '#b49a80', glyph: '<path d="M9 8.2a3.6 3.6 0 1 1 6 2.7c-1.2 1-1.7 1.7-1.7 3a2.2 2.2 0 0 1-4.1 1" stroke="I" stroke-width="2" stroke-linecap="round"/><path d="M11.2 9a1.2 1.2 0 1 1 1.8 1" stroke="I" stroke-width="1.6" stroke-linecap="round"/>' },
+    chatter:   { name: 'Chatter',   color: '#8e8a78', glyph: '<circle cx="12" cy="11.5" r="1.8" fill="I"/><path d="M9.2 14.3a4 4 0 0 1 0-5.6M14.8 8.7a4 4 0 0 1 0 5.6M6.9 16.6a7.2 7.2 0 0 1 0-10.2M17.1 6.4a7.2 7.2 0 0 1 0 10.2" stroke="I" stroke-width="1.7" stroke-linecap="round"/>' }
+  };
+  // radiation trefoil centred at (12, 10.5)
+  const trefoil = (() => {
+    const cx = 12, cy = 10.5;
+    let s = `<circle cx="${cx}" cy="${cy}" r="1.6" fill="I"/>`;
+    for (const a of [-90, 30, 150]) {
+      const P = (R, d) => { const r = (a + d) * Math.PI / 180; return `${(cx + R * Math.cos(r)).toFixed(2)} ${(cy + R * Math.sin(r)).toFixed(2)}`; };
+      s += `<path d="M${P(2.8, -30)} L${P(6.6, -30)} A6.6 6.6 0 0 1 ${P(6.6, 30)} L${P(2.8, 30)} A2.8 2.8 0 0 0 ${P(2.8, -30)}z" fill="I"/>`;
+    }
+    return s;
+  })();
+  G.emi_warn.glyph = G.emi_now.glyph = trefoil;
+
+  // Zone Messages kind -> category (kinds seen in History.txt; unknowns fall back to chatter)
+  const KIND = {
+    leiche: 'death', todnetz: 'death',
+    notruf: 'distress', bitte: 'distress',
+    mutanten: 'mutant',
+    emi_weg: 'emi_warn', wetter_vorboten: 'emi_warn', emi_da: 'emi_now',
+    augenzeuge: 'sighting', feind: 'sighting',
+    gehoert: 'heard', geruecht: 'heard',
+    geschwaetz: 'chatter', aktivitaet: 'chatter', wissenschaft: 'chatter', kanal_bandits: 'chatter', kanal_skif: 'chatter',
+    skif_kanal_a: 'chatter'
+  };
+  const INK = '#15130f';
+  // teardrop pin path in a 24x30 box: round head centred (12,10.5) r 9.5, point at (12,29)
+  const PIN = 'M12 29C9.6 24.6 2.5 18.4 2.5 10.5a9.5 9.5 0 0 1 19 0c0 7.9-7.1 14.1-9.5 18.5z';
+
+  function ageOpacity(ageSec) {
+    const a = Math.max(0, +ageSec || 0);
+    return +(1 - (1 - MIN_OP) * Math.min(1, a / FADE_S)).toFixed(3);
+  }
+  function eventCategory(kind) {
+    const k = String(kind || '').toLowerCase();
+    if (G[k]) return k;
+    if (KIND[k]) return KIND[k];
+    if (k.startsWith('antw_')) return 'chatter';
+    if (k.startsWith('emi')) return 'emi_warn';
+    return 'chatter';
+  }
+  function eventIcon(kind, ageSec, opts) {
+    opts = opts || {};
+    const cat = eventCategory(kind), g = G[cat];
+    const w = opts.size || (opts.phone ? 14 : 20), h = Math.round(w * 30 / 24);
+    const ring = cat === 'emi_now' ? '<path d="' + PIN + '" fill="none" stroke="#ffd2c8" stroke-width="2.2"/>' : '';
+    return `<svg xmlns="http://www.w3.org/2000/svg" class="ev-pin ev-${cat}" viewBox="0 0 24 30" width="${w}" height="${h}" opacity="${ageOpacity(ageSec)}" fill="none">` +
+      `<path d="${PIN}" fill="${g.color}" stroke="#f2eee2" stroke-opacity=".85" stroke-width="1.4"/>${ring}` +
+      g.glyph.replace(/"I"/g, `"${INK}"`) + '</svg>';
+  }
+  // Fight marker heard on the radio only (not confirmed by the logger): crossed swords in a
+  // dashed circle, with a small radio badge at the top right.
+  function radioFightIcon(ageSec, opts) {
+    opts = opts || {};
+    const w = opts.size || (opts.phone ? 22 : 30), c = opts.color || '#ff6a4a';
+    return `<svg xmlns="http://www.w3.org/2000/svg" class="ev-radiofight" viewBox="0 0 32 32" width="${w}" height="${w}" opacity="${ageOpacity(ageSec)}" fill="none">` +
+      `<circle cx="15" cy="17" r="12" fill="#111" fill-opacity=".6" stroke="${c}" stroke-width="2.4" stroke-dasharray="4 3"/>` +
+      `<path d="M9 11l12 12M21 11 9 23" stroke="${c}" stroke-width="2.6" stroke-linecap="round"/>` +
+      `<path d="M8 20.5l3.5 3.5M22 20.5l-3.5 3.5" stroke="${c}" stroke-width="2.6" stroke-linecap="round"/>` +
+      `<circle cx="25.5" cy="6.5" r="5.8" fill="#1b1f1c" stroke="#f2eee2" stroke-width="1.3"/>` +
+      `<circle cx="25.5" cy="7.6" r="1.1" fill="#f2eee2"/><path d="M23.4 9.6a3 3 0 0 1 0-4.1M27.6 5.5a3 3 0 0 1 0 4.1" stroke="#f2eee2" stroke-width="1.2" stroke-linecap="round"/>` +
+      '</svg>';
+  }
+  window.EVENT_ICONS = G;
+  window.EVENT_KIND_CATEGORY = KIND;
+  window.EVENT_FADE = { seconds: FADE_S, minOpacity: MIN_OP };
+  window.eventCategory = eventCategory;
+  window.eventIcon = eventIcon;
+  window.radioFightIcon = radioFightIcon;
+})();
+
+</script>
+<script>
 /* faction_icons.js (Square), inlined */
 /* Faction symbols for the Stalker 2 live map group markers.
  * 24x24 single-colour glyphs drawn in currentColor: set `color` on the wrapper (or use .color).
@@ -573,7 +700,7 @@ function factionKey(f) {
   if (FACTION_ALIASES[f]) return FACTION_ALIASES[f];
   const g = String(f).replace(/\?+$/, "");          // "Duty?" = likely Duty (Zone Messages guess)
   if (g !== f) return factionKey(g);
-  if (/^Faction \d+$/.test(f)) return "Unknown";    // Zone Messages faction index we can't name yet
+  if (/^Faction \d+$/.test(f) || /^Unknown\b/.test(f)) return "Unknown";    // Zone Messages faction index we can't name yet
   return "Mutants";
 }
 function facColor(f) {
@@ -1808,7 +1935,7 @@ const LV = {
   markers: new Map(),   // id -> { marker, key, fight, goneAt }
   firstSeen: new Map(), // id -> local time first seen (for the "new" flash)
   min: store.get("liveMin", false), inflight: false,
-  msgs: [], msgById: new Map(), msgMarkers: new Map(), tab: store.get("liveTab", "fights"),
+  msgs: [], msgById: new Map(), msgMarkers: new Map(), radioMore: false,
   alertSeen: new Set(), alertInit: false, alertTimer: null
 };
 const lvNow = () => Date.now() / 1000;
@@ -1844,6 +1971,14 @@ function lvSize(f, maxF) {
   return Math.round((24 + 14 * k) * UI);
 }
 function lvIconHtml(f, size, ended) {
+  if (f.source === "radio") {
+    // reported on the radio only: dashed ring in the side colours, radio glyph, no head count
+    const sd = (f.sides && f.sides.length) ? f.sides : [{ faction: "Unknown" }];
+    const segs = sd.map((x, i) => `<circle cx="16" cy="16" r="11.5" fill="none" stroke="${facColor(x.faction)}" stroke-width="4.5" stroke-dasharray="5 ${(5 * (sd.length - 1) + 3).toFixed(0)}" stroke-dashoffset="${-i * 5}"/>`).join("");
+    return `<div class="live-mark radio${ended ? " ended" : ""}" style="width:${size}px;height:${size}px"><span class="pz rd"></span>` +
+      `<svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="15" fill="#0b0c0a" fill-opacity=".72" stroke="#ffb020" stroke-width="1" stroke-dasharray="2.5 2"/>${segs}` +
+      `<g transform="translate(9 9) scale(.875)">${MSG_ICON.radio.replace(/C/g, "#ffcf70")}</g></svg></div>`;
+  }
   const sides = (f.sides && f.sides.length) ? f.sides : [{ faction: "Unknown", fielded: 1 }];
   const counts = sides.map(s => Math.max(1, Number(s.fielded) || 1));
   const sum = counts.reduce((a, b) => a + b, 0);
@@ -1870,7 +2005,8 @@ function liveTopInset() {
   return lp && !lp.hidden ? Math.round(lp.getBoundingClientRect().bottom + 8) : 0;
 }
 function lvSidesHtml(f) {
-  return (f.sides || []).map(s => `<span style="color:${lvTextColor(s.faction)}">${esc(s.faction)}</span> ${s.fielded}`).join(" <span class='m'>vs</span> ");
+  const n = (s) => f.source === "radio" || !s.fielded ? "" : ` ${s.fielded}`;   // radio reports carry no head count
+  return (f.sides || []).map(s => `<span style="color:${lvTextColor(s.faction)}">${esc(s.faction)}</span>${n(s)}`).join(" <span class='m'>vs</span> ");
 }
 function lvPopup(f, st) {
   const sides = (f.sides || []).map(s => `<span style="color:${lvTextColor(s.faction)}">${esc(s.faction)} ${s.fielded}${s.lost ? ` (lost ${s.lost})` : ""}</span>`).join(" vs ");
@@ -1878,8 +2014,17 @@ function lvPopup(f, st) {
   const near = lvNear(f); if (near) bits.push(esc(near));
   if (f.clashes > 1) bits.push(`${f.clashes} clashes`);
   if (f.pos_source === "group_position") bits.push("position estimated from group routes");
+  const R = f.radio || {};
+  if (f.source === "radio") bits.push(`reported on the radio${R.count ? ` (${R.count} report${R.count > 1 ? "s" : ""})` : ""} · not seen by the logger`);
+  else if (f.source === "both" && R.count) bits.push(`also on the radio: ${R.count} report${R.count > 1 ? "s" : ""}${(R.factions || []).length ? ` · also ${R.factions.map(esc).join(", ")}` : ""}`);
+  if (f.source === "radio") {
+    const fs = (f.sides || []).map(s => `<span style="color:${lvTextColor(s.faction)}">${esc(s.faction)}</span>`).join(" vs ") || "Fighting reported";
+    const w = st.active ? `first report ${fmtDur(st.elapsed)} ago · latest ${fmtDur(st.age)} ago` : `quiet · last report ${fmtDur(st.age)} ago`;
+    return `<div class="fight-pop"><span class="live-tag radio rfight">FIGHT · RADIO-REPORTED</span><div class="sides">${fs}</div><div class="when">${w}</div>` +
+      `<div class="meta">${bits.join(" · ")}</div>` + fightMsgsHtml(f) + `</div>`;
+  }
   const when = st.active ? `started ${fmtDur(st.elapsed)} ago · last shots ${fmtDur(st.age)} ago` : `ended · last shots ${fmtDur(st.age)} ago`;
-  return `<div class="fight-pop"><span class="live-tag${st.active ? "" : " ended"}">${st.active ? "● LIVE" : "ENDED"}</span>` +
+  return `<div class="fight-pop"><span class="live-tag${st.active ? "" : " ended"}">FIGHT · ${st.active ? "● LIVE" : "ENDED"}</span>` +
     `<div class="sides">${sides}</div><div class="when">${when}</div>` + (bits.length ? `<div class="meta">${bits.join(" · ")}</div>` : "") + fightMsgsHtml(f) + `</div>`;
 }
 function lvSpread(items) {
@@ -1911,11 +2056,12 @@ const MSG_CAT_NAME = { fight: "Firefight", distress: "Distress call", death: "De
   weather: "Weather", reply: "Reply", chatter: "Chatter", info: "Radio", cluster: "Heavy fighting" };
 const MSG_ICON = {
   fight: '<circle cx="8" cy="8" r="4.6" fill="none" stroke="C" stroke-width="1.6"/><path d="M8 1.5v4M8 10.5v4M1.5 8h4M10.5 8h4" stroke="C" stroke-width="1.6"/>',
-  distress: '<path d="M8 1.8 15 14.2H1z" fill="none" stroke="C" stroke-width="1.6" stroke-linejoin="round"/><path d="M8 6v4" stroke="C" stroke-width="1.8"/><circle cx="8" cy="12" r="1" fill="C"/>',
-  death: '<path d="M8 1.5v13M3.5 5.5h9" stroke="C" stroke-width="2"/>',
-  mutant: '<path d="M3 13c0-5 2-9 5-11 3 2 5 6 5 11M5.5 9.5l2.5 1.5 2.5-1.5" fill="none" stroke="C" stroke-width="1.6"/>',
+  distress: '<path d="M8 2.2v7.4" stroke="C" stroke-width="2.8" stroke-linecap="round"/><circle cx="8" cy="13.2" r="1.6" fill="C"/>',
+  death: '<path d="M8 1.5v13M3.5 5.5h9" stroke="C" stroke-width="2.2"/>',
+  mutant: '<path d="M3.2 2.5c1.6 3.6 1.6 7.6-.4 11M7.8 1.8c1.6 4.2 1.6 8.4-.4 12.4M12.4 2.5c1.6 3.6 1.6 7.6-.4 11" fill="none" stroke="C" stroke-width="1.8" stroke-linecap="round"/>',
   enemy: '<path d="M1.5 8s2.5-4.5 6.5-4.5S14.5 8 14.5 8 12 12.5 8 12.5 1.5 8 1.5 8z" fill="none" stroke="C" stroke-width="1.5"/><circle cx="8" cy="8" r="2" fill="C"/>',
-  emission: '<path d="M9.5 1 3.5 9h4L6.5 15l6-8.5h-4z" fill="C"/>',
+  emission: '<circle cx="8" cy="8" r="1.7" fill="C"/>' + [-90, 30, 150].map(a => { const r = d => (a + d) * Math.PI / 180, P = (R, d) => `${(8 + R * Math.cos(r(d))).toFixed(2)} ${(8 + R * Math.sin(r(d))).toFixed(2)}`;
+    return `<path d="M${P(3, -30)} L${P(7.2, -30)} A7.2 7.2 0 0 1 ${P(7.2, 30)} L${P(3, 30)} A3 3 0 0 0 ${P(3, -30)}z" fill="C"/>`; }).join(""),
   war: '<path d="M3.5 15V1.5M3.5 2h9l-2 3.2 2 3.3h-9" fill="none" stroke="C" stroke-width="1.6" stroke-linejoin="round"/>',
   peace: '<path d="M2 9l3-3 3 2 3-3 3 3M4 11l2 2M7 10.5l2 2M10 10l1.5 1.5" fill="none" stroke="C" stroke-width="1.6" stroke-linecap="round"/>',
   cluster: '<circle cx="5" cy="6" r="2.4" fill="C"/><circle cx="11" cy="6" r="2.4" fill="C"/><circle cx="8" cy="11.5" r="2.4" fill="C"/>',
@@ -1938,14 +2084,14 @@ function msgLabelHtml(m) {
   // faction names in the label get their colours
   let h = esc(m.label || m.kind);
   for (const f of (m.factions || [])) {
-    if (/^Faction \d+$/.test(f)) continue;
+    if (/^Faction \d+$/.test(f) || /^Unknown \(/.test(f)) continue;
     h = h.split(esc(f)).join(`<span style="color:${lvTextColor(f)}">${esc(f)}</span>`);
   }
   return h;
 }
 function msgVisible(m) {
   if (S.focusedTheater && m.u != null && !inFocusedTheater(m.u, m.v)) return false;
-  const facs = (m.factions || []).filter(f => !/^Faction \d+$/.test(f));
+  const facs = (m.factions || []).filter(f => !/^Faction \d+$/.test(f) && !/^Unknown \(/.test(f));
   return !facs.length || visibleFac(facs);
 }
 function msgPopup(m) {
@@ -1953,7 +2099,7 @@ function msgPopup(m) {
   const replies = LV.msgs.filter(q => q.reply_to === m.id);
   const bits = [esc(msgWhere(m))];
   if (m.group != null) bits.push(`wanderer group ${m.group}`);
-  let h = `<div class="fight-pop msg-pop"><span class="live-tag radio" style="border-left:3px solid ${col}">RADIO · ${esc(MSG_CAT_NAME[m.cat] || "Message")}</span>` +
+  let h = `<div class="fight-pop msg-pop"><span class="live-tag radio" style="border-left:3px solid ${col}">EVENT · ${esc(MSG_CAT_NAME[m.cat] || "Message")} · radio</span>` +
     `<div class="sides">${msgLabelHtml(m)}</div><div class="when">${m.game_time ? `game ${esc(m.game_time)} · ` : ""}${fmtDur(msgAge(m))} ago</div>` +
     `<div class="meta">${bits.join(" · ")}</div>`;
   if (replies.length) h += `<div class="pop-msgs"><div class="h">Replies</div>` +
@@ -1968,7 +2114,15 @@ function fightMsgsHtml(f) {
     `<button type="button" class="pop-msg" data-mid="${m.id}"><span class="mi">${msgSvg(m)}</span><span>${msgLabelHtml(m)}</span><span class="t">${fmtDur(msgAge(m))}</span></button>`).join("") +
     (ms.length > 5 ? `<div class="lp-more">+${ms.length - 5} more</div>` : "") + `</div>`;
 }
-function msgSize(m) { return Math.round((m.level >= 3 ? 19 : 15) * UI); }
+// Square's teardrop pins for radio events; kinds it doesn't cover (firefight reports, wars, ...) keep the diamond
+function evPinHtml(m, age, hot) {
+  if (typeof window.eventIcon !== "function") return null;
+  const k = String(m.kind || "");
+  if (!(window.EVENT_KIND_CATEGORY || {})[k] && !/^(antw_|kanal_|emi)/.test(k)) return null;
+  const w = Math.round((window.innerWidth < 700 ? 14 : 20) * Math.min(UI, 1.5) * (m.level >= 3 ? 1.15 : 1)), h = Math.round(w * 30 / 24);
+  return { w, h, html: `<div class="ev-wrap${hot ? " hot" : ""}" title="${esc(m.label)}">${window.eventIcon(k, age, { size: w })}</div>` };
+}
+function msgSize(m) { return Math.round((m.level >= 3 ? 20 : 16) * Math.min(UI, 1.8)); }
 function mapObstacleRects() {
   // things already drawn on the map that live markers must not sit on: region wheels + names, place labels,
   // historical fight wheels (map-container px)
@@ -2009,14 +2163,16 @@ function renderMsgMarkers(placedFights) {
   const roots = LV.msgs.filter(m => m.u != null && m.level >= 1 && !(m.reply_to && LV.msgById.has(m.reply_to)) && msgVisible(m))
     .sort((a, b) => (b.level - a.level) || (b.t - a.t)).slice(0, 45);
   for (const m of roots) {
-    const size = msgSize(m);
+    const hot = msgHot(m), age = msgAge(m);
+    const op = hot ? 1 : age < 600 ? 0.85 : age < 1800 ? 0.62 : 0.4;   // events fade with age
+    const pin = evPinHtml(m, age, hot);
+    const size = pin ? pin.h + 2 : msgSize(m);      // keep-out box = the pin's real (taller) box, centred
     const p0 = map.latLngToContainerPoint(ll(m.u, m.v));
     const p = freeSpot(p0, size, placed, rects, 120);
     placed.push({ p, size });
-    const hot = msgHot(m), age = msgAge(m);
-    const op = hot ? 1 : age < 1800 ? 0.9 : 0.5;
-    const mk = L.marker(map.containerPointToLatLng(p), { pane: "msgPane", keyboard: true, zIndexOffset: hot ? 2000 : 1000, opacity: op,
-      icon: L.divIcon({ className: "msg-ico", iconSize: [size, size], iconAnchor: [size / 2, size / 2],
+    const mk = L.marker(map.containerPointToLatLng(p), { pane: "msgPane", keyboard: true, zIndexOffset: hot ? 2000 : 1000, opacity: pin ? 1 : op,
+      icon: pin ? L.divIcon({ className: "msg-ico", iconSize: [pin.w, pin.h], iconAnchor: [pin.w / 2, pin.h / 2], html: pin.html })
+        : L.divIcon({ className: "msg-ico", iconSize: [size, size], iconAnchor: [size / 2, size / 2],
         html: `<div class="msg-mark${hot ? " hot" : ""}" style="--c:${msgColor(m)}" title="${esc(m.label)}">${msgSvg(m)}</div>` }) });
     mk.bindPopup("", { maxWidth: 290 });
     mk.on("click", () => { mk.getPopup().options.autoPanPaddingTopLeft = L.point(10, Math.max(60, liveTopInset())); mk.setPopupContent(msgPopup(m)); });
@@ -2050,18 +2206,22 @@ function alertFocus(a) {
 function lvShowRadio(mid) {
   // zone-wide news (wars, ceasefires, emissions) has no place on the map: open the radio list on it
   map.closePopup();
-  LV.tab = "msgs"; store.set("liveTab", "msgs");
+  if (mid != null && window.innerWidth < 700) LV.radioMore = true;
   if (S.focusedTheater) LV.regionOpen = true; else LV.min = false;
   LV._msgScroll = 0;
   renderLivePanel();
   const row = document.querySelector(`#live-panel .lp-row.msg[data-mid="${mid}"]`);
   if (row) { row.scrollIntoView({ block: "nearest" }); row.classList.add("new"); }
 }
-function renderMsgList() {
+function renderMsgList(opt) {
+  opt = opt || {};
   const al = (LV.data && LV.data.alerts) || [];
   const inRegion = (x) => !S.focusedTheater || x.u == null || inFocusedTheater(x.u, x.v);
   const alerts = al.filter(a => (a.age_s || 0) + (lvNow() - LV.fetchedAt) <= MSG_ALERT_S && inRegion(a) && a.kind === "cluster");
-  const ms = LV.msgs.filter(msgVisible).slice(0, 40);
+  // lines about a fight listed above sit under that fight, not here again
+  const all = LV.msgs.filter(m => msgVisible(m) && !(opt.skip && m.fight_id && opt.skip.has(m.fight_id)));
+  const lim = opt.limit || 40;
+  const ms = all.slice(0, lim);
   if (!ms.length && !alerts.length) {
     const info = (LV.data && LV.data.messages_info) || {};
     return `<div class="lp-note">${info.found ? "No radio messages yet." : "No Zone Messages history found on the PC yet (it appears after the game writes its first radio message)."}</div>`;
@@ -2077,7 +2237,10 @@ function renderMsgList() {
       `<span class="lp-txt">${msgLabelHtml(m)} <span class="m">· ${esc(m.u == null ? "Zone-wide" : msgRegion(m))}</span></span>` +
       `<span class="lp-t">${fmtDur(msgAge(m))}</span></button>`;
   }
-  return h + `</div>`;
+  h += `</div>`;
+  if (all.length > 5 && (lim < all.length || LV.radioMore) && window.innerWidth < 700)
+    h += `<button type="button" class="lp-moreradio">${LV.radioMore ? "Show less" : `Show ${Math.min(all.length, 40) - lim} more`}</button>`;
+  return h;
 }
 function lvAlertHide() {
   const el = document.getElementById("lv-alert");
@@ -2095,7 +2258,8 @@ function lvAlertPlace() {
   const zoom = parseFloat(getComputedStyle(el).zoom) || 1;
   const W = window.innerWidth;
   el.style.left = "0px"; el.style.top = "0px";
-  const w = el.getBoundingClientRect().width, hgt = el.getBoundingClientRect().height;
+  if (!lvAlertPlace._narrow) el.style.width = "";
+  let w = el.getBoundingClientRect().width, hgt = el.getBoundingClientRect().height;
   const hit = (x, y) => obs.some(r => x < r.right + 4 && x + w > r.left - 4 && y < r.bottom + 4 && y + hgt > r.top - 4);
   const fl = document.querySelector("#filters").getBoundingClientRect();
   const lp = document.getElementById("live-panel");
@@ -2104,7 +2268,11 @@ function lvAlertPlace() {
   const rightEdge = fabs ? fabs.left - 8 : W - 10;
   const cands = [[(W - w) / 2, 8], [(W - w) / 2, fl.top], [lpr.right + 8, lpr.top], [lpr.right + 8, fl.top], [lpr.left, lpr.bottom + 8],
     [rightEdge - w, lpr.bottom + 8], [10, fl.bottom + 8], [(W - w) / 2, lpr.bottom + 8]];
-  const count = (x, y) => obs.filter(r => x < r.right + 4 && x + w > r.left - 4 && y < r.bottom + 4 && y + hgt > r.top - 4).length;
+  if (fabs) cands.push([10, fabs.bottom + 8], [Math.max(10, (W - w) / 2), fabs.bottom + 8]);
+  // covering the region card / bottom sheet (just content) beats covering a control or the live panel
+  const soft = new Set([visRect("#region-card"), visRect("#sheet")].filter(Boolean).map(r => r.left + "," + r.top));
+  const count = (x, y) => obs.filter(r => x < r.right + 4 && x + w > r.left - 4 && y < r.bottom + 4 && y + hgt > r.top - 4)
+    .reduce((n, r) => n + (soft.has(r.left + "," + r.top) ? 0.3 : 1), 0);
   let pick = null, best = Infinity;
   for (const [x, y] of cands) {
     if (x < 0 || x + w > W || y + hgt > window.innerHeight) continue;
@@ -2120,8 +2288,25 @@ function lvAlertPlace() {
         if (x + w > W - 8) break;
       }
   }
+  if (best > 0 && !lvAlertPlace._narrow) {
+    // still nothing free (e.g. 1440x900: the tall live panel leaves a gap narrower than the banner): narrow the
+    // banner to the free column right of the panel and try once more
+    const gap = rightEdge - (lpr.right + 8);
+    if (gap >= 260 && gap < w) {
+      el.style.width = Math.floor(gap / zoom) + "px";
+      lvAlertPlace._narrow = true;
+      try { lvAlertPlace(); } finally { lvAlertPlace._narrow = false; }
+      return;
+    }
+  }
   pick = pick || cands[4];
   el.style.left = (pick[0] / zoom) + "px"; el.style.top = (pick[1] / zoom) + "px";
+}
+// the banner's height changes when its text wraps differently or fonts load: place it again whenever its size changes
+if (window.ResizeObserver) {
+  let _alSz = "";
+  new ResizeObserver(ents => { const r = ents[0].contentRect, k = Math.round(r.width) + "x" + Math.round(r.height);
+    if (k !== _alSz) { _alSz = k; lvAlertPlace(); } }).observe(document.getElementById("lv-alert"));
 }
 function lvAlertShow(a, more) {
   const el = document.getElementById("lv-alert");
@@ -2245,7 +2430,7 @@ function grpInfoHtml(g) {
   else if (g.near) doing += ` · ${esc(lvNear(g))}`;
   bits.push(doing);
   bits.push(`last report ${fmtDur((g.age_s || 0) + lvNow() - LV.fetchedAt)} ago · group ${esc(g.id)}`);
-  return `<div class="fight-pop grp-pop"><span class="live-tag radio">GROUP</span><div class="sides" style="font-size:14px">${bits[0]}</div><div class="when">${bits[1]}</div><div class="meta">${bits[2]}</div></div>`;
+  return `<div class="fight-pop grp-pop"><span class="live-tag radio">GROUP · ${esc(g.faction)}</span><div class="sides" style="font-size:14px">${bits[0]}</div><div class="when">${bits[1]}</div><div class="meta">${bits[2]}</div></div>`;
 }
 function renderGroupMarkers(placed) {
   layer.liveGroups.clearLayers();
@@ -2294,6 +2479,19 @@ function renderLive() {
     }
     items.push({ id, rec, f, st, size: lvSize(f, maxF) });
   }
+  // guard: a radio-only fight within 200 m of a logger fight is the same fight (the logger normally merges them)
+  const ppm = pixelsPerMeter(), logF = items.filter(it => it.f.source !== "radio");
+  for (const it of items) { it.rec.dupOf = null; it.rec.radioDup = false; }
+  for (let i = items.length - 1; i >= 0; i--) {
+    const it = items[i];
+    if (it.f.source !== "radio") continue;
+    const host = logF.find(o => Math.hypot(o.f.u - it.f.u, o.f.v - it.f.v) / ppm <= 200);
+    if (host) {
+      it.rec.dupOf = host.id; host.rec.radioDup = true;
+      if (it.rec.marker) { layer.live.removeLayer(it.rec.marker); it.rec.marker = null; it.rec.key = null; }
+      items.splice(i, 1);
+    }
+  }
   if (!map._loaded) return;
   lvSpread(items);
   for (const it of items) {
@@ -2315,7 +2513,7 @@ function renderLive() {
   // fights first, then groups nudged off them, then radio markers nudged off both
   const openMsg = [...LV.msgMarkers.entries()].find(([, mk]) => mk.isPopupOpen());
   const openGrp = layer.liveGroups.getLayers().some(mk => mk.isPopupOpen && mk.isPopupOpen());
-  const mkKey = `${LV.fetchedAt}|${map.getZoom()}|${S.focusedTheater}|${[...S.hidden].join(",")}|${Math.floor(lvNow() / 30)}|${items.length}|${S.layers.groups}|${UI}|${Math.round(map.getCenter().lat)},${Math.round(map.getCenter().lng)}`;
+  const mkKey = `${LV.sig}|${map.getZoom()}|${S.focusedTheater}|${[...S.hidden].join(",")}|${Math.floor(lvNow() / 30)}|${items.length}|${S.layers.groups}|${UI}|${Math.round(map.getCenter().lat)},${Math.round(map.getCenter().lng)}`;
   if (!openMsg && !openGrp && mkKey !== LV.msgKey) {
     LV.msgKey = mkKey;
     const placed = renderGroupMarkers(items.map(it => ({ p: map.latLngToContainerPoint(it.latlng), size: it.size })));
@@ -2334,10 +2532,18 @@ function positionLivePanel() {
   const top = fl.getBoundingClientRect().bottom + 6;
   lp.style.top = Math.round(top / z) + "px";
   // keep it above the Key button / legend in the same column (short desktop windows)
-  const lg = visRect("#legend"), lr = lp.getBoundingClientRect();
-  if (lg && !lp.style.left && lg.left < lr.right && lg.right > lr.left && lg.top > top + 120) {
-    lp.style.maxHeight = Math.floor((lg.top - 8 - top) / z) + "px"; lp.style.overflowY = "auto";
-  } else { lp.style.maxHeight = ""; lp.style.overflowY = ""; }
+  // keep it above whatever sits below it in the same column (legend, map buttons, the sheet)
+  const lr = lp.getBoundingClientRect();
+  let lim = Infinity;
+  for (const sel of ["#legend", "#fabs", "#sheet", "#region-card"]) {
+    const r = visRect(sel);
+    if (r && r.left < lr.right && r.right > lr.left && r.top > top + 120) lim = Math.min(lim, r.top);
+  }
+  // phones: fights + radio share one panel; keep it under ~40% of the screen so the map and banners keep room
+  if (window.innerWidth < 700) lim = Math.min(lim, top + Math.max(200, window.innerHeight * 0.4));
+  // the panel is a flex column: the Fights and Radio lists shrink and scroll inside it, nothing spills out
+  lp.style.overflowY = "";
+  lp.style.maxHeight = lim < Infinity ? Math.floor((lim - 8 - top) / z) + "px" : "";
 }
 function lpSameShape(a, b) {
   if (a.childNodes.length !== b.childNodes.length) return false;
@@ -2373,8 +2579,8 @@ function renderLivePanel() {
   const staleS = LV.lastOk ? lvNow() - LV.lastOk : Infinity;
   const connected = LV.connected && staleS < 15;
   btn.classList.toggle("off-air", !connected);
-  let title, upd, body = "", tabs = "";
-  const allRecs = [...LV.markers.entries()].map(([id, r]) => ({ id, r, st: r.st || lvState(r) })).filter(x => x.st.op > 0.02);
+  let title, upd, body = "";
+  const allRecs = [...LV.markers.entries()].map(([id, r]) => ({ id, r, st: r.st || lvState(r) })).filter(x => x.st.op > 0.02 && !x.r.dupOf);
   const inRegion = (x) => x.r.fight.u != null && inFocusedTheater(x.r.fight.u, x.r.fight.v);
   const recs = S.focusedTheater ? allRecs.filter(inRegion) : allRecs;
   const elsewhere = S.focusedTheater ? allRecs.filter(x => !inRegion(x) && x.st.active).length : 0;
@@ -2391,34 +2597,38 @@ function renderLivePanel() {
     upd = `updated ${fmtDur(lvNow() - LV.lastOk)} ago`;
     const hasMsgs = !!(d.messages_info && d.messages_info.found) || LV.msgs.length > 0;
     const nHot = LV.msgs.filter(m => msgHot(m) && msgVisible(m)).length;
-    if (hasMsgs) {
-      const tab = LV.tab === "msgs" ? "msgs" : "fights";
-      tabs = `<div class="lp-tabs" role="tablist"><button type="button" role="tab" data-tab="fights" class="${tab === "fights" ? "on" : ""}" aria-selected="${tab === "fights"}">Fights${act.length ? `<span class="badge">${act.length}</span>` : ""}</button>` +
-        `<button type="button" role="tab" data-tab="msgs" class="${tab === "msgs" ? "on" : ""}" aria-selected="${tab === "msgs"}">Radio${nHot ? `<span class="badge">${nHot}</span>` : ""}</button></div>`;
-      if (nHot) title = title.replace("</span>", ` · ⚠ ${nHot}</span>`);
-    }
-    const rows = act.concat(ended).slice(0, S.focusedTheater ? 2 : 3);
+    if (nHot) title = title.replace("</span>", ` · ⚠ ${nHot}</span>`);
+    const phone = window.innerWidth < 700;
+    const rows = act.concat(ended).slice(0, phone || S.focusedTheater ? 3 : 8);
+    const shown = new Set(rows.map(x => x.id));
+    let fb = "";
     for (const x of rows) {
       const f = x.r.fight;
       const isNew = x.st.active && lvNow() - (LV.firstSeen.get(x.id) || 0) < 8;
       const near = lvNear(f);
-      body += `<button type="button" class="lp-row${x.st.active ? "" : " ended"}${isNew ? " new" : ""}" data-id="${esc(x.id)}">` +
-        `<span class="dot"></span><span class="lp-txt">${lvSidesHtml(f)}${near ? ` <span class="m">· ${esc(near)}</span>` : ""}</span>` +
+      const src = f.source === "radio" ? `<span class="rbadge" title="reported on the radio">RADIO</span>`
+        : (f.source === "both" || x.r.radioDup) ? `<span class="rbadge both" title="seen by the logger and on the radio">+RADIO</span>` : "";
+      fb += `<button type="button" class="lp-row${x.st.active ? "" : " ended"}${isNew ? " new" : ""}${f.source === "radio" ? " radio" : ""}" data-id="${esc(x.id)}">` +
+        `<span class="dot"></span><span class="lp-txt">${src}${lvSidesHtml(f)}${near ? ` <span class="m">· ${esc(near)}</span>` : ""}</span>` +
         `<span class="lp-t">${x.st.active ? fmtDur(x.st.elapsed) : "ended"}</span></button>`;
+      // the radio lines about this fight, right under it
+      const ms = (f.message_ids || []).map(id => LV.msgById.get(id)).filter(m => m && !m.is_reply).sort((a, b) => b.t - a.t).slice(0, phone ? 1 : 2);
+      for (const m of ms) fb += `<button type="button" class="lp-row msg sub lvl${m.level}" data-mid="${m.id}"><span class="mi">${msgSvg(m)}</span>` +
+        `<span class="lp-txt">${msgLabelHtml(m)}</span><span class="lp-t">${fmtDur(msgAge(m))}</span></button>`;
     }
     const more = act.length + ended.length - rows.length;
-    if (more > 0) body += `<div class="lp-more">+${more} more on the map</div>`;
-    if (elsewhere) body += `<div class="lp-more">${elsewhere} more elsewhere in the Zone · ← Theaters</div>`;
+    if (more > 0) fb += `<div class="lp-more">+${more} more on the map</div>`;
+    if (elsewhere) fb += `<div class="lp-more">${elsewhere} more elsewhere in the Zone · ← Theaters</div>`;
     if (!rows.length && S.focusedTheater) {
-      body = `<div class="lp-note">Quiet in this region right now.</div>` + (elsewhere ? `<div class="lp-more">${elsewhere} firefight${elsewhere > 1 ? "s" : ""} elsewhere in the Zone · ← Theaters</div>` : "");
+      fb = `<div class="lp-note">Quiet in this region right now.</div>` + (elsewhere ? `<div class="lp-more">${elsewhere} firefight${elsewhere > 1 ? "s" : ""} elsewhere in the Zone · ← Theaters</div>` : "");
     } else if (!rows.length) {
       const nG = (d.groups || []).length;
-      body = d.game_active
-        ? `<div class="lp-note">No firefights right now.${nG ? ` ${nG} group${nG > 1 ? "s" : ""} on the move (faint dots).` : ""}</div>`
+      fb = d.game_active
+        ? `<div class="lp-note">No firefights right now.${nG ? ` ${nG} group${nG > 1 ? "s" : ""} on the move.` : ""}</div>`
         : `<div class="lp-note">No new Zone Wanderers events${d.files && d.files.log_age_s != null ? ` for ${fmtDur(d.files.log_age_s)}` : ""} - is the game running?</div>`;
     }
-    if (tabs && LV.tab === "msgs") body = renderMsgList();
-    body = tabs + body;
+    body = `<div class="lp-sec"><div class="lp-h">Fights${act.length ? `<span class="badge">${act.length}</span>` : ""}</div><div class="lp-fights">${fb}</div></div>`;
+    if (hasMsgs) body += `<div class="lp-sec"><div class="lp-h">Radio${nHot ? `<span class="badge">${nHot}</span>` : ""}</div>${renderMsgList({ skip: shown, limit: phone && !LV.radioMore ? 5 : 40 })}</div>`;
   }
   const html = `<button type="button" class="lp-head" id="lp-head" aria-expanded="${!compact}">${title}<span class="lp-upd">${upd}<span class="lp-chev">${compact ? "▸" : "▾"}</span></span></button><div class="lp-body">${body}</div>`;
   // called every second: if only the times changed, patch the text in place (keeps scroll, focus and hover)
@@ -2428,6 +2638,7 @@ function renderLivePanel() {
   LV._panelHtml = html;
   if (LVshape) { lpPatchText(lp, tpl); lvAlertPlace(); return; }
   lp.innerHTML = html;
+  positionLivePanel();
   lp.querySelector("#lp-head").onclick = () => {
     if (S.focusedTheater) LV.regionOpen = !LV.regionOpen;
     else { LV.min = !LV.min; store.set("liveMin", LV.min); }
@@ -2439,7 +2650,7 @@ function renderLivePanel() {
   lp.querySelectorAll(".lp-row[data-mid]").forEach(b => b.onclick = () => msgFocus(b.dataset.mid));
   lp.querySelectorAll(".lp-row[data-aid]").forEach(b => b.onclick = () => { const a = ((LV.data && LV.data.alerts) || []).find(x => x.id === b.dataset.aid); if (a) alertFocus(a); });
   lvAlertPlace();
-  lp.querySelectorAll(".lp-tabs button").forEach(b => b.onclick = (e) => { e.stopPropagation(); LV.tab = b.dataset.tab; store.set("liveTab", LV.tab); LV._msgScroll = 0; renderLivePanel(); lvAlertPlace(); });
+  const mb = lp.querySelector(".lp-moreradio"); if (mb) mb.onclick = (e) => { e.stopPropagation(); LV.radioMore = !LV.radioMore; renderLivePanel(); lvAlertPlace(); };
 }
 function lvFocus(id) {
   const rec = LV.markers.get(id); if (!rec) return;
@@ -2471,6 +2682,11 @@ async function lvPoll() {
     if (!r.ok) throw new Error("HTTP " + r.status);
     const d = await r.json();
     if (!d || !/^zoneheat-live\/[12]$/.test(d.schema)) throw new Error("not a live feed");
+    // markers rebuild only when what they show changed (not on every poll: that made them flicker)
+    try {
+      LV.sig = [(d.groups || []).map(g => [g.id, g.u, g.v, g.activity, g.fighting, g.n, g.faction].join(":")).join(";"),
+        (d.messages || []).map(m => m.id + (m.fight_id || "")).join(","), (d.fights || []).map(f => f.id + f.source + f.active).join(",")].join("|");
+    } catch (e) { LV.sig = String(lvNow()); }
     LV.data = d; LV.fetchedAt = lvNow(); LV.lastOk = LV.fetchedAt; LV.connected = true; LV.fails = 0;
     lvApply(d);
     try { lvApplyMsgs(d); } catch (e) { console.warn("radio feed skipped:", e); LV.msgs = []; LV.msgById = new Map(); }
@@ -2504,7 +2720,17 @@ document.getElementById("btn-live").onclick = () => setLive(!LV.on, true);
   const fac = ["Loners", "Bandits", "Duty", "Freedom", "Mercenaries", "Monolith", "Military", "Ward", "Scientists", "Noon", "Spark", "Corps", "Mutants"];
   const glyph = f => `<svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="15" fill="#050605" stroke="#555" stroke-width="1"/><g transform="translate(8.4 8.4) scale(.95)">${grpGlyphSvg(f)}</g></svg>`;
   const ring = a => `<svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="15" fill="#050605"/><circle cx="16" cy="16" r="12" fill="none" ${GRP_ACT[a].ring}/></svg>`;
-  el.innerHTML = `<div class="h">Live groups · emblem = faction</div><div class="lg-glyphs">${fac.map(f => `<span>${glyph(f)}${esc(f)}</span>`).join("")}</div>` +
+  const EVK = { death: "todnetz", distress: "notruf", mutant: "mutanten", emission: "emi_weg" };
+  const dia = (cat) => typeof window.eventIcon === "function" ? `<span class="lg-ev pin">${window.eventIcon(EVK[cat], 0, { size: 14 })}</span>`
+    : `<span class="lg-ev"><span class="msg-mark" style="--c:${MSG_CAT_COLOR[cat]}">${msgSvg({ cat })}</span></span>`;
+  const solid = lvIconHtml({ sides: [{ faction: "Loners", fielded: 4 }, { faction: "Bandits", fielded: 3 }], fielded: "" }, 20, false).replace(/<span class="pz[^"]*"><\/span>/g, "");
+  const dashed = lvIconHtml({ source: "radio", sides: [{ faction: "Duty" }, { faction: "Mutants" }] }, 20, false).replace(/<span class="pz[^"]*"><\/span>/g, "");
+  const grp = `<svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="15" fill="#050605"/><circle cx="16" cy="16" r="12" fill="none" ${GRP_ACT.hunt.ring}/><g transform="translate(8.4 8.4) scale(.95)">${grpGlyphSvg("Loners")}</g></svg>`;
+  el.innerHTML = `<div class="h">Map icons</div><div class="lg-cats">` +
+    `<div class="lg-cat"><span class="ic">${grp}</span><b>Groups</b><span class="m">emblem in a circle</span></div>` +
+    `<div class="lg-cat"><span class="ic">${solid}</span><span class="ic">${dashed}</span><b>Fights</b><span class="m">solid = logger · dashed = radio</span></div>` +
+    `<div class="lg-cat"><span class="ic ev">${dia("death")}${dia("distress")}${dia("mutant")}${dia("emission")}</span><b>Events</b><span class="m">radio, fade with age</span></div></div>` +
+    `<div class="h" style="margin-top:6px">Live groups · emblem = faction</div><div class="lg-glyphs">${fac.map(f => `<span>${glyph(f)}${esc(f)}</span>`).join("")}</div>` +
     `<div class="h" style="margin-top:6px">Ring = what it's doing · number = members</div><div class="lg-rings">${Object.keys(GRP_ACT).map(a => `<span>${ring(a)}${GRP_ACT[a].name}</span>`).join("")}</div>`;
 })();
 document.addEventListener("visibilitychange", () => { if (LV.on && document.visibilityState === "visible") { LV.backoffUntil = 0; lvPoll(); } });
