@@ -263,7 +263,7 @@ def wanderers_ingest(cfg, reader: "DLFRReader"):
             "zw_event": r["kind"],
             "activity": act,
             "group_id": r["group"],
-            "approximate": True,
+            "approximate": calibration(cfg)[0] is None,
         })
     seen["first_seen"] = first_seen
     if len(first_seen) > 20000:
@@ -1333,7 +1333,8 @@ def build_data(cfg, snaps) -> dict:
             row["zw_event"] = e["zw_event"]
         if e.get("activity"):
             row["activity"] = e["activity"]
-        if e.get("approximate"):
+        # only mark fight positions approximate when no calib_points affine exists
+        if e.get("coord_space") == "wanderers_m" and not m:
             row["approximate"] = True
         if uv:
             row.update(u=round(uv[0], 1), v=round(uv[1], 1), w=float(e.get("weight") or 1.0))

@@ -1,0 +1,122 @@
+{
+  "_help": "World units are UE centimetres (XTeleportTo / ZoneSensor). Pixels are on map.jpg (u right, v down, origin top-left). Fitted 2026-11-19 from 9 named landmarks. In-sample RMS 6.5 px, leave-one-out RMS 10.9 px, max 18.4 px.",
+  "points": [
+    {
+      "name": "Pripyat Enerhetyk",
+      "world": [
+        232313.02,
+        160059.8
+      ],
+      "pixel": [
+        455.0,
+        175.0
+      ],
+      "source": "Steam teleport: Palace of Culture, just outside base (XTeleportTo). Pixel picked on the south-central Pripyat city block of map.jpg.",
+      "added": "2026-11-18T21:04:04"
+    },
+    {
+      "name": "Cooling Towers",
+      "world": [
+        542200.0,
+        334520.0
+      ],
+      "pixel": [
+        1000.0,
+        463.0
+      ],
+      "source": "Reddit/UETools teleport list: Cooling Towers. Pixel is the eastern cooling tower (the lit one) on map.jpg.",
+      "added": "2026-11-18T21:04:04"
+    },
+    {
+      "name": "SIRCAA entrance",
+      "world": [
+        670302.91,
+        477894.64
+      ],
+      "pixel": [
+        1218.0,
+        720.0
+      ],
+      "source": "Steam teleport: SIRCAA main entrance, outside courtyard. Pixel on the south side of the circular campus, inside the ring road.",
+      "added": "2026-11-18T21:04:04"
+    },
+    {
+      "name": "Cement Factory",
+      "world": [
+        496355.79,
+        380215.59
+      ],
+      "pixel": [
+        912.0,
+        546.0
+      ],
+      "source": "Steam teleport: Cement Factory base. Pixel on the long industrial sheds west of the cooling towers.",
+      "added": "2026-11-18T21:04:04"
+    },
+    {
+      "name": "Rostok Freedom Base",
+      "world": [
+        322320.93,
+        412575.75
+      ],
+      "pixel": [
+        590.0,
+        600.0
+      ],
+      "source": "Steam teleport: Rostok Freedom Base. Pixel on the east edge of the large central settlement.",
+      "added": "2026-11-18T21:04:04"
+    },
+    {
+      "name": "Slag Heap",
+      "world": [
+        417467.05,
+        412122.42
+      ],
+      "pixel": [
+        765.0,
+        598.0
+      ],
+      "source": "Steam teleport: Garbage / Slag Heap. Pixel on the settlement east of Rostok at the same latitude.",
+      "added": "2026-11-18T21:04:04"
+    },
+    {
+      "name": "Chemical Plant",
+      "world": [
+        307090.0,
+        515580.0
+      ],
+      "pixel": [
+        560.0,
+        775.0
+      ],
+      "source": "Reddit/UETools teleport list: Chemical Plant base. Pixel on the industrial cluster west of the river.",
+      "added": "2026-11-18T21:04:04"
+    },
+    {
+      "name": "Zalissya",
+      "world": [
+        401851.93,
+        549233.31
+      ],
+      "pixel": [
+        735.0,
+        822.0
+      ],
+      "source": "Steam teleport: Zalyssya. Pixel on the Lesser Zone village south of the river fork.",
+      "added": "2026-11-18T21:04:04"
+    },
+    {
+      "name": "Icarus",
+      "world": [
+        609882.35,
+        612659.01
+      ],
+      "pixel": [
+        1098.0,
+        952.0
+      ],
+      "source": "Steam teleport: Icarus. Pixel on the Ward base buildings in the south-east Zaton cluster.",
+      "added": "2026-11-18T21:04:04"
+    }
+  ]
+}
