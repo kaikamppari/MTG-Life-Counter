@@ -799,6 +799,10 @@ class DLFRReader:
                 out.append(p)
         return out
 
+    def persist_seen(self):
+        self.state["seen"] = list(self.seen)[-20000:]
+        write_json_atomic(self.state_path, self.state)
+
     def add_events(self, events):
         new = [e for e in events if e["id"] not in self.seen]
         for e in new:
@@ -807,6 +811,7 @@ class DLFRReader:
             with open(self.events_path, "a", encoding="utf-8") as f:
                 for e in new:
                     f.write(json.dumps(e, ensure_ascii=False) + "\n")
+            self.persist_seen()
         return new
 
     def poll(self):
@@ -1289,6 +1294,16 @@ def build_data(cfg, snaps) -> dict:
         return tuple(info["pixel"][:2]) if info and info.get("pixel") else None
 
     events = read_jsonl_tail(cfg["_state"] / "events.jsonl", 20_000_000)
+    seen_ids = set()
+    unique_events = []
+    for e in events:
+        eid = e.get("id")
+        if eid and eid in seen_ids:
+            continue
+        if eid:
+            seen_ids.add(eid)
+        unique_events.append(e)
+    events = unique_events
     conflicts, unplaced = [], []
     wars = defaultdict(lambda: {"dead": 0, "events": 0, "last": 0.0})
     for e in events:
