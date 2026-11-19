@@ -247,6 +247,7 @@ h4 { font: 700 11px/1 var(--mono); }
 #live-panel.min .lp-body { display: none; }
 .lp-body { margin-top: 4px; display: flex; flex-direction: column; gap: 3px; }
 .lp-row { appearance: none; display: flex; align-items: flex-start; gap: 7px; width: 100%; text-align: left; min-height: 30px;
+  flex: 0 0 auto; /* do not shrink inside the scrolling .lp-msgs / .lp-fights column */
   background: rgba(0,0,0,.3); border: 1px solid var(--line); border-radius: 6px; padding: 5px 8px; color: var(--text);
   font: 600 12.5px/1.2 var(--display); }
 .lp-row .dot { width: 9px; height: 9px; border-radius: 50%; flex: 0 0 9px; background: #e2553f; box-shadow: 0 0 0 0 rgba(226,85,63,.7);
@@ -255,9 +256,11 @@ h4 { font: 700 11px/1 var(--mono); }
 .lp-row.ended .dot { background: var(--muted); animation: none; }
 .lp-row.new { border-color: #e2553f; background: rgba(200,53,42,.18); }
 .lp-row { height: auto; overflow: hidden; } /* Chrome: a flex button only grows with wrapped lines if overflow is not visible */
-.lp-txt { min-width: 0; flex: 1 1 auto; white-space: normal; overflow: hidden; overflow-wrap: anywhere; line-height: 1.25; height: auto; }
-.lp-txt .m { color: var(--muted); font-weight: 600; }
-.lp-t { font: 600 11px/1 var(--mono); color: #ffb9ab; white-space: nowrap; flex: 0 0 auto; margin-top: 3px; }
+.lp-txt { min-width: 0; flex: 1 1 auto; min-height: min-content; display: flex; flex-direction: column; gap: 1px;
+  white-space: normal; overflow: visible; overflow-wrap: anywhere; line-height: 1.3; height: auto; }
+.lp-line { display: block; overflow-wrap: anywhere; }
+.lp-where, .lp-txt .m { display: block; color: var(--muted); font-weight: 600; font-size: 0.92em; line-height: 1.25; }
+.lp-t { font: 600 11px/1 var(--mono); color: #ffb9ab; white-space: nowrap; flex: 0 0 auto; margin-top: 3px; align-self: flex-start; }
 #live-panel .mi, #live-panel .dot, #live-panel .rbadge { flex: 0 0 auto; margin-top: 2px; }
 .lp-row.ended .lp-t { color: var(--muted); }
 .lp-note { font: 600 11.5px/1.35 var(--display); color: var(--muted); padding: 2px 0; }
@@ -351,6 +354,27 @@ body.live-mode #legend .lg-live { display: block; }
   font: 700 10.5px/1 var(--mono); letter-spacing: .08em; padding: 6px; min-height: 26px; }
 @media (max-width: 699px) { .lp-fights { max-height: none; } }
 .lp-msgs { display: flex; flex-direction: column; gap: 3px; max-height: none; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
+/* thicker live-list scrollbar (Kai: "increase the size of the size bar a bit") */
+#live-panel .lp-msgs, #live-panel .lp-fights {
+  overflow-y: scroll;
+  scrollbar-gutter: stable;
+  scrollbar-width: auto;
+  scrollbar-color: #d4a35c rgba(0,0,0,.4);
+}
+#live-panel .lp-msgs::-webkit-scrollbar,
+#live-panel .lp-fights::-webkit-scrollbar { width: 11px; }
+#live-panel .lp-msgs::-webkit-scrollbar-track,
+#live-panel .lp-fights::-webkit-scrollbar-track { background: rgba(0,0,0,.35); border-radius: 6px; }
+#live-panel .lp-msgs::-webkit-scrollbar-thumb,
+#live-panel .lp-fights::-webkit-scrollbar-thumb {
+  background: #d4a35c; border-radius: 6px; border: 2px solid rgba(14,16,12,.9); min-height: 32px;
+}
+#live-panel .lp-msgs::-webkit-scrollbar-thumb:hover,
+#live-panel .lp-fights::-webkit-scrollbar-thumb:hover { background: #e8bf7a; }
+@media (max-width: 699px) {
+  #live-panel .lp-msgs::-webkit-scrollbar,
+  #live-panel .lp-fights::-webkit-scrollbar { width: 14px; }
+}
 .lp-row.msg { min-height: 28px; padding: 4px 7px; font-size: 12px; }
 .lp-row.msg.lvl0 { opacity: .62; }
 .lp-row.msg.lvl3 { border-color: #6b2a20; }
@@ -398,7 +422,7 @@ body.live-mode #legend .lg-live { display: block; }
   #topbar, #filters, #fabs, #legend, #sheet, #btn-back, #lv-alert, #banner { zoom: var(--z, 1); }
   /* Keep #live-panel at zoom 1: width stays ≤270px (Kai), and zoomed flex rows were painting wrapped text over the next row. */
   #live-panel { zoom: 1; }
-  /* narrow panel (Kai t1478: width, not height): ~270 px at zoom 1, rows are one short line each */
+  /* narrow panel (Kai t1478: width, not height): ~270 px at zoom 1; rows grow to wrap */
   #live-panel { max-width: min(270px, calc(100vw / var(--z, 1) - 96px)); padding: 5px 7px 6px; }
   /* tall panel: radio list takes leftover height and scrolls */
   #live-panel:not(.min) .lp-fights { max-height: min(28vh, 220px); flex: 0 1 auto; }
@@ -2095,6 +2119,11 @@ function fmtShort(s) {   // '30s', '4m', '2h'
   return `${Math.floor(s / 3600)}h`;
 }
 function lpNarrow() { return window.innerWidth >= 700; }   // desk panel is narrow; phones keep the full-width layout
+function lpTxtHtml(mainHtml, where) {
+  // Message / fight text plus an optional place suffix on its own line, so wraps never sit under the time.
+  const w = (where && String(where).trim()) ? `<span class="lp-where">${esc(String(where).trim())}</span>` : "";
+  return `<span class="lp-txt"><span class="lp-line">${mainHtml || ""}</span>${w}</span>`;
+}
 function msgShortHtml(m) {  // icon + short text for linked lines: 'Distress call (Ward) - attacked by Mutants' -> 'Distress call'
   const full = m.label || m.kind || "";
   const short = full.split(/\s+[(\-–·:]\s*|\s+-\s+/)[0] || full;
@@ -2241,11 +2270,23 @@ function msgWhere(m) {
   const n = lvNear(m), r = msgRegion(m);
   return n && r && !n.endsWith(r) ? `${n} (${r})` : (n || r);
 }
+function zmDropUnfilled(s) {
+  // Page-side safety net: never show raw {tokens}. Drop the clause/phrase, not leftover words.
+  if (s == null) return "";
+  s = String(s);
+  s = s.replace(/[^.!?]*\{[A-Za-z_][A-Za-z0-9_]*\}[^.!?]*[.!?]?\s*/g, "");
+  s = s.replace(/(?:^|,|\s)\s*(?:in|at|near|from|with|of|by|for|to|on|and)?\s*\{[A-Za-z_][A-Za-z0-9_]*\}/gi, "");
+  s = s.replace(/\{[A-Za-z_][A-Za-z0-9_]*\}/g, "");
+  s = s.replace(/\s+,/g, ",").replace(/,+/g, ",").replace(/,\s*([.!?])/g, "$1").replace(/\s+([.!?])/g, "$1");
+  s = s.replace(/\s{2,}/g, " ").replace(/^[,;\s]+|[,;\s]+$/g, "").trim();
+  if (s && /[a-z]/.test(s.charAt(0))) s = s.charAt(0).toUpperCase() + s.slice(1);
+  return s;
+}
 function msgSpoken(m) {
   // Prefer the logger's actual radio line (m.text / m.raw / m.body) over our kind summary.
   if (!m) return "";
-  const t = m.text || m.raw || m.body;
-  return t != null && String(t).trim() ? String(t).trim() : "";
+  const t = zmDropUnfilled(m.text || m.raw || m.body || "");
+  return t;
 }
 function msgLine(m) {
   const spoken = msgSpoken(m);
@@ -2413,9 +2454,9 @@ function renderMsgList(opt) {
     const aAge = (a.age_s || 0) + lvNow() - LV.fetchedAt;
     h += lpNarrow()
       ? `<button type="button" class="lp-row msg alert" data-aid="${esc(a.id)}" title="${esc(a.label + " · " + msgWhere(a))}"><span class="mi">${msgSvg({ cat: "cluster", kind: "cluster" })}</span>` +
-        `<span class="lp-txt">${esc(a.label)}</span><span class="lp-t">${fmtShort(aAge)}</span></button>`
+        `${lpTxtHtml(esc(a.label), msgWhere(a))}<span class="lp-t">${fmtShort(aAge)}</span></button>`
       : `<button type="button" class="lp-row msg alert" data-aid="${esc(a.id)}"><span class="mi">${msgSvg({ cat: "cluster", kind: "cluster" })}</span>` +
-      `<span class="lp-txt">${esc(a.label)} <span class="m">· ${esc(msgWhere(a))}</span></span><span class="lp-t">${fmtDur(aAge)}</span></button>`;
+      `${lpTxtHtml(esc(a.label), msgWhere(a))}<span class="lp-t">${fmtDur(aAge)}</span></button>`;
   }
   const nar = lpNarrow();
   for (const m of ms) {
@@ -2423,12 +2464,12 @@ function renderMsgList(opt) {
       const cls = `lvl${m.level}${msgHot(m) ? " hot" : ""}${m.fight_id && LV.markers.has(m.fight_id) ? " linked" : ""}`;
       const where = m.u == null ? "Zone-wide" : msgRegion(m);
       h += `<button type="button" class="lp-row msg ${cls}" data-mid="${m.id}" title="${esc(msgLine(m) + " · " + where)}"><span class="mi">${msgSvg(m)}</span>` +
-        `<span class="lp-txt">${msgLabelHtml(m)}</span><span class="lp-t">${fmtShort(msgAge(m))}</span></button>`;
+        `${lpTxtHtml(msgLabelHtml(m), where)}<span class="lp-t">${fmtShort(msgAge(m))}</span></button>`;
       continue;
     }
     const cls = `lvl${m.level}${msgHot(m) ? " hot" : ""}${m.fight_id && LV.markers.has(m.fight_id) ? " linked" : ""}`;
     h += `<button type="button" class="lp-row msg ${cls}" data-mid="${m.id}"><span class="mi">${msgSvg(m)}</span>` +
-      `<span class="lp-txt">${msgLabelHtml(m)} <span class="m">· ${esc(m.u == null ? "Zone-wide" : msgRegion(m))}</span></span>` +
+      `${lpTxtHtml(msgLabelHtml(m), m.u == null ? "Zone-wide" : msgRegion(m))}` +
       `<span class="lp-t">${fmtDur(msgAge(m))}</span></button>`;
   }
   h += `</div>`;
@@ -2896,15 +2937,15 @@ function renderLivePanel() {
           : isBoth ? `<span class="rbadge both" title="seen by the logger and on the radio">+RADIO</span>` : "");
       const tip = nar ? ` title="${esc((isRadio ? "Radio-reported · " : isBoth ? "Logger + radio · " : "") + (near || "") )}"` : "";
       fb += `<button type="button" class="lp-row${x.st.active ? "" : " ended"}${isNew ? " new" : ""}${isRadio ? " radio" : ""}" data-id="${esc(x.id)}"${tip}>` +
-        `<span class="dot"></span><span class="lp-txt">${src}${lvSidesHtml(f)}${near && !nar ? ` <span class="m">· ${esc(near)}</span>` : ""}</span>` +
+        `<span class="dot"></span>${lpTxtHtml(src + lvSidesHtml(f), near)}` +
         `<span class="lp-t">${x.st.active ? (nar ? fmtShort(x.st.elapsed) : fmtDur(x.st.elapsed)) : (nar ? "end" : "ended")}</span></button>`;
       // the radio lines about this fight, right under it
       const ms = (f.message_ids || []).map(id => LV.msgById.get(id)).filter(m => m && !m.is_reply).sort((a, b) => b.t - a.t).slice(0, phone ? 1 : 2);
       for (const m of ms) fb += !phone
         ? `<button type="button" class="lp-row msg sub lvl${m.level}" data-mid="${m.id}" title="${esc(msgLine(m))}"><span class="mi">${msgSvg(m)}</span>` +
-          `<span class="lp-txt">${msgLabelHtml(m)}</span><span class="lp-t">${fmtShort(msgAge(m))}</span></button>`
+          `${lpTxtHtml(msgLabelHtml(m))}<span class="lp-t">${fmtShort(msgAge(m))}</span></button>`
         : `<button type="button" class="lp-row msg sub lvl${m.level}" data-mid="${m.id}"><span class="mi">${msgSvg(m)}</span>` +
-        `<span class="lp-txt">${msgLabelHtml(m)}</span><span class="lp-t">${fmtDur(msgAge(m))}</span></button>`;
+        `${lpTxtHtml(msgLabelHtml(m))}<span class="lp-t">${fmtDur(msgAge(m))}</span></button>`;
     }
     const more = act.length + ended.length - rows.length;
     if (more > 0) fb += `<div class="lp-more">+${more} more on the map</div>`;

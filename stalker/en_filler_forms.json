@@ -1,0 +1,118 @@
+{
+  "wo_templates": [
+    "in {gebiet}, at {ort}",
+    "in {gebiet}, near {ort}",
+    "in {gebiet}, close to {ort}",
+    "in {gebiet}, {richtung} of {ort}",
+    "somewhere in {gebiet}"
+  ],
+  "richtung": [
+    "north",
+    "north-east",
+    "east",
+    "south-east",
+    "south",
+    "south-west",
+    "west",
+    "north-west"
+  ],
+  "faction": [
+    "Loners",
+    "Freedom",
+    "Duty",
+    "Bandits",
+    "Mercenaries",
+    "Ward",
+    "Spark",
+    "IPSF",
+    "Ecologists",
+    "Corps",
+    "Noontide",
+    "Monolith"
+  ],
+  "opferbei_with": [
+    "with the Loners",
+    "with Freedom",
+    "with Duty",
+    "with the Bandits",
+    "with the Mercenaries",
+    "with the Ward",
+    "with Spark",
+    "with the IPSF",
+    "with the Ecologists",
+    "with the Corps",
+    "with Noontide",
+    "with Monolith"
+  ],
+  "von_from": [
+    "from the Loners",
+    "from Freedom",
+    "from Duty",
+    "from the Bandits",
+    "from the Mercenaries",
+    "from the Ward",
+    "from Spark",
+    "from the IPSF",
+    "from the Ecologists",
+    "from the Corps",
+    "from Noontide",
+    "from Monolith"
+  ],
+  "mutant": [
+    "a controller",
+    "a poltergeist",
+    "a bloodsucker",
+    "a zombie",
+    "a chimera",
+    "a burer",
+    "a pseudogiant",
+    "a snork",
+    "a pseudodog",
+    "a boar",
+    "a flesh",
+    "a pack of rats",
+    "a pack of rodents",
+    "a blind dog",
+    "a bayun"
+  ],
+  "mutantakk": [
+    "a controller",
+    "a poltergeist",
+    "a bloodsucker",
+    "a zombie",
+    "a chimera",
+    "a burer",
+    "a pseudogiant",
+    "a snork",
+    "a pseudodog",
+    "a boar",
+    "a flesh",
+    "a pack of rats",
+    "a pack of rodents",
+    "a blind dog",
+    "a bayun"
+  ],
+  "mutant_fallback": "a mutant",
+  "unknown": "unknown",
+  "durch_templates": [
+    "That was the work of people {x}.",
+    "It was {x}.",
+    "No idea who or what did it."
+  ],
+  "ursache": [
+    "Gunshot wound",
+    "Mutant attack",
+    "Cause unknown"
+  ],
+  "ding": [
+    "a medkit",
+    "a bandage",
+    "anti-rad pills",
+    "some bread",
+    "a can of food",
+    "a sausage",
+    "some water",
+    "a bottle of vodka",
+    "an energy drink"
+  ]
+}

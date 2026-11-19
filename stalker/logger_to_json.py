@@ -2514,6 +2514,283 @@ def zm_label(kind: str):
     return (kind.replace("_", " ").capitalize(), 1, "info")
 
 
+
+
+# Optional game-text templates (kind or "kind:variant" -> string). History.txt itself only
+# stores a kind + variant index, not the spoken radio line. If zm_text_templates.json is
+# present next to the logger, we fill message["text"] with the real line; otherwise the
+# client falls back to the summary in message["label"]. Tokens are filled from History,
+# faction/forms tables, and the nearest known place (POI / area). Raw {tokens} are never
+# left in the text: unknown values drop the surrounding clause or phrase.
+class _ZmKeep(dict):
+    """Leave unknown {tokens} as placeholders so the drop pass can remove the clause."""
+    def __missing__(self, key):
+        return "{" + key + "}"
+
+_ZM_FORMS = None
+_ZM_TEXT_TEMPLATES = None
+_ZM_THEATERS = None
+_ZM_TOKEN_RE = re.compile(r"\{[A-Za-z_][A-Za-z0-9_]*\}")
+
+
+def _zm_json_beside(name):
+    p = Path(__file__).with_name(name)
+    try:
+        return json.loads(p.read_text(encoding="utf-8")) if p.exists() else {}
+    except (OSError, json.JSONDecodeError):
+        return {}
+
+
+def _zm_forms():
+    global _ZM_FORMS
+    if _ZM_FORMS is None:
+        _ZM_FORMS = _zm_json_beside("en_filler_forms.json") or {}
+    return _ZM_FORMS
+
+
+def _zm_templates():
+    global _ZM_TEXT_TEMPLATES
+    if _ZM_TEXT_TEMPLATES is None:
+        _ZM_TEXT_TEMPLATES = _zm_json_beside("zm_text_templates.json") or {}
+    return _ZM_TEXT_TEMPLATES
+
+
+def _zm_theaters():
+    global _ZM_THEATERS
+    if _ZM_THEATERS is None:
+        names = {}
+        data = _zm_json_beside("theaters.json")
+        for t in (data.get("theaters") or []):
+            if isinstance(t, dict) and t.get("id") and t.get("name"):
+                names[str(t["id"])] = t["name"]
+        _ZM_THEATERS = names
+    return _ZM_THEATERS
+
+
+def _zm_fac_form(idx, key):
+    forms = _zm_forms().get(key) or []
+    try:
+        i = int(idx)
+    except (TypeError, ValueError):
+        return ""
+    if 0 <= i < len(forms):
+        return forms[i] or ""
+    return ""
+
+
+def _zm_richtung(du, dv):
+    """Compass from a place to the message. Map +v is south (image / CRS.Simple)."""
+    dirs = _zm_forms().get("richtung") or [
+        "north", "north-east", "east", "south-east",
+        "south", "south-west", "west", "north-west",
+    ]
+    north, east = -float(dv), float(du)
+    if north == 0 and east == 0:
+        return ""
+    ang = math.degrees(math.atan2(east, north))
+    if ang < 0:
+        ang += 360
+    return dirs[int((ang + 22.5) // 45) % len(dirs)]
+
+
+def _zm_poi_uv(tracker, place):
+    if not place:
+        return None
+    name = place.get("name") if isinstance(place, dict) else None
+    pois = getattr(tracker, "pois", None) or []
+    for p in pois:
+        if name and p.get("name") == name and p.get("u") is not None:
+            return float(p["u"]), float(p["v"])
+    return None
+
+
+def _zm_wo(gebiet, ort, dist_m, richtung):
+    forms = _zm_forms().get("wo_templates") or [
+        "in {gebiet}, at {ort}",
+        "in {gebiet}, near {ort}",
+        "in {gebiet}, close to {ort}",
+        "in {gebiet}, {richtung} of {ort}",
+        "somewhere in {gebiet}",
+    ]
+    if gebiet and ort and gebiet.casefold() == ort.casefold():
+        ort = None
+    if gebiet and ort:
+        if dist_m is not None and dist_m >= 250 and richtung:
+            tmpl = forms[3] if len(forms) > 3 else "in {gebiet}, {richtung} of {ort}"
+            return tmpl.format(gebiet=gebiet, ort=ort, richtung=richtung)
+        if dist_m is not None and dist_m >= 80:
+            tmpl = forms[1] if len(forms) > 1 else "in {gebiet}, near {ort}"
+            return tmpl.format(gebiet=gebiet, ort=ort)
+        tmpl = forms[0] if forms else "in {gebiet}, at {ort}"
+        return tmpl.format(gebiet=gebiet, ort=ort)
+    if gebiet:
+        tmpl = forms[4] if len(forms) > 4 else "somewhere in {gebiet}"
+        return tmpl.format(gebiet=gebiet)
+    if ort:
+        if dist_m is not None and dist_m >= 80:
+            return f"near {ort}"
+        return f"at {ort}"
+    return ""
+
+
+def _zm_durch(row):
+    forms = _zm_forms().get("durch_templates") or [
+        "That was the work of people {x}.", "It was {x}.", "No idea who or what did it.",
+    ]
+    fb = row.get("fac_b")
+    x = ""
+    if isinstance(fb, int) and fb >= 100:
+        x = (_zm_forms().get("mutant_fallback") or "a mutant")
+    elif isinstance(fb, int) and 0 <= fb < 100:
+        x = _zm_fac_form(fb, "faction")
+    if x:
+        tmpl = forms[1] if len(forms) > 1 else "It was {x}."
+        return tmpl.format(x=x)
+    return forms[2] if len(forms) > 2 else ""
+
+
+def _zm_ursache(row):
+    forms = _zm_forms().get("ursache") or ["Gunshot wound", "Mutant attack", "Cause unknown"]
+    fb = row.get("fac_b")
+    if isinstance(fb, int) and fb >= 100:
+        return forms[1] if len(forms) > 1 else "Mutant attack"
+    if isinstance(fb, int) and 0 <= fb < 100 and _zm_fac_form(fb, "faction"):
+        return forms[0] if forms else "Gunshot wound"
+    return forms[2] if len(forms) > 2 else "Cause unknown"
+
+
+def zm_drop_unfilled(text):
+    """Remove leftover {tokens} together with their clause or phrase. No dangling words, no braces."""
+    if not text:
+        return text
+    s = str(text)
+
+    def drop_phrases(chunk):
+        chunk = re.sub(
+            r"(?:,\s*|\s+)?(?:\b(?:in|at|near|from|with|of|by|for|to|on|and|or)\s+)?\{[A-Za-z_][A-Za-z0-9_]*\}",
+            "",
+            chunk,
+        )
+        chunk = _ZM_TOKEN_RE.sub("", chunk)
+        return chunk
+
+    parts = re.split(r"(?<=[.!?])\s+", s)
+    kept = []
+    for p in parts:
+        if not p.strip():
+            continue
+        if _ZM_TOKEN_RE.search(p):
+            p2 = drop_phrases(p)
+            p2 = re.sub(r"\s+", " ", p2).strip(" ,;:-")
+            # Drop the sentence if the leftover is a fragment (no word, or a dangling preposition / colon).
+            if not re.search(r"[A-Za-z0-9]", p2):
+                continue
+            if re.search(r"\b(?:in|at|near|from|with|of|by|for|to|on|and|or|the|a|an|I'm|Im)\s*$", p2, re.I):
+                continue
+            if re.search(r"[:;,]\s*$", p2) and len(re.findall(r"[A-Za-z0-9]+", p2)) < 3:
+                continue
+            kept.append(p2)
+        else:
+            kept.append(p.strip())
+    s = " ".join(kept)
+    s = drop_phrases(s)
+    s = re.sub(r"[ \t]+", " ", s)
+    s = re.sub(r" +([,;:])", r"\1", s)
+    s = re.sub(r"([,;:]){2,}", r"\1", s)
+    s = re.sub(r",\s*([.!?])", r"\1", s)
+    s = re.sub(r"\s+([.!?])", r"\1", s)
+    s = re.sub(r"([.!?]){2,}", r"\1", s)
+    s = re.sub(r"(?<=[.!?])\s+([a-z])", lambda m: " " + m.group(1).upper(), s)
+    s = s.strip(" ,;:-")
+    if s and s[0].islower():
+        s = s[0].upper() + s[1:]
+    s = re.sub(r"\s{2,}", " ", s).strip()
+    return s or None
+
+
+def zm_spoken_text(row, label, speaker, area_name=None, place=None, uv=None, tracker=None):
+    templates = _zm_templates()
+    kind = row.get("kind") or ""
+    var = row.get("variant")
+    tmpl = templates.get(f"{kind}:{var}") or templates.get(kind)
+    if not tmpl:
+        return None
+
+    fa, fb = row.get("fac_a"), row.get("fac_b")
+    fb_fac = fb if isinstance(fb, int) and 0 <= fb < 100 else None
+    fb_mut = isinstance(fb, int) and fb >= 100
+    extra = row.get("extra")
+
+    gebiet = area_name or ""
+    if not gebiet and isinstance(place, dict):
+        tid = place.get("theater")
+        if tid:
+            gebiet = _zm_theaters().get(str(tid), "") or str(tid).replace("_", " ").title()
+
+    ort, dist_m, richtung = "", None, ""
+    if isinstance(place, dict) and place.get("name"):
+        dist_m = place.get("dist_m")
+        try:
+            dist_m = float(dist_m) if dist_m is not None else None
+        except (TypeError, ValueError):
+            dist_m = None
+        # A very distant POI is not a useful "at {ort}".
+        if dist_m is None or dist_m <= 1500:
+            ort = place.get("name") or ""
+            if uv and uv[0] is not None and uv[1] is not None:
+                puv = _zm_poi_uv(tracker, place)
+                if puv:
+                    richtung = _zm_richtung(uv[0] - puv[0], uv[1] - puv[1])
+
+    wo = _zm_wo(gebiet, ort, dist_m, richtung)
+
+    fields = _ZmKeep(
+        speaker=speaker or "",
+        label=label or "",
+        variant=var if var is not None else "",
+    )
+
+    def put(key, val):
+        if val is None:
+            return
+        s = str(val).strip() if not isinstance(val, (int, float)) else val
+        if s == "" or s == 0 or s == "0":
+            # zahl stays unfilled when zero / missing; other empty strings stay as {token}.
+            return
+        fields[key] = s
+
+    put("fra", _zm_fac_form(fa, "faction"))
+    put("frb", _zm_fac_form(fb_fac, "faction"))
+    put("fravon", _zm_fac_form(fa, "von_from"))
+    put("frbvon", _zm_fac_form(fb_fac, "von_from"))
+    put("taetervon", _zm_fac_form(fb_fac, "von_from"))
+    put("opfervon", _zm_fac_form(fa, "von_from"))
+    put("opferbei", _zm_fac_form(fa, "opferbei_with"))
+    put("opferfr", _zm_fac_form(fa, "faction"))
+    put("gebiet", gebiet)
+    put("ort", ort)
+    put("wo", wo)
+    put("richtung", richtung)
+    if extra not in (None, 0, "0"):
+        put("zahl", extra)
+
+    # Honest generics for fields History does not name. Prefer these over raw tokens
+    # or ungrammatical clause-drops ("Man down! is dead").
+    put("opfer", "a stalker")
+    put("zrname", "someone")
+    put("ding", "supplies")
+    mut = (_zm_forms().get("mutant_fallback") or "a mutant") if (fb_mut or kind in ("mutanten", "jagd")) else ""
+    put("mutant", mut)
+    put("mutantakk", mut)
+    put("durch", _zm_durch(row))
+    put("ursache", _zm_ursache(row))
+
+    try:
+        text = str(tmpl).format_map(fields)
+    except (IndexError, ValueError):
+        text = str(tmpl)
+    return zm_drop_unfilled(text)
+
 class ZoneMessagesReader:
     """Reads the newest Zone Messages History.txt (only its first bytes; it is newest-first)."""
 
@@ -2902,11 +3179,12 @@ class ZoneMessagesReader:
             elif k in ("feind", "gehoert") and self.fac(r["fac_b"]):
                 label = f"{label}: {self.fac(r['fac_b'])}"
             t = offset + r["secs"]
+            speaker = self.fac(r["speaker_fac"])
             m = {"id": r["id"], "kind": k, "label": label, "level": level, "cat": cat,
-                 "toast": k in ZM_TOAST, "secs": r["secs"],
+                 "toast": k in ZM_TOAST, "secs": r["secs"], "variant": r.get("variant"),
                  "game_time": f"{r['hour']:02d}:{r['minute']:02d}" if r["hour"] is not None and r["minute"] is not None else None,
                  "age_game_s": newest - r["secs"], "t": round(t, 1), "age_s": round(now - t, 1),
-                 "factions": facs, "speaker_faction": self.fac(r["speaker_fac"]),
+                 "factions": facs, "speaker_faction": speaker,
                  "fac_ids": [r["fac_a"], r["fac_b"], r["speaker_fac"]], "subject": r["subject"],
                  "reply_to": r["reply_to"], "group": r["group"], "place_id": r["place_id"],
                  "area": ZM_AREAS.get(r["area"]) if r["area"] is not None else None, "area_id": r["area"]}
@@ -2917,6 +3195,10 @@ class ZoneMessagesReader:
                 poi = tr._poi(u, v)
                 if poi:
                     m["near"] = poi
+            spoken = zm_spoken_text(r, label, speaker, area_name=m.get("area"),
+                                    place=m.get("near"), uv=(m.get("u"), m.get("v")), tracker=tr)
+            if spoken:
+                m["text"] = spoken
             by_id[r["id"]] = m
             out.append(m)
         # replies (rNNN) copy their thread root's location: not a new map point, they bump the root's reply count
@@ -2928,6 +3210,16 @@ class ZoneMessagesReader:
                 for kk in ("x", "y", "u", "v", "near"):
                     if kk in src and kk not in m:
                         m[kk] = src[kk]
+                # location may have arrived from the thread root; refill the spoken line
+                row0 = next((q for q in rows if q["id"] == m["id"]), None)
+                if row0 is not None:
+                    spoken = zm_spoken_text(row0, m["label"], m.get("speaker_faction"),
+                                            area_name=m.get("area"), place=m.get("near"),
+                                            uv=(m.get("u"), m.get("v")), tracker=tr)
+                    if spoken:
+                        m["text"] = spoken
+                    else:
+                        m.pop("text", None)
         # link to live fights (per-kind distance gates; a different region only counts within 100 m)
         for f in fights:
             f.setdefault("message_ids", [])
