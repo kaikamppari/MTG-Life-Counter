@@ -57,7 +57,6 @@ html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text);
 #legend { position: fixed; left: 10px; bottom: calc(126px + var(--safe-b)); z-index: 790; background: var(--panel);
   border: 1px solid var(--line); border-radius: 10px; padding: 7px 9px; font-size: 11px; color: var(--muted); }
 .lg-row { display: flex; align-items: center; gap: 7px; margin: 2px 0; }
-.lg-heat { width: 34px; height: 8px; border-radius: 4px; background: linear-gradient(90deg, #3b0f70, #8c2981, #de4968, #fe9f6d, #fcfdbf); }
 .lg-ring { width: 13px; height: 13px; border-radius: 50%; border: 2px solid var(--text); margin: 0 10px; }
 .lg-ring.dashed { border-style: dashed; border-color: #FF6B00; }
 .lg-dot { width: 9px; height: 9px; border-radius: 50%; border: 1px solid #111; background: #e2553f; margin: 0 12px 0 2px; flex: 0 0 9px; }
@@ -207,7 +206,6 @@ h4 { font: 700 11px/1 var(--mono); }
 
 <div id="legend">
   <div class="lg-title">The Zone</div>
-  <div class="lg-row"><span class="lg-heat"></span><span>heat</span></div>
   <div class="lg-row" id="lg-fights-row"><span class="lg-pie"></span><span id="lg-fights-label">theater · size = fighters</span></div>
   <div class="lg-row"><span class="lg-fade"></span><span>older ← → recent</span></div>
   <div class="lg-row"><span class="lg-ring"></span><span>group (count)</span></div>
@@ -230,18 +228,11 @@ h4 { font: 700 11px/1 var(--mono); }
   </nav>
 
   <div class="tab" id="tab-layers">
-    <label class="row"><span>Conflict heat</span><input type="checkbox" data-layer="heat" checked></label>
     <label class="row"><span>Enemy groups</span><input type="checkbox" data-layer="groups" checked></label>
     <label class="row"><span>Single NPCs</span><input type="checkbox" data-layer="actors"></label>
     <label class="row"><span>Battles</span><input type="checkbox" data-layer="fights" checked></label>
     <label class="row"><span>Hottest fronts</span><input type="checkbox" data-layer="fronts" checked></label>
     <label class="row"><span>Me + my trail</span><input type="checkbox" data-layer="player" checked></label>
-    <div class="row"><span>Heat fades (half-life)</span>
-      <select id="halflife">
-        <option value="5">5 min</option><option value="20">20 min</option><option value="60">1 h</option>
-        <option value="240">4 h</option><option value="0" selected>never</option>
-      </select></div>
-    <div class="row"><span>Heat strength</span><input type="range" id="gain" min="0.2" max="4" step="0.1" value="1"></div>
   </div>
 
   <div class="tab" id="tab-factions" hidden>
@@ -279,8 +270,6 @@ h4 { font: 700 11px/1 var(--mono); }
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="anonymous"></script>
-<script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"
-        integrity="sha256-65UqrlgGoRAnKfKRuriH3eeDrOhZgZo1SCenduc+SGo=" crossorigin="anonymous"></script>
 <script>
 "use strict";
 /* =====================================================================
@@ -437,9 +426,8 @@ const store = {
 };
 const S = {
   data: null, sourceLabel: "", isSample: false,
-  layers: Object.assign({ heat: true, groups: true, actors: false, fights: true, fronts: true, player: true }, store.get("layers", {})),
+  layers: ((saved) => { const o = Object.assign({ groups: true, actors: false, fights: true, fronts: true, player: true }, saved); delete o.heat; return o; })(store.get("layers", {})),
   windowIdx: store.get("win", WINDOW_STEPS_H.length - 1), winMode: store.get("winMode", "hours"),
-  halflife: store.get("hl", 0), gain: store.get("gain", 1),
   focusedTheater: null, programmaticZoom: false, fitZoom: null,
   hidden: new Set(store.get("hidden", [])), auto: store.get("auto", true),
   picking: false, imgW: 0, imgH: 0, scale: 1, mapKey: ""
@@ -450,7 +438,7 @@ const S = {
    ===================================================================== */
 const map = L.map("map", { crs: L.CRS.Simple, minZoom: -6, maxZoom: 4, zoomSnap: 0.25, zoomDelta: 0.5,
   attributionControl: false, zoomControl: false, bounceAtZoomLimits: false, preferCanvas: true });
-const layer = { base: null, heat: null, groups: L.layerGroup().addTo(map), actors: L.layerGroup().addTo(map),
+const layer = { base: null, groups: L.layerGroup().addTo(map), actors: L.layerGroup().addTo(map),
   fights: L.layerGroup().addTo(map), theaters: L.layerGroup().addTo(map), outlines: L.layerGroup().addTo(map),
   fronts: L.layerGroup().addTo(map), player: L.layerGroup().addTo(map), pick: L.layerGroup().addTo(map) };
 
@@ -594,10 +582,16 @@ function battlePopup(c, now, d) {
     (when ? `<div class="when">${esc(when)}</div>` : "") +
     (bits.length ? `<div class="meta">${bits.join(" · ")}</div>` : "") + `</div>`;
 }
+function battleVisualSize(fielded, sides) {
+  const counts = (sides || []).map(s => Math.max(1, Number(s.fielded) || 1));
+  const total = fielded || counts.reduce((a, b) => a + b, 0) || (sides || []).length || 1;
+  return Math.round(Math.max(16, Math.min(26, 14 + Math.sqrt(Math.max(total, 1)) * 2.8)));
+}
 function battleIcon(sides, fielded, age) {
   const counts = sides.map(s => Math.max(1, Number(s.fielded) || 1));
   const total = fielded || counts.reduce((a, b) => a + b, 0) || sides.length || 1;
-  const size = Math.round(Math.max(22, Math.min(42, 18 + Math.sqrt(total) * 6)));
+  const visual = battleVisualSize(fielded, sides);
+  const size = Math.max(visual, 28);
   const r = 12, cx = 16, cy = 16;
   let acc = 0;
   const slices = [];
@@ -622,7 +616,8 @@ function battleIcon(sides, fielded, age) {
   }
   const op = recencyOpacity(age);
   const recent = age <= 30 * 60;
-  const html = `<div class="fight-mark" style="opacity:${op}"><svg viewBox="0 0 32 32" aria-hidden="true">${slices.join("")}<circle cx="16" cy="16" r="6.2" fill="#0b0c0a" fill-opacity=".55"/></svg></div>`;
+  const pad = (size - visual) / 2;
+  const html = `<div class="fight-mark" style="opacity:${op};width:${visual}px;height:${visual}px;margin:${pad}px"><svg viewBox="0 0 32 32" aria-hidden="true">${slices.join("")}<circle cx="16" cy="16" r="6.2" fill="#0b0c0a" fill-opacity=".55"/></svg></div>`;
   return L.divIcon({ className: "fight-ico" + (recent ? " recent" : ""), iconSize: [size, size], iconAnchor: [size / 2, size / 2], html });
 }
 function shouldShowTheaters() {
@@ -696,7 +691,8 @@ function theaterIcon(rec, now) {
   const sides = Object.values(rec.sides);
   const counts = sides.map(s => Math.max(1, s.fielded || s.fights || 1));
   const total = rec.fielded || rec.fights || counts.reduce((a, b) => a + b, 0);
-  const size = Math.round(Math.max(30, Math.min(58, 24 + Math.sqrt(Math.max(total, 1)) * 5)));
+  const visual = Math.round(Math.max(20, Math.min(32, 16 + Math.sqrt(Math.max(total, 1)) * 2.4)));
+  const size = Math.max(visual, 32);
   const r = 12, cx = 16, cy = 16;
   let acc = 0, sum = counts.reduce((a, b) => a + b, 0), slices = [];
   sides.forEach((s, i) => {
@@ -718,8 +714,9 @@ function theaterIcon(rec, now) {
   }
   const age = rec.last ? now - rec.last : 1e12;
   const op = recencyOpacity(age);
-  const html = `<div class="theater-mark" style="opacity:${op}"><svg viewBox="0 0 32 32" aria-hidden="true">${slices.join("")}<circle cx="16" cy="16" r="5.8" fill="#0b0c0a" fill-opacity=".62"/></svg></div>`;
-  return L.divIcon({ className: "theater-ico" + (age <= 30 * 60 ? " recent" : ""), iconSize: [size, size], iconAnchor: [size / 2, size / 2], html });
+  const pad = (size - visual) / 2;
+  const html = `<div class="theater-mark" style="opacity:${op};width:${visual}px;height:${visual}px;margin:${pad}px"><svg viewBox="0 0 32 32" aria-hidden="true">${slices.join("")}<circle cx="16" cy="16" r="5.8" fill="#0b0c0a" fill-opacity=".62"/></svg></div>`;
+  return L.divIcon({ className: "theater-ico" + (age <= 30 * 60 ? " recent" : ""), iconSize: [size, size], iconAnchor: [size / 2, size / 2], html, visual });
 }
 function openTheater(id, opts) {
   const t = THEATERS.find(x => x.id === id);
@@ -743,37 +740,81 @@ function closeTheaters() {
   }
   render();
 }
-function heatRadius() {
-  // ~1.2% of map width in image pixels, converted to screen pixels at this zoom
-  const r = S.imgW * 0.012 * Math.pow(2, map.getZoom());
-  return Math.max(14, Math.min(90, r));
+function mapScale() {
+  return Math.pow(2, map.getZoom());
+}
+function theaterVisualSize(rec) {
+  const total = rec.fielded || rec.fights || 1;
+  return Math.round(Math.max(20, Math.min(32, 16 + Math.sqrt(Math.max(total, 1)) * 2.4)));
+}
+function separateTheaters(recs) {
+  const scale = mapScale();
+  const placed = recs.map(r => {
+    const visual = theaterVisualSize(r);
+    return { rec: r, u: r.theater.u, v: r.theater.v, ou: r.theater.u, ov: r.theater.v, visual };
+  });
+  const gap = 5;
+  const maxNudge = 40;
+  for (let iter = 0; iter < 16; iter++) {
+    let moved = false;
+    for (let i = 0; i < placed.length; i++) {
+      for (let j = i + 1; j < placed.length; j++) {
+        const a = placed[i], b = placed[j];
+        let du = b.u - a.u, dv = b.v - a.v;
+        const dist = Math.hypot(du, dv) || 0.01;
+        const need = (a.visual + b.visual) / 2 / scale + gap / scale;
+        if (dist < need) {
+          const push = (need - dist) / 2;
+          const ux = du / dist, uy = dv / dist;
+          a.u -= ux * push; a.v -= uy * push;
+          b.u += ux * push; b.v += uy * push;
+          moved = true;
+        }
+      }
+    }
+    for (const p of placed) {
+      const nd = Math.hypot(p.u - p.ou, p.v - p.ov);
+      if (nd > maxNudge) {
+        p.u = p.ou + (p.u - p.ou) * maxNudge / nd;
+        p.v = p.ov + (p.v - p.ov) * maxNudge / nd;
+      }
+    }
+    if (!moved) break;
+  }
+  return placed;
+}
+function spreadBattles(items) {
+  const scale = mapScale();
+  const gap = 3;
+  const placed = [];
+  for (const it of items) {
+    let u = it.u, v = it.v;
+    const r = it.visual / 2;
+    for (let k = 0; k < 48; k++) {
+      if (k > 0) {
+        const radMap = ((6 + k * 4) / scale);
+        const ang = k * 2.399963229728653;
+        u = it.u + radMap * Math.cos(ang);
+        v = it.v + radMap * Math.sin(ang);
+      }
+      const ok = placed.every(p => {
+        const du = (u - p.u) * scale, dv = (v - p.v) * scale;
+        const need = r + p.visual / 2 + gap;
+        return du * du + dv * dv >= need * need;
+      });
+      if (ok) break;
+    }
+    it.pu = u; it.pv = v;
+    placed.push({ u, v, visual: it.visual });
+  }
+  return items;
 }
 
 function render() {
   const d = S.data; if (!d) return;
   const now = clockNow();
   const since = windowSince(now);
-  const hl = S.halflife * 60;
   const showTheaters = shouldShowTheaters();
-
-  // --- heat
-  if (layer.heat) { map.removeLayer(layer.heat); layer.heat = null; }
-  if (S.layers.heat) {
-    const pts = [];
-    for (const c of d.conflicts) {
-      if (c.t < since || !visibleFac(c.factions)) continue;
-      const decay = hl > 0 ? Math.pow(0.5, Math.max(0, now - c.t) / hl) : 1;
-      const w = (c.w ?? 1) * decay;
-      if (w > 0.01) pts.push([ll(c.u, c.v).lat, ll(c.u, c.v).lng, w]);
-    }
-    const rad = heatRadius();
-    const ws = pts.map(p => p[2]).sort((a, b) => a - b);
-    const p90 = ws.length ? ws[Math.min(ws.length - 1, Math.floor(ws.length * 0.9))] : 1;
-    layer.heat = L.heatLayer(pts, { radius: rad, blur: rad * 0.85, max: Math.max(0.15, p90 / S.gain),
-      maxZoom: map.getZoom(), minOpacity: 0.3,
-      gradient: { 0.2: "#3b0f70", 0.4: "#8c2981", 0.6: "#de4968", 0.8: "#fe9f6d", 1.0: "#fcfdbf" } }).addTo(map);
-    S.heatCount = pts.length;
-  }
 
   // --- groups
   layer.groups.clearLayers();
@@ -811,40 +852,47 @@ function render() {
   const noteFac = (f) => { if (f && !seenFac.has(f)) { seenFac.add(f); fightFacs.push(f); } };
   if (S.layers.fights) {
     if (showTheaters) {
-      for (const rec of aggregateTheaters(d, since, now)) {
+      const placed = separateTheaters(aggregateTheaters(d, since, now));
+      for (const p of placed) {
+        const rec = p.rec;
         Object.keys(rec.sides).forEach(noteFac);
         const icon = theaterIcon(rec, now);
-        const marker = L.marker(ll(rec.theater.u, rec.theater.v), {
+        const marker = L.marker(ll(p.u, p.v), {
           icon, keyboard: true, zIndexOffset: 800
         }).bindPopup(theaterPopup(rec, now), { maxWidth: 300, className: "fight-popup" });
         marker.on("click", () => openTheater(rec.theater.id));
         layer.theaters.addLayer(marker);
-        const half = (icon.options.iconSize[1] || 40) / 2 + 3;
-        const label = L.marker(ll(rec.theater.u, rec.theater.v), {
+        const half = (icon.options.visual || p.visual) / 2 + 4;
+        const label = L.marker(ll(p.u, p.v), {
           icon: L.divIcon({ className: "theater-label-ico", iconSize: [0, 0], iconAnchor: [0, 0],
             html: `<div class="theater-name" style="opacity:${recencyOpacity(rec.last ? now - rec.last : 1e12)};transform:translate(-50%,${half}px)">${esc(rec.theater.name)}</div>` }),
           interactive: false, keyboard: false, zIndexOffset: 2500
         });
         layer.theaters.addLayer(label);
-        const ring = rec.theater.ring.map(p => ll(p[0], p[1]));
+        const ring = rec.theater.ring.map(pt => ll(pt[0], pt[1]));
         layer.outlines.addLayer(L.polygon(ring, {
           color: "rgba(212,163,92,.55)", weight: 1, fillColor: "#d4a35c", fillOpacity: 0.04, interactive: false
         }));
       }
     } else {
+      const pending = [];
       for (const c of d.conflicts) {
         if (c.kind !== "fight" || c.t < since || c.u == null || c.v == null || !visibleFac(c.factions)) continue;
         if (S.focusedTheater) {
-          const t = theaterOf(c.u, c.v);
-          if (!t || t.id !== S.focusedTheater) continue;
+          const th = theaterOf(c.u, c.v);
+          if (!th || th.id !== S.focusedTheater) continue;
         }
         const sides = (c.sides && c.sides.length) ? c.sides : (c.factions || []).map(f => ({ faction: f }));
         sides.forEach(s => noteFac(factionKey(s.faction)));
-        const age = now - (c.t || now);
-        layer.fights.addLayer(L.marker(ll(c.u, c.v), {
-          icon: battleIcon(sides, c.fielded, age), keyboard: true,
-          zIndexOffset: Math.round(1000 - Math.min(age, 200000) / 200)
-        }).bindPopup(battlePopup(c, now, d), { maxWidth: 280, className: "fight-popup" }));
+        pending.push({ c, sides, visual: battleVisualSize(c.fielded, sides), u: c.u, v: c.v, age: now - (c.t || now) });
+      }
+      pending.sort((a, b) => a.age - b.age);
+      spreadBattles(pending);
+      for (const it of pending) {
+        layer.fights.addLayer(L.marker(ll(it.pu, it.pv), {
+          icon: battleIcon(it.sides, it.c.fielded, it.age), keyboard: true,
+          zIndexOffset: Math.round(1000 - Math.min(it.age, 200000) / 200)
+        }).bindPopup(battlePopup(it.c, now, d), { maxWidth: 280, className: "fight-popup" }));
       }
       if (S.focusedTheater) {
         const t = THEATERS.find(x => x.id === S.focusedTheater);
@@ -1019,10 +1067,6 @@ const win = document.getElementById("window"); win.max = WINDOW_STEPS_H.length -
 win.value = Math.min(S.windowIdx, WINDOW_STEPS_H.length - 1); S.windowIdx = +win.value; setWindowLabel();
 win.oninput = () => { S.winMode = "hours"; S.windowIdx = +win.value; store.set("winMode", S.winMode); setWindowLabel(); store.set("win", S.windowIdx); render(); };
 document.querySelectorAll("#filters button").forEach(b => b.onclick = () => applyTimeFilter(b.dataset.tf));
-const hlSel = document.getElementById("halflife"); hlSel.value = String(S.halflife);
-hlSel.onchange = () => { S.halflife = +hlSel.value; store.set("hl", S.halflife); render(); };
-const gain = document.getElementById("gain"); gain.value = S.gain;
-gain.oninput = () => { S.gain = +gain.value; store.set("gain", S.gain); render(); };
 document.getElementById("chips-all").onclick = () => { S.hidden.clear(); store.set("hidden", []); buildChips(); render(); };
 const auto = document.getElementById("autorefresh"); auto.checked = S.auto;
 auto.onchange = () => { S.auto = auto.checked; store.set("auto", S.auto); };
@@ -1068,7 +1112,6 @@ document.querySelectorAll("[data-copy]").forEach(b => b.onclick = async () => {
 });
 
 map.on("zoomend", () => {
-  if (layer.heat) layer.heat.setOptions({ radius: heatRadius(), blur: heatRadius() * 0.85, maxZoom: map.getZoom() });
   if (S.programmaticZoom) return;
   const atOverview = shouldShowTheaters();
   if (S.focusedTheater && atOverview) closeTheaters();
