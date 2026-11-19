@@ -318,6 +318,15 @@ body.live-mode #legend .lg-live { display: block; }
 .lp-h { font: 700 10px/1.2 var(--mono); letter-spacing: .14em; color: var(--accent); text-transform: uppercase; margin: 3px 0 3px; display: flex; align-items: center; }
 .lp-h .badge { display: inline-block; min-width: 15px; padding: 1px 4px; margin-left: 6px; border-radius: 8px; background: #c8352a; color: #fff; font: 700 9.5px/1.2 var(--mono); letter-spacing: 0; text-align: center; }
 .lp-fights { display: flex; flex-direction: column; gap: 3px; max-height: max(190px, 34vh); overflow-y: auto; overscroll-behavior: contain; }
+@media (max-width: 699px) {
+  #live-panel { padding: 5px 8px 6px; }
+  #live-panel .lp-row { padding: 4px 7px; min-height: 28px; }
+  #live-panel .lp-row.msg { padding: 3px 7px; min-height: 26px; }
+  #live-panel .lp-body { gap: 2px; }
+}
+.rglyph { display: inline-flex; width: 13px; height: 13px; margin-right: 4px; vertical-align: -2px; color: #ffb020; flex: 0 0 13px; }
+.rglyph.both { color: #d4b070; }
+.rglyph svg { width: 13px; height: 13px; }
 .lp-row.msg.sub { margin-left: 16px; width: calc(100% - 16px); box-sizing: border-box; min-height: 24px; padding: 2px 7px; font-size: 11.5px; border-style: dashed; opacity: .9; }
 .lp-row.radio .dot { background: transparent; border: 2px dashed #ffb020; animation: none; box-sizing: border-box; }
 .rbadge { display: inline-block; font: 700 8.5px/1 var(--mono); letter-spacing: .08em; padding: 2px 4px; margin-right: 5px; border-radius: 3px;
@@ -372,7 +381,14 @@ body.live-mode #legend .lg-live { display: block; }
 #lv-alert .al-x { appearance: none; background: none; border: 0; color: #ffcfc4; font-size: 18px; padding: 0 2px 0 6px; cursor: pointer; }
 @media (min-width: 700px) {
   #topbar, #filters, #fabs, #legend, #sheet, #btn-back, #live-panel, #lv-alert, #banner { zoom: var(--z, 1); }
-  #live-panel { max-width: min(440px, calc(100vw / var(--z, 1) - 96px)); }
+  /* narrow panel (Kai t1478: width, not height): ~270 px at zoom 1, rows are one short line each */
+  #live-panel { max-width: min(270px, calc(100vw / var(--z, 1) - 96px)); padding: 5px 7px 6px; }
+  #live-panel .lp-row { gap: 5px; min-height: 26px; padding: 3px 6px; font-size: 12px; }
+  #live-panel .lp-row.msg { min-height: 24px; padding: 3px 6px; font-size: 11.5px; }
+  #live-panel .lp-row.msg.sub { margin-left: 12px; width: calc(100% - 12px); min-height: 20px; padding: 1px 6px; font-size: 11px; }
+  #live-panel .lp-head { gap: 4px; }
+  #live-panel .lp-title { letter-spacing: .06em; }
+  #live-panel .lp-t { font-size: 10.5px; }
   /* caps in real screen px: zoomed elements multiply their own lengths, so divide by --z (= the zoom) */
   #sheet { max-height: calc(64vh / var(--z, 1)); }
   body.region-view #sheet { max-height: calc(45vh / var(--z, 1)); }
@@ -1940,6 +1956,19 @@ const LV = {
 };
 const lvNow = () => Date.now() / 1000;
 function lvServerNow() { return LV.data ? LV.data.now + (lvNow() - LV.fetchedAt) : lvNow(); }
+function fmtShort(s) {   // '30s', '4m', '2h'
+  s = Math.max(0, Math.round(s));
+  if (s < 60) return `${s}s`;
+  if (s < 3600) return `${Math.floor(s / 60)}m`;
+  return `${Math.floor(s / 3600)}h`;
+}
+function lpNarrow() { return window.innerWidth >= 700; }   // desk panel is narrow; phones keep the full-width layout
+function msgShortHtml(m) {  // icon + short text for linked lines: 'Distress call (Ward) - attacked by Mutants' -> 'Distress call'
+  const full = m.label || m.kind || "";
+  const short = full.split(/\s+[(\-–·:]\s*|\s+-\s+/)[0] || full;
+  return esc(short);
+}
+const RGLYPH = `<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="9" r="1.6" fill="currentColor"/><path d="M5 6.2a4 4 0 0 0 0 5.6M11 6.2a4 4 0 0 1 0 5.6M3 4.3a6.6 6.6 0 0 0 0 9.4M13 4.3a6.6 6.6 0 0 1 0 9.4" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>`;
 function fmtDur(s) {
   s = Math.max(0, Math.round(s));
   if (s < 60) return `${s}s`;
@@ -2130,28 +2159,32 @@ function mapObstacleRects() {
   for (const e of map.getContainer().querySelectorAll(".theater-mark, .theater-name, .poi-label, .fight-mark")) {
     const r = e.getBoundingClientRect();
     if (!r.width || r.right < c.left || r.left > c.right || r.bottom < c.top || r.top > c.bottom) continue;
-    out.push({ x0: r.left - c.left, y0: r.top - c.top, x1: r.right - c.left, y1: r.bottom - c.top });
+    const label = e.classList.contains("theater-name") || e.classList.contains("poi-label");
+    out.push({ x0: r.left - c.left, y0: r.top - c.top, x1: r.right - c.left, y1: r.bottom - c.top, label });
   }
   return out;
 }
-function freeSpot(p0, size, placed, rects, tries) {
-  // golden-angle spiral from the true spot: first point clear of other markers and of the map's own drawings;
-  // if nothing is fully clear, the one clear of markers that touches the fewest drawings
-  const half = size / 2 + 2;
-  let best = null, bestHits = Infinity;
+function freeSpot(p0, size, placed, rects, tries, box) {
+  // golden-angle spiral from the true spot: first point clear of other markers and of the map's own drawings.
+  // Scored by overlap AREA of the marker's real box (w x h), names/place labels weigh 40x (a pin may sit on a wheel, not on a name). If nothing is clear,
+  // the least-overlap spot wins; null if every candidate still sits on a name label (caller skips/shrinks the pin).
+  const hw = (box ? box.w : size) / 2 + 2, hh = (box ? box.h : size) / 2 + 2;
+  let best = null, bestScore = Infinity, bestLabel = true;
   for (let k = 0; k < tries; k++) {
     const rad = k ? 4 + k * 3 : 0, ang = k * 2.399963229728653;
     const p = k ? L.point(p0.x + rad * Math.cos(ang), p0.y + rad * Math.sin(ang)) : p0;
     if (!placed.every(q => Math.hypot(p.x - q.p.x, p.y - q.p.y) >= (size + q.size) / 2 + 2)) continue;
-    let hits = 0;
+    let score = 0, onLabel = false;
     for (const r of rects) {
-      const dx = Math.max(r.x0 - p.x, 0, p.x - r.x1), dy = Math.max(r.y0 - p.y, 0, p.y - r.y1);
-      if (dx * dx + dy * dy < half * half) hits++;
+      const ox = Math.min(r.x1, p.x + hw) - Math.max(r.x0, p.x - hw), oy = Math.min(r.y1, p.y + hh) - Math.max(r.y0, p.y - hh);
+      if (ox <= 0 || oy <= 0) continue;
+      score += ox * oy * (r.label ? 40 : 1); if (r.label) onLabel = true;
     }
-    if (!hits) return p;
-    if (hits < bestHits) { bestHits = hits; best = p; }
+    if (!score) return p;
+    score += rad * 0.5;            // prefer spots nearer the true location
+    if (score < bestScore) { bestScore = score; best = p; bestLabel = onLabel; }
   }
-  return best || p0;
+  return best && !bestLabel ? best : (best ? Object.assign(best, { onLabel: true }) : null);
 }
 function renderMsgMarkers(placedFights) {
   layer.msgs.clearLayers();
@@ -2168,7 +2201,9 @@ function renderMsgMarkers(placedFights) {
     const pin = evPinHtml(m, age, hot);
     const size = pin ? pin.h + 2 : msgSize(m);      // keep-out box = the pin's real (taller) box, centred
     const p0 = map.latLngToContainerPoint(ll(m.u, m.v));
-    const p = freeSpot(p0, size, placed, rects, 120);
+    let p = freeSpot(p0, size, placed, rects, 160, pin ? { w: pin.w, h: pin.h } : null);
+    // no spot clear of names: hot events still show (at the least-overlap spot), others are skipped rather than covering a label
+    if (!p || p.onLabel) { if (!hot) continue; if (!p) p = p0; }
     placed.push({ p, size });
     const mk = L.marker(map.containerPointToLatLng(p), { pane: "msgPane", keyboard: true, zIndexOffset: hot ? 2000 : 1000, opacity: pin ? 1 : op,
       icon: pin ? L.divIcon({ className: "msg-ico", iconSize: [pin.w, pin.h], iconAnchor: [pin.w / 2, pin.h / 2], html: pin.html })
@@ -2207,7 +2242,7 @@ function lvShowRadio(mid) {
   // zone-wide news (wars, ceasefires, emissions) has no place on the map: open the radio list on it
   map.closePopup();
   if (mid != null && window.innerWidth < 700) LV.radioMore = true;
-  if (S.focusedTheater) LV.regionOpen = true; else LV.min = false;
+  if (S.focusedTheater) { LV.regionOpen = true; LV._regionPinned = true; } else LV.min = false;
   LV._msgScroll = 0;
   renderLivePanel();
   const row = document.querySelector(`#live-panel .lp-row.msg[data-mid="${mid}"]`);
@@ -2228,10 +2263,22 @@ function renderMsgList(opt) {
   }
   let h = `<div class="lp-msgs">`;
   for (const a of alerts) {
-    h += `<button type="button" class="lp-row msg alert" data-aid="${esc(a.id)}"><span class="mi">${msgSvg({ cat: "cluster", kind: "cluster" })}</span>` +
-      `<span class="lp-txt">${esc(a.label)} <span class="m">· ${esc(msgWhere(a))}</span></span><span class="lp-t">${fmtDur((a.age_s || 0) + lvNow() - LV.fetchedAt)}</span></button>`;
+    const aAge = (a.age_s || 0) + lvNow() - LV.fetchedAt;
+    h += lpNarrow()
+      ? `<button type="button" class="lp-row msg alert" data-aid="${esc(a.id)}" title="${esc(a.label + " · " + msgWhere(a))}"><span class="mi">${msgSvg({ cat: "cluster", kind: "cluster" })}</span>` +
+        `<span class="lp-txt">${esc(a.label)}</span><span class="lp-t">${fmtShort(aAge)}</span></button>`
+      : `<button type="button" class="lp-row msg alert" data-aid="${esc(a.id)}"><span class="mi">${msgSvg({ cat: "cluster", kind: "cluster" })}</span>` +
+      `<span class="lp-txt">${esc(a.label)} <span class="m">· ${esc(msgWhere(a))}</span></span><span class="lp-t">${fmtDur(aAge)}</span></button>`;
   }
+  const nar = lpNarrow();
   for (const m of ms) {
+    if (nar) {
+      const cls = `lvl${m.level}${msgHot(m) ? " hot" : ""}${m.fight_id && LV.markers.has(m.fight_id) ? " linked" : ""}`;
+      const where = m.u == null ? "Zone-wide" : msgRegion(m);
+      h += `<button type="button" class="lp-row msg ${cls}" data-mid="${m.id}" title="${esc((m.label || m.kind) + " · " + where)}"><span class="mi">${msgSvg(m)}</span>` +
+        `<span class="lp-txt">${msgLabelHtml(m)}</span><span class="lp-t">${fmtShort(msgAge(m))}</span></button>`;
+      continue;
+    }
     const cls = `lvl${m.level}${msgHot(m) ? " hot" : ""}${m.fight_id && LV.markers.has(m.fight_id) ? " linked" : ""}`;
     h += `<button type="button" class="lp-row msg ${cls}" data-mid="${m.id}"><span class="mi">${msgSvg(m)}</span>` +
       `<span class="lp-txt">${msgLabelHtml(m)} <span class="m">· ${esc(m.u == null ? "Zone-wide" : msgRegion(m))}</span></span>` +
@@ -2573,6 +2620,11 @@ function renderLivePanel() {
   btn.setAttribute("aria-pressed", String(LV.on));
   if (!LV.on) return;
   // region view is busy (region card below): show just the header unless opened
+  if (S.focusedTheater !== LV._lastTheater) {   // entering a region: phones start collapsed, desks as last left
+    LV._lastTheater = S.focusedTheater;
+    if (S.focusedTheater && !LV._regionPinned) LV.regionOpen = lpNarrow() ? !!store.get("liveRegionOpen", false) : false;
+  }
+  LV._regionPinned = false;
   const compact = S.focusedTheater ? !LV.regionOpen : !!LV.min;
   lp.classList.toggle("min", compact);
   const d = LV.data;
@@ -2593,8 +2645,9 @@ function renderLivePanel() {
     body = `<div class="lp-note">${LV.everOk ? "Can't reach the PC right now - retrying." : "Live view needs the page from your PC."} ` +
       `Open <b>http://${here}</b> on home Wi-Fi (run <b>start_live.ps1</b> on the PC; it prints the address).</div>`;
   } else {
-    title = `<span class="lp-title">● Live${act.length ? ` · ${act.length} firefight${act.length > 1 ? "s" : ""}${S.focusedTheater ? " here" : ""}` : ""}</span>`;
-    upd = `updated ${fmtDur(lvNow() - LV.lastOk)} ago`;
+    const nar = lpNarrow();
+    title = `<span class="lp-title">● Live${act.length ? ` · ${act.length} ${nar ? "fight" : "firefight"}${act.length > 1 ? "s" : ""}${S.focusedTheater ? " here" : ""}` : ""}</span>`;
+    upd = nar ? fmtShort(lvNow() - LV.lastOk) : `updated ${fmtDur(lvNow() - LV.lastOk)} ago`;
     const hasMsgs = !!(d.messages_info && d.messages_info.found) || LV.msgs.length > 0;
     const nHot = LV.msgs.filter(m => msgHot(m) && msgVisible(m)).length;
     if (nHot) title = title.replace("</span>", ` · ⚠ ${nHot}</span>`);
@@ -2606,14 +2659,23 @@ function renderLivePanel() {
       const f = x.r.fight;
       const isNew = x.st.active && lvNow() - (LV.firstSeen.get(x.id) || 0) < 8;
       const near = lvNear(f);
-      const src = f.source === "radio" ? `<span class="rbadge" title="reported on the radio">RADIO</span>`
-        : (f.source === "both" || x.r.radioDup) ? `<span class="rbadge both" title="seen by the logger and on the radio">+RADIO</span>` : "";
-      fb += `<button type="button" class="lp-row${x.st.active ? "" : " ended"}${isNew ? " new" : ""}${f.source === "radio" ? " radio" : ""}" data-id="${esc(x.id)}">` +
-        `<span class="dot"></span><span class="lp-txt">${src}${lvSidesHtml(f)}${near ? ` <span class="m">· ${esc(near)}</span>` : ""}</span>` +
-        `<span class="lp-t">${x.st.active ? fmtDur(x.st.elapsed) : "ended"}</span></button>`;
+      const isRadio = f.source === "radio", isBoth = !isRadio && (f.source === "both" || x.r.radioDup);
+      const nar = !phone;
+      const src = nar
+        ? (isRadio ? `<span class="rbadge rglyph" title="reported on the radio" aria-label="RADIO">${RGLYPH}</span>`
+          : isBoth ? `<span class="rbadge rglyph both" title="seen by the logger and on the radio" aria-label="+RADIO">${RGLYPH}</span>` : "")
+        : (isRadio ? `<span class="rbadge" title="reported on the radio">RADIO</span>`
+          : isBoth ? `<span class="rbadge both" title="seen by the logger and on the radio">+RADIO</span>` : "");
+      const tip = nar ? ` title="${esc((isRadio ? "Radio-reported · " : isBoth ? "Logger + radio · " : "") + (near || "") )}"` : "";
+      fb += `<button type="button" class="lp-row${x.st.active ? "" : " ended"}${isNew ? " new" : ""}${isRadio ? " radio" : ""}" data-id="${esc(x.id)}"${tip}>` +
+        `<span class="dot"></span><span class="lp-txt">${src}${lvSidesHtml(f)}${near && !nar ? ` <span class="m">· ${esc(near)}</span>` : ""}</span>` +
+        `<span class="lp-t">${x.st.active ? (nar ? fmtShort(x.st.elapsed) : fmtDur(x.st.elapsed)) : (nar ? "end" : "ended")}</span></button>`;
       // the radio lines about this fight, right under it
       const ms = (f.message_ids || []).map(id => LV.msgById.get(id)).filter(m => m && !m.is_reply).sort((a, b) => b.t - a.t).slice(0, phone ? 1 : 2);
-      for (const m of ms) fb += `<button type="button" class="lp-row msg sub lvl${m.level}" data-mid="${m.id}"><span class="mi">${msgSvg(m)}</span>` +
+      for (const m of ms) fb += !phone
+        ? `<button type="button" class="lp-row msg sub lvl${m.level}" data-mid="${m.id}" title="${esc(m.label || m.kind)}"><span class="mi">${msgSvg(m)}</span>` +
+          `<span class="lp-txt">${msgShortHtml(m)}</span><span class="lp-t">${fmtShort(msgAge(m))}</span></button>`
+        : `<button type="button" class="lp-row msg sub lvl${m.level}" data-mid="${m.id}"><span class="mi">${msgSvg(m)}</span>` +
         `<span class="lp-txt">${msgLabelHtml(m)}</span><span class="lp-t">${fmtDur(msgAge(m))}</span></button>`;
     }
     const more = act.length + ended.length - rows.length;
@@ -2640,7 +2702,7 @@ function renderLivePanel() {
   lp.innerHTML = html;
   positionLivePanel();
   lp.querySelector("#lp-head").onclick = () => {
-    if (S.focusedTheater) LV.regionOpen = !LV.regionOpen;
+    if (S.focusedTheater) { LV.regionOpen = !LV.regionOpen; if (lpNarrow()) store.set("liveRegionOpen", LV.regionOpen); }
     else { LV.min = !LV.min; store.set("liveMin", LV.min); }
     renderLivePanel();
   };
