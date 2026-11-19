@@ -127,6 +127,8 @@ h4 { margin: 10px 0 6px; font-size: 12px; letter-spacing: .08em; text-transform:
 .pick-ico .x { width: 22px; height: 22px; position: absolute; left: -11px; top: -11px; border: 2px solid var(--accent); border-radius: 50%; }
 @keyframes pulse { 0% { transform: scale(.6); opacity: 1; } 100% { transform: scale(1.6); opacity: 0; } }
 .leaflet-div-icon { background: none; border: 0; }
+.theater-ico { overflow: visible; }
+.theater-mark { overflow: visible; }
 .leaflet-popup-content-wrapper, .leaflet-popup-tip { background: var(--panel); color: var(--text); border: 1px solid var(--line);
   border-radius: 4px; box-shadow: 0 8px 24px rgba(0,0,0,.45); }
 .leaflet-popup-content-wrapper { border-top: 2px solid var(--accent); }
@@ -148,7 +150,20 @@ h4 { margin: 10px 0 6px; font-size: 12px; letter-spacing: .08em; text-transform:
 .lg-fade { width: 34px; height: 8px; border-radius: 4px; border: 1px solid #111;
   background: linear-gradient(90deg, rgba(212,163,92,.25), #d4a35c); }
 .lg-pie { width: 13px; height: 13px; border-radius: 50%; margin: 0 10px; flex: 0 0 13px;
-  background: conic-gradient(#C0723A 0 55%, #FF4E6A 55% 100%); border: 1px solid #111; box-shadow: inset 0 0 0 3px var(--panel); }
+  background: conic-gradient(#6A121C 0 55%, #FFE14A 55% 100%); border: 1px solid #FFD9C8; box-shadow: inset 0 0 0 3px var(--panel); }
+#btn-back { position: fixed; top: calc(58px + var(--safe-t)); right: 10px; z-index: 810;
+  appearance: none; background: var(--panel); color: var(--text); border: 1px solid var(--accent);
+  border-radius: 4px; padding: 8px 12px; min-height: 36px; font: 700 12px/1 var(--display);
+  letter-spacing: .1em; text-transform: uppercase; }
+#btn-back[hidden] { display: none; }
+.theater-mark { position: relative; width: 100%; height: 100%; filter: drop-shadow(0 0 3px rgba(0,0,0,.9)); }
+.theater-mark svg { display: block; width: 100%; height: 100%; }
+.theater-label-ico { overflow: visible; background: none; border: 0; }
+.theater-name { position: absolute; left: 0; top: 0; transform: translate(-50%, 0);
+  font: 700 9px/1.15 var(--display); letter-spacing: .05em; text-transform: uppercase;
+  color: var(--text); background: rgba(11,12,10,.82); border: 1px solid rgba(212,163,92,.4);
+  border-radius: 3px; padding: 2px 5px; white-space: nowrap; pointer-events: none; }
+.lg-factions .outlined i, .chip.outlined i { box-shadow: 0 0 0 1px #FFD9C8; }
 
 .fight-mark { position: relative; width: 100%; height: 100%; filter: drop-shadow(0 0 2px rgba(0,0,0,.85)); }
 .fight-mark svg { display: block; width: 100%; height: 100%; }
@@ -181,6 +196,7 @@ h4 { font: 700 11px/1 var(--mono); }
   <button type="button" data-tf="today">Today</button>
   <button type="button" data-tf="all">All</button>
 </div>
+<button type="button" id="btn-back" hidden>← Theaters</button>
 <div id="banner" hidden></div>
 
 <div id="fabs">
@@ -192,7 +208,7 @@ h4 { font: 700 11px/1 var(--mono); }
 <div id="legend">
   <div class="lg-title">The Zone</div>
   <div class="lg-row"><span class="lg-heat"></span><span>heat</span></div>
-  <div class="lg-row" id="lg-fights-row"><span class="lg-pie"></span><span>battle · size = fighters</span></div>
+  <div class="lg-row" id="lg-fights-row"><span class="lg-pie"></span><span id="lg-fights-label">theater · size = fighters</span></div>
   <div class="lg-row"><span class="lg-fade"></span><span>older ← → recent</span></div>
   <div class="lg-row"><span class="lg-ring"></span><span>group (count)</span></div>
   <div class="lg-row"><span class="lg-ring dashed"></span><span>mutant pack</span></div>
@@ -282,26 +298,27 @@ const DATA_URL = new URLSearchParams(location.search).get("data") || "data.json"
 const REFRESH_MS = 60000;
 const WINDOW_STEPS_H = [0.25, 0.5, 1, 2, 3, 6, 12, 24, 48, 72, 168, null]; // null = all time
 
-// High-contrast palette for the dark PDA map. Human factions each get a distinct
-// color (Okabe-Ito / Tol-inspired, with extra lightness separation on the warm
-// side so red-green colorblind viewers can still tell Duty, Mutants, and Bandits
-// apart). Every non-human species shares the Mutants color; popups still use the
-// species name.
+// Distinct hues on the dark PDA map. Mutants share one magenta; popups still
+// name the species. Bandits are a dark crimson with a light outline so they
+// stay readable. Military is kept separate from Ward. Spark is teal, not yellow.
 const FACTION_COLORS = {
-  Loners: "#E0A63A", Duty: "#FF4E6A", Freedom: "#1ED99A", Bandits: "#C0723A",
-  Mercenaries: "#3A96FF", Monolith: "#F4F0E8", Ward: "#B5E04A", Spark: "#FFF59A",
-  Noon: "#D85EF0", Scientists: "#2ADDE8", Corps: "#8BA3D9", Scavengers: "#E0C48A",
-  Renegades: "#FF7AAD", Mutants: "#FF6B00", Unknown: "#9AA0A6"
+  Loners: "#FFE14A", Duty: "#FF3A4F", Freedom: "#00C853", Bandits: "#6A121C",
+  Mercenaries: "#2F7BFF", Monolith: "#F3F0E8", Ward: "#C8F04A", Spark: "#00D2C8",
+  Noon: "#A060FF", Scientists: "#7AD7FF", Corps: "#A8B4E0", Military: "#8A9A3C",
+  Scavengers: "#E8D0B0", Renegades: "#FF6A3C", Mutants: "#E018C8", Unknown: "#8A9098"
 };
 const FACTION_ALIASES = {
   Neutrals: "Loners", Neutral: "Loners", Loner: "Loners",
-  Varta: "Ward", Militaries: "Ward", Military: "Ward", Army: "Ward",
+  Varta: "Ward",
+  Militaries: "Military", Military: "Military", Army: "Military",
   Iskra: "Spark",
   Corpus: "Corps", Korpus: "Corps",
   Ecologists: "Scientists", Ecologist: "Scientists", Scientist: "Scientists",
   Merc: "Mercenaries", Mercs: "Mercenaries", Mercenary: "Mercenaries",
   Bandit: "Bandits"
 };
+const OUTLINED_FACTIONS = new Set(["Bandits"]);
+const OUTLINE_COLOR = "#FFD9C8";
 function factionKey(f) {
   if (!f) return "Unknown";
   if (Object.prototype.hasOwnProperty.call(FACTION_COLORS, f)) return f;
@@ -313,6 +330,34 @@ function facColor(f) {
 }
 function facHidden(f) {
   return S.hidden.has(factionKey(f));
+}
+const THEATERS = [{"id":"prypiat","name":"Pripyat","u":490.0,"v":186.5,"ring":[[414.9,173.6],[441.2,208.4],[403.3,231.3],[482.4,284.2],[601.4,209.0],[569.8,167.6],[569.1,138.7],[553.6,125.8],[431.2,122.7],[418.6,132.3],[437.3,161.2],[414.9,173.6]]},{"id":"generators","name":"Generators","u":700.7,"v":237.5,"ring":[[572.0,315.2],[655.8,282.8],[827.2,284.9],[828.7,226.2],[813.7,199.6],[790.5,189.9],[715.9,190.5],[688.0,198.6],[628.3,191.4],[534.6,254.4],[572.0,315.2]]},{"id":"jupiter","name":"Jupiter","u":440.3,"v":297.5,"ring":[[487.4,341.4],[521.2,321.2],[572.0,315.2],[534.6,254.4],[482.4,284.2],[403.3,231.3],[369.4,244.2],[349.7,263.8],[298.7,340.8],[303.1,354.6],[487.4,341.4]]},{"id":"cnpp","name":"Chornobyl NPP","u":757.3,"v":364.0,"ring":[[572.0,315.2],[620.5,386.0],[619.2,417.2],[842.0,419.7],[857.7,417.8],[865.7,410.9],[871.3,285.5],[655.8,282.8],[572.0,315.2]]},{"id":"yanov","name":"Yaniv","u":430.7,"v":381.5,"ring":[[311.4,437.8],[342.5,419.3],[370.8,413.8],[441.3,425.2],[492.3,413.8],[525.0,398.4],[571.4,395.9],[620.5,386.0],[572.0,315.2],[521.2,321.2],[487.4,341.4],[303.1,354.6],[300.6,381.5],[283.7,394.4],[275.4,424.4],[274.7,446.6],[311.4,437.8]]},{"id":"red_forest","name":"Red Forest","u":451.0,"v":450.0,"ring":[[274.2,468.2],[278.2,504.2],[295.9,533.8],[373.5,498.8],[599.0,501.5],[634.5,495.9],[624.1,464.2],[618.9,422.2],[620.5,386.0],[571.4,395.9],[525.0,398.4],[492.3,413.8],[441.3,425.2],[370.8,413.8],[342.5,419.3],[311.4,437.8],[274.7,446.6],[274.2,468.2]]},{"id":"cooling_towers","name":"Cooling Towers","u":956.7,"v":476.6,"ring":[[839.0,489.3],[1030.2,572.3],[1049.5,575.6],[1060.1,546.0],[1079.3,534.6],[1084.3,521.5],[1059.5,484.4],[1051.5,464.4],[1030.2,450.6],[954.3,430.9],[938.9,411.9],[865.7,410.9],[857.7,417.8],[842.0,419.7],[839.0,489.3]]},{"id":"iron_forest","name":"Iron Forest","u":697.1,"v":471.4,"ring":[[618.9,422.2],[624.1,464.2],[634.5,495.9],[660.1,502.4],[838.3,504.3],[842.0,419.7],[619.2,417.2],[618.9,422.2]]},{"id":"cement_factory","name":"Cement Factory","u":967.7,"v":600.6,"ring":[[838.3,504.3],[830.3,677.6],[980.0,679.7],[1065.4,674.0],[1040.3,625.3],[1035.9,607.2],[1049.5,575.6],[1030.2,572.3],[839.0,489.3],[838.3,504.3]]},{"id":"rostok","name":"Rostok","u":578.8,"v":574.2,"ring":[[618.4,674.0],[641.0,664.8],[653.5,645.3],[660.1,502.4],[634.5,495.9],[599.0,501.5],[516.5,500.6],[478.2,584.6],[470.2,672.2],[618.4,674.0]]},{"id":"yantar","name":"Yantar","u":371.2,"v":590.5,"ring":[[313.3,556.5],[350.1,566.3],[348.0,612.9],[330.3,627.4],[352.1,670.7],[470.2,672.2],[478.2,584.6],[516.5,500.6],[373.5,498.8],[295.9,533.8],[313.3,556.5]]},{"id":"garbage","name":"Garbage","u":709.3,"v":719.5,"ring":[[653.5,645.3],[641.0,664.8],[618.4,674.0],[616.5,715.0],[629.6,739.7],[641.5,736.7],[650.1,750.7],[657.2,753.7],[680.6,752.0],[692.4,760.3],[715.3,759.6],[764.6,767.9],[789.3,768.7],[827.1,749.2],[838.3,504.3],[660.1,502.4],[653.5,645.3]]},{"id":"malachite","name":"Malachite","u":202.4,"v":698.9,"ring":[[94.4,634.7],[99.8,648.5],[80.6,716.4],[82.5,739.4],[88.3,755.3],[107.1,755.8],[126.5,765.1],[135.3,793.5],[147.1,804.7],[162.0,810.6],[216.1,804.6],[300.6,805.4],[302.3,775.3],[315.1,753.2],[319.8,702.2],[352.1,670.7],[330.3,627.4],[284.3,623.8],[234.5,609.5],[129.6,608.4],[123.7,622.3],[95.1,622.1],[94.4,634.7]]},{"id":"sircaa","name":"SIRCAA","u":1203.3,"v":700.8,"ring":[[1167.5,655.8],[1150.7,672.7],[1145.9,697.4],[1147.6,738.1],[1167.6,745.7],[1206.3,750.4],[1247.9,745.0],[1269.5,736.1],[1277.0,699.6],[1269.8,677.8],[1208.2,651.4],[1187.8,649.5],[1167.5,655.8]]},{"id":"wild_island","name":"Wild Island","u":895.5,"v":812.3,"ring":[[980.0,679.7],[830.3,677.6],[827.1,749.2],[789.3,768.7],[797.6,777.2],[804.5,796.4],[827.8,809.2],[835.3,821.9],[825.3,863.1],[842.2,870.0],[858.1,870.5],[863.6,861.5],[890.5,852.9],[941.8,853.6],[957.7,860.8],[978.5,895.8],[1088.4,767.5],[1128.1,730.4],[1065.4,674.0],[980.0,679.7]]},{"id":"chemical_plant","name":"Chemical Plant","u":533.1,"v":789.1,"ring":[[623.9,847.6],[632.1,832.5],[632.6,820.7],[608.9,801.8],[599.0,768.7],[604.6,759.8],[625.7,756.4],[629.6,739.7],[616.5,715.0],[618.4,674.0],[352.1,670.7],[319.8,702.2],[315.1,753.2],[302.3,775.3],[300.6,805.4],[372.5,846.5],[527.1,848.3],[552.1,859.3],[581.5,863.1],[608.4,855.4],[622.6,857.0],[623.9,847.6]]},{"id":"zaton","name":"Zaton","u":1208.0,"v":928.3,"ring":[[1240.8,1103.8],[1256.4,1077.9],[1288.0,1049.3],[1324.1,1045.0],[1359.8,1063.2],[1420.9,1071.0],[1428.0,1045.0],[1425.3,1010.2],[1400.9,941.5],[1384.5,912.8],[1374.6,853.1],[1379.2,788.4],[1364.0,768.6],[1269.5,736.1],[1247.9,745.0],[1206.3,750.4],[1167.6,745.7],[1128.1,730.4],[1088.4,767.5],[978.5,895.8],[988.8,910.3],[979.7,946.9],[998.4,964.7],[1025.8,980.7],[1064.4,994.3],[1085.2,1019.0],[1144.9,1069.1],[1159.5,1096.6],[1191.9,1114.4],[1209.2,1131.6],[1240.8,1103.8]]},{"id":"lesser_zone","name":"Lesser Zone","u":714.1,"v":862.1,"ring":[[604.6,759.8],[599.0,768.7],[605.5,795.9],[632.6,820.7],[622.6,857.0],[641.2,867.8],[642.0,908.3],[666.2,935.1],[668.3,949.2],[662.5,956.3],[617.4,970.6],[616.6,989.9],[630.3,1008.2],[643.7,1014.4],[747.5,1015.1],[752.4,1009.4],[753.3,994.4],[782.2,947.5],[818.6,920.1],[818.4,885.8],[835.3,821.9],[827.8,809.2],[804.5,796.4],[797.6,777.2],[789.3,768.7],[692.4,760.3],[680.6,752.0],[657.2,753.7],[637.1,736.3],[629.6,739.7],[625.7,756.4],[604.6,759.8]]},{"id":"duga","name":"Duga","u":277.9,"v":935.8,"ring":[[168.8,835.0],[163.9,850.0],[151.4,859.7],[154.4,886.0],[173.9,901.4],[190.2,925.2],[208.0,914.8],[324.6,1057.0],[338.6,1049.0],[349.2,1060.9],[358.9,1055.4],[371.4,1036.3],[396.0,1025.2],[392.3,989.1],[367.4,956.7],[372.5,846.5],[300.6,805.4],[216.1,804.6],[162.0,810.6],[168.8,835.0]]},{"id":"orbita","name":"Orbita","u":555.2,"v":942.5,"ring":[[367.4,956.7],[392.3,989.1],[396.0,1025.2],[432.0,1019.7],[457.3,1007.0],[495.0,1001.5],[540.9,1005.4],[561.6,977.9],[603.6,978.0],[610.7,971.4],[662.5,956.3],[668.3,949.2],[666.2,935.1],[642.0,908.3],[641.2,867.8],[622.6,857.0],[608.4,855.4],[581.5,863.1],[552.1,859.3],[527.1,848.3],[372.5,846.5],[367.4,956.7]]},{"id":"cordon","name":"Cordon","u":825.9,"v":971.6,"ring":[[821.2,871.7],[818.6,920.1],[782.2,947.5],[753.3,994.4],[745.1,1026.0],[747.5,1035.4],[776.8,1050.1],[796.9,1070.0],[843.8,1070.5],[851.0,1021.2],[911.5,996.7],[907.6,971.2],[920.2,943.6],[917.8,935.5],[878.9,914.7],[875.0,888.6],[859.6,882.1],[858.1,870.5],[842.2,870.0],[825.3,863.1],[821.2,871.7]]},{"id":"swamp","name":"Swamps","u":1345.1,"v":1156.4,"ring":[[1359.8,1063.2],[1324.1,1045.0],[1288.0,1049.3],[1256.4,1077.9],[1240.8,1103.8],[1209.2,1131.6],[1213.2,1160.6],[1227.5,1174.3],[1249.5,1183.6],[1305.5,1220.9],[1377.1,1221.9],[1418.2,1237.0],[1428.1,1229.6],[1419.9,1198.5],[1433.3,1165.2],[1431.3,1149.6],[1412.9,1108.7],[1412.2,1089.1],[1420.9,1071.0],[1359.8,1063.2]]}];
+function pointInRing(u, v, ring) {
+  let inside = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const x1 = ring[i][0], y1 = ring[i][1], x2 = ring[j][0], y2 = ring[j][1];
+    if (((y1 > v) !== (y2 > v)) && (u < (x2 - x1) * (v - y1) / ((y2 - y1) || 1e-15) + x1)) inside = !inside;
+  }
+  return inside;
+}
+function theaterOf(u, v) {
+  if (u == null || v == null) return null;
+  for (const t of THEATERS) if (pointInRing(u, v, t.ring)) return t;
+  let best = null, bd = Infinity;
+  for (const t of THEATERS) {
+    const d = (u - t.u) * (u - t.u) + (v - t.v) * (v - t.v);
+    if (d < bd) { bd = d; best = t; }
+  }
+  return best;
+}
+function theaterBounds(t) {
+  let minU = Infinity, minV = Infinity, maxU = -Infinity, maxV = -Infinity;
+  for (const p of t.ring) {
+    if (p[0] < minU) minU = p[0]; if (p[0] > maxU) maxU = p[0];
+    if (p[1] < minV) minV = p[1]; if (p[1] > maxV) maxV = p[1];
+  }
+  const pad = 40;
+  return L.latLngBounds(ll(minU - pad, maxV + pad), ll(maxU + pad, minV - pad));
 }
 
 /* =====================================================================
@@ -395,6 +440,7 @@ const S = {
   layers: Object.assign({ heat: true, groups: true, actors: false, fights: true, fronts: true, player: true }, store.get("layers", {})),
   windowIdx: store.get("win", WINDOW_STEPS_H.length - 1), winMode: store.get("winMode", "hours"),
   halflife: store.get("hl", 0), gain: store.get("gain", 1),
+  focusedTheater: null, programmaticZoom: false, fitZoom: null,
   hidden: new Set(store.get("hidden", [])), auto: store.get("auto", true),
   picking: false, imgW: 0, imgH: 0, scale: 1, mapKey: ""
 };
@@ -405,7 +451,8 @@ const S = {
 const map = L.map("map", { crs: L.CRS.Simple, minZoom: -6, maxZoom: 4, zoomSnap: 0.25, zoomDelta: 0.5,
   attributionControl: false, zoomControl: false, bounceAtZoomLimits: false, preferCanvas: true });
 const layer = { base: null, heat: null, groups: L.layerGroup().addTo(map), actors: L.layerGroup().addTo(map),
-  fights: L.layerGroup().addTo(map), fronts: L.layerGroup().addTo(map), player: L.layerGroup().addTo(map), pick: L.layerGroup().addTo(map) };
+  fights: L.layerGroup().addTo(map), theaters: L.layerGroup().addTo(map), outlines: L.layerGroup().addTo(map),
+  fronts: L.layerGroup().addTo(map), player: L.layerGroup().addTo(map), pick: L.layerGroup().addTo(map) };
 
 // data pixel (u right, v down) -> Leaflet latlng in image pixels
 const ll = (u, v) => L.latLng(-v * S.scale, u * S.scale);
@@ -436,7 +483,7 @@ function setBase(url, w, h) {
   layer.base = L.imageOverlay(url, bounds, { interactive: false }).addTo(map);
   layer.base.bringToBack();
   map.setMaxBounds(bounds.pad(0.5));
-  if (!S.didFit) { map.fitBounds(bounds); S.didFit = true; }
+  if (!S.didFit) { map.fitBounds(bounds); S.didFit = true; S.fitZoom = map.getZoom(); }
   map.setMinZoom(map.getBoundsZoom(bounds) - 1);
 }
 
@@ -488,15 +535,25 @@ async function setData(d) {
   S.data = d;
   await ensureBaseMap(d);
   buildChips(); render(); updateStatus();
+  const want = new URLSearchParams(location.search).get("theater");
+  if (want && THEATERS.some(t => t.id === want) && S.focusedTheater !== want) {
+    openTheater(want, { animate: false });
+  }
 }
 
 /* =====================================================================
    Rendering
    ===================================================================== */
 const windowH = () => WINDOW_STEPS_H[S.windowIdx];
+function clockNow() {
+  // Count windows and recency from the data's generated time, not the phone clock,
+  // so "last hour" still works when the page is opened later.
+  const g = S.data && S.data.generated;
+  return g ? g : Date.now() / 1000;
+}
 function windowSince(now) {
   if (S.winMode === "today") {
-    const d = new Date();
+    const d = new Date((now || clockNow()) * 1000);
     d.setHours(0, 0, 0, 0);
     return d.getTime() / 1000;
   }
@@ -560,10 +617,131 @@ function battleIcon(sides, fielded, age) {
     const large = frac > 0.5 ? 1 : 0;
     slices.push(`<path d="M ${x0.toFixed(2)} ${y0.toFixed(2)} A ${r} ${r} 0 ${large} 1 ${x1.toFixed(2)} ${y1.toFixed(2)}" fill="none" stroke="${col}" stroke-width="6" stroke-linecap="butt"/>`);
   });
+  if (sides.some(s => OUTLINED_FACTIONS.has(factionKey(s.faction)))) {
+    slices.unshift(`<circle cx="16" cy="16" r="15.4" fill="none" stroke="${OUTLINE_COLOR}" stroke-width="1.8"/>`);
+  }
   const op = recencyOpacity(age);
   const recent = age <= 30 * 60;
   const html = `<div class="fight-mark" style="opacity:${op}"><svg viewBox="0 0 32 32" aria-hidden="true">${slices.join("")}<circle cx="16" cy="16" r="6.2" fill="#0b0c0a" fill-opacity=".55"/></svg></div>`;
   return L.divIcon({ className: "fight-ico" + (recent ? " recent" : ""), iconSize: [size, size], iconAnchor: [size / 2, size / 2], html });
+}
+function shouldShowTheaters() {
+  if (S.focusedTheater) return false;
+  if (S.fitZoom == null) return true;
+  return map.getZoom() <= S.fitZoom + 0.85;
+}
+function visibleEvents(d, since) {
+  return d.conflicts.filter(c => c.t >= since && c.u != null && c.v != null && visibleFac(c.factions));
+}
+function aggregateTheaters(d, since, now) {
+  const by = new Map();
+  for (const t of THEATERS) {
+    by.set(t.id, {
+      theater: t, fights: 0, fielded: 0, lost: 0, last: 0,
+      sides: {}, dlfrIncidents: 0, dlfrDead: 0
+    });
+  }
+  for (const c of visibleEvents(d, since)) {
+    const t = theaterOf(c.u, c.v);
+    if (!t) continue;
+    const rec = by.get(t.id);
+    const isFight = c.kind === "fight" && c.source === "ZoneWanderers";
+    if (isFight) {
+      rec.fights += 1;
+      rec.fielded += c.fielded || 0;
+      rec.lost += c.lost != null ? c.lost : (c.dead || 0);
+      rec.last = Math.max(rec.last, c.t || 0);
+      const sides = (c.sides && c.sides.length) ? c.sides : (c.factions || []).map(f => ({ faction: f }));
+      for (const s of sides) {
+        const key = factionKey(s.faction);
+        const row = rec.sides[key] || (rec.sides[key] = { faction: key, fielded: 0, lost: 0, fights: 0 });
+        if (s.fielded != null) row.fielded += s.fielded;
+        if (s.lost != null) row.lost += s.lost;
+        row.fights += 1;
+      }
+    } else {
+      rec.dlfrIncidents += 1;
+      rec.dlfrDead += c.dead || 0;
+      rec.last = Math.max(rec.last, c.t || 0);
+      for (const f of (c.factions || [])) {
+        const key = factionKey(f);
+        const row = rec.sides[key] || (rec.sides[key] = { faction: key, fielded: 0, lost: 0, fights: 0 });
+        row.fights += 1;
+      }
+    }
+  }
+  return [...by.values()].filter(r => r.fights || r.dlfrIncidents);
+}
+function theaterPopup(rec, now) {
+  const sides = Object.values(rec.sides).sort((a, b) => (b.fielded - a.fielded) || (b.lost - a.lost) || a.faction.localeCompare(b.faction));
+  const lines = sides.map(s => {
+    const col = facColor(s.faction);
+    let lab = s.faction;
+    if (s.fielded || s.lost) lab = sideLabel(s);
+    return `<div><span style="color:${col}">${esc(lab)}</span>${s.fights ? ` · ${s.fights} battle${s.fights === 1 ? "" : "s"}` : ""}</div>`;
+  }).join("");
+  const when = rec.last ? fmtAgo(now - rec.last) + " ago" : "";
+  const bits = [];
+  if (rec.fights) bits.push(`${rec.fights} battle${rec.fights === 1 ? "" : "s"}`);
+  if (rec.fielded) bits.push(`${rec.fielded} fielded`);
+  if (rec.lost) bits.push(`${rec.lost} lost`);
+  if (rec.dlfrIncidents) bits.push(`DLFR: ${rec.dlfrIncidents} incident${rec.dlfrIncidents === 1 ? "" : "s"}, ${rec.dlfrDead} dead`);
+  return `<div class="fight-pop"><div class="sides">${esc(rec.theater.name)}</div>` +
+    (bits.length ? `<div class="when">${esc(bits.join(" · "))}</div>` : "") +
+    `<div class="meta">${lines}</div>` +
+    (when ? `<div class="meta">${esc(when)}</div>` : "") +
+    `<div class="meta">Tap to zoom in</div></div>`;
+}
+function theaterIcon(rec, now) {
+  const sides = Object.values(rec.sides);
+  const counts = sides.map(s => Math.max(1, s.fielded || s.fights || 1));
+  const total = rec.fielded || rec.fights || counts.reduce((a, b) => a + b, 0);
+  const size = Math.round(Math.max(30, Math.min(58, 24 + Math.sqrt(Math.max(total, 1)) * 5)));
+  const r = 12, cx = 16, cy = 16;
+  let acc = 0, sum = counts.reduce((a, b) => a + b, 0), slices = [];
+  sides.forEach((s, i) => {
+    const frac = counts[i] / sum, col = facColor(s.faction);
+    if (frac >= 0.999) {
+      slices.push(`<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${col}" stroke-width="7"/>`);
+      return;
+    }
+    const a0 = acc * 2 * Math.PI - Math.PI / 2;
+    const a1 = (acc + frac) * 2 * Math.PI - Math.PI / 2;
+    acc += frac;
+    const x0 = cx + r * Math.cos(a0), y0 = cy + r * Math.sin(a0);
+    const x1 = cx + r * Math.cos(a1), y1 = cy + r * Math.sin(a1);
+    const large = frac > 0.5 ? 1 : 0;
+    slices.push(`<path d="M ${x0.toFixed(2)} ${y0.toFixed(2)} A ${r} ${r} 0 ${large} 1 ${x1.toFixed(2)} ${y1.toFixed(2)}" fill="none" stroke="${col}" stroke-width="7" stroke-linecap="butt"/>`);
+  });
+  if (sides.some(s => OUTLINED_FACTIONS.has(s.faction))) {
+    slices.unshift(`<circle cx="16" cy="16" r="15.6" fill="none" stroke="${OUTLINE_COLOR}" stroke-width="1.8"/>`);
+  }
+  const age = rec.last ? now - rec.last : 1e12;
+  const op = recencyOpacity(age);
+  const html = `<div class="theater-mark" style="opacity:${op}"><svg viewBox="0 0 32 32" aria-hidden="true">${slices.join("")}<circle cx="16" cy="16" r="5.8" fill="#0b0c0a" fill-opacity=".62"/></svg></div>`;
+  return L.divIcon({ className: "theater-ico" + (age <= 30 * 60 ? " recent" : ""), iconSize: [size, size], iconAnchor: [size / 2, size / 2], html });
+}
+function openTheater(id, opts) {
+  const t = THEATERS.find(x => x.id === id);
+  if (!t) return;
+  S.focusedTheater = id;
+  const back = document.getElementById("btn-back");
+  if (back) back.hidden = false;
+  S.programmaticZoom = true;
+  map.fitBounds(theaterBounds(t), { padding: [28, 28], maxZoom: 1.25, animate: !opts || opts.animate !== false });
+  setTimeout(() => { S.programmaticZoom = false; }, 400);
+  render();
+}
+function closeTheaters() {
+  S.focusedTheater = null;
+  const back = document.getElementById("btn-back");
+  if (back) back.hidden = true;
+  if (S.imgW) {
+    S.programmaticZoom = true;
+    map.fitBounds(L.latLngBounds([-S.imgH, 0], [0, S.imgW]));
+    setTimeout(() => { S.programmaticZoom = false; }, 400);
+  }
+  render();
 }
 function heatRadius() {
   // ~1.2% of map width in image pixels, converted to screen pixels at this zoom
@@ -573,9 +751,10 @@ function heatRadius() {
 
 function render() {
   const d = S.data; if (!d) return;
-  const now = Date.now() / 1000;
+  const now = clockNow();
   const since = windowSince(now);
   const hl = S.halflife * 60;
+  const showTheaters = shouldShowTheaters();
 
   // --- heat
   if (layer.heat) { map.removeLayer(layer.heat); layer.heat = null; }
@@ -588,7 +767,10 @@ function render() {
       if (w > 0.01) pts.push([ll(c.u, c.v).lat, ll(c.u, c.v).lng, w]);
     }
     const rad = heatRadius();
-    layer.heat = L.heatLayer(pts, { radius: rad, blur: rad * 0.85, max: 1.2 / S.gain, minOpacity: 0.3,
+    const ws = pts.map(p => p[2]).sort((a, b) => a - b);
+    const p90 = ws.length ? ws[Math.min(ws.length - 1, Math.floor(ws.length * 0.9))] : 1;
+    layer.heat = L.heatLayer(pts, { radius: rad, blur: rad * 0.85, max: Math.max(0.15, p90 / S.gain),
+      maxZoom: map.getZoom(), minOpacity: 0.3,
       gradient: { 0.2: "#3b0f70", 0.4: "#8c2981", 0.6: "#de4968", 0.8: "#fe9f6d", 1.0: "#fcfdbf" } }).addTo(map);
     S.heatCount = pts.length;
   }
@@ -620,36 +802,69 @@ function render() {
     }
   }
 
-  // --- battles (merged Zone Wanderers clashes, plus any other kind=fight)
+  // --- theaters (overview) or individual battle rings (zoomed in)
   layer.fights.clearLayers();
+  layer.theaters.clearLayers();
+  layer.outlines.clearLayers();
   const fightFacs = [];
+  const seenFac = new Set();
+  const noteFac = (f) => { if (f && !seenFac.has(f)) { seenFac.add(f); fightFacs.push(f); } };
   if (S.layers.fights) {
-    const seenFac = new Set();
-    for (const c of d.conflicts) {
-      if (c.kind !== "fight" || c.t < since || c.u == null || c.v == null || !visibleFac(c.factions)) continue;
-      const sides = (c.sides && c.sides.length) ? c.sides : (c.factions || []).map(f => ({ faction: f }));
-      sides.forEach(s => {
-        if (!s.faction) return;
-        const key = factionKey(s.faction);
-        if (!seenFac.has(key)) { seenFac.add(key); fightFacs.push(key); }
-      });
-      const age = now - (c.t || now);
-      const icon = battleIcon(sides, c.fielded, age);
-      const html = battlePopup(c, now, d);
-      layer.fights.addLayer(L.marker(ll(c.u, c.v), {
-        icon, keyboard: true, zIndexOffset: Math.round(1000 - Math.min(age, 200000) / 200)
-      }).bindPopup(html, { maxWidth: 280, className: "fight-popup" }));
+    if (showTheaters) {
+      for (const rec of aggregateTheaters(d, since, now)) {
+        Object.keys(rec.sides).forEach(noteFac);
+        const icon = theaterIcon(rec, now);
+        const marker = L.marker(ll(rec.theater.u, rec.theater.v), {
+          icon, keyboard: true, zIndexOffset: 800
+        }).bindPopup(theaterPopup(rec, now), { maxWidth: 300, className: "fight-popup" });
+        marker.on("click", () => openTheater(rec.theater.id));
+        layer.theaters.addLayer(marker);
+        const half = (icon.options.iconSize[1] || 40) / 2 + 3;
+        const label = L.marker(ll(rec.theater.u, rec.theater.v), {
+          icon: L.divIcon({ className: "theater-label-ico", iconSize: [0, 0], iconAnchor: [0, 0],
+            html: `<div class="theater-name" style="opacity:${recencyOpacity(rec.last ? now - rec.last : 1e12)};transform:translate(-50%,${half}px)">${esc(rec.theater.name)}</div>` }),
+          interactive: false, keyboard: false, zIndexOffset: 2500
+        });
+        layer.theaters.addLayer(label);
+        const ring = rec.theater.ring.map(p => ll(p[0], p[1]));
+        layer.outlines.addLayer(L.polygon(ring, {
+          color: "rgba(212,163,92,.55)", weight: 1, fillColor: "#d4a35c", fillOpacity: 0.04, interactive: false
+        }));
+      }
+    } else {
+      for (const c of d.conflicts) {
+        if (c.kind !== "fight" || c.t < since || c.u == null || c.v == null || !visibleFac(c.factions)) continue;
+        if (S.focusedTheater) {
+          const t = theaterOf(c.u, c.v);
+          if (!t || t.id !== S.focusedTheater) continue;
+        }
+        const sides = (c.sides && c.sides.length) ? c.sides : (c.factions || []).map(f => ({ faction: f }));
+        sides.forEach(s => noteFac(factionKey(s.faction)));
+        const age = now - (c.t || now);
+        layer.fights.addLayer(L.marker(ll(c.u, c.v), {
+          icon: battleIcon(sides, c.fielded, age), keyboard: true,
+          zIndexOffset: Math.round(1000 - Math.min(age, 200000) / 200)
+        }).bindPopup(battlePopup(c, now, d), { maxWidth: 280, className: "fight-popup" }));
+      }
+      if (S.focusedTheater) {
+        const t = THEATERS.find(x => x.id === S.focusedTheater);
+        if (t) layer.outlines.addLayer(L.polygon(t.ring.map(p => ll(p[0], p[1])), {
+          color: "rgba(212,163,92,.7)", weight: 1.5, fillColor: "#d4a35c", fillOpacity: 0.05, interactive: false
+        }));
+      }
     }
   }
   const facBox = document.getElementById("lg-factions");
   const approxNote = document.getElementById("lg-approx");
   const fightsRow = document.getElementById("lg-fights-row");
+  const fightsLabel = document.getElementById("lg-fights-label");
   if (fightsRow) fightsRow.hidden = !S.layers.fights;
+  if (fightsLabel) fightsLabel.textContent = showTheaters ? "theater · size = fighters" : "battle · size = fighters";
   if (facBox) {
     facBox.hidden = !S.layers.fights || !fightFacs.length;
     const order = Object.keys(FACTION_COLORS);
     fightFacs.sort((a, b) => ((order.indexOf(a) + 1 || 99) - (order.indexOf(b) + 1 || 99)) || a.localeCompare(b));
-    facBox.innerHTML = fightFacs.map(f => `<span><i style="background:${facColor(f)}"></i>${esc(f)}</span>`).join("");
+    facBox.innerHTML = fightFacs.map(f => `<span class="${OUTLINED_FACTIONS.has(f) ? "outlined" : ""}"><i style="background:${facColor(f)}"></i>${esc(f)}</span>`).join("");
   }
   if (approxNote) {
     const nFights = d.conflicts.filter(c => c.kind === "fight").length;
@@ -688,7 +903,7 @@ function renderLists(since) {
     w.dead += c.dead || 0; w.events++; w.last = Math.max(w.last, c.t);
   }
   const list = Object.values(wars).sort((a, b) => b.dead - a.dead || b.events - a.events).slice(0, 12);
-  const now = Date.now() / 1000;
+  const now = clockNow();
   document.getElementById("war-count").textContent = list.length ? list.length : "";
   document.getElementById("wars").innerHTML = list.length ? list.map(w =>
     `<div class="war"><span>${w.pair.split(" vs ").map(f => `<span style="color:${facColor(f)}">${esc(f)}</span>`).join(" vs ")}</span>` +
@@ -738,7 +953,7 @@ function buildChips() {
   const order = Object.keys(FACTION_COLORS);
   const facs = [...seen].filter(Boolean).sort((a, b) => ((order.indexOf(a) + 1 || 99) - (order.indexOf(b) + 1 || 99)) || a.localeCompare(b));
   const el = document.getElementById("chips");
-  el.innerHTML = facs.map(f => `<button class="chip${S.hidden.has(f) ? " off" : ""}" data-f="${esc(f)}"><i style="background:${facColor(f)}"></i>${esc(f)}</button>`).join("")
+  el.innerHTML = facs.map(f => `<button class="chip${S.hidden.has(f) ? " off" : ""}${OUTLINED_FACTIONS.has(f) ? " outlined" : ""}" data-f="${esc(f)}"><i style="background:${facColor(f)}"></i>${esc(f)}</button>`).join("")
     || '<p class="hint">No factions in the data yet.</p>';
   el.querySelectorAll(".chip").forEach(b => b.onclick = () => {
     const f = b.dataset.f; S.hidden.has(f) ? S.hidden.delete(f) : S.hidden.add(f);
@@ -852,7 +1067,15 @@ document.querySelectorAll("[data-copy]").forEach(b => b.onclick = async () => {
   setTimeout(() => { b.textContent = "Copy"; }, 1500);
 });
 
-map.on("zoomend", () => { if (layer.heat) layer.heat.setOptions({ radius: heatRadius(), blur: heatRadius() * 0.85 }); });
+map.on("zoomend", () => {
+  if (layer.heat) layer.heat.setOptions({ radius: heatRadius(), blur: heatRadius() * 0.85, maxZoom: map.getZoom() });
+  if (S.programmaticZoom) return;
+  const atOverview = shouldShowTheaters();
+  if (S.focusedTheater && atOverview) closeTheaters();
+  else render();
+});
+const backBtn = document.getElementById("btn-back");
+if (backBtn) backBtn.onclick = () => closeTheaters();
 
 // refresh loop
 setInterval(() => { if (S.auto && !S.manualSample && document.visibilityState === "visible") loadData(false); else updateStatus(); }, REFRESH_MS);

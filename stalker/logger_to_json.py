@@ -94,7 +94,8 @@ DEFAULTS = {
         "Bandits": ["bandit", "bandits"],
         "Monolith": ["monolith", "monolithians"],
         "Mercenaries": ["mercenary", "mercenaries", "merc", "mercs"],
-        "Ward": ["ward", "varta", "military", "militaries", "army"],
+        "Ward": ["ward", "varta"],
+        "Military": ["military", "militaries", "army"],
         "Scientists": ["scientist", "scientists", "ecologist", "ecologists"],
         "Spark": ["spark", "iskra"],
         "Noon": ["noon", "noonites"],
@@ -1101,7 +1102,15 @@ class DLFRReader:
                 self.state = json.loads(self.state_path.read_text(encoding="utf-8"))
             except Exception:
                 pass
-        self.seen = set(self.state.get("seen", []))
+        seen_src = list(self.state.get("seen") or [])
+        seen_uniq = []
+        seen_set = set()
+        for x in seen_src:
+            if x not in seen_set:
+                seen_set.add(x)
+                seen_uniq.append(x)
+        self.seen_list = seen_uniq
+        self.seen = seen_set
         self.rules = []
         for r in cfg.get("log_rules") or []:
             try:
@@ -1121,13 +1130,17 @@ class DLFRReader:
         return out
 
     def persist_seen(self):
-        self.state["seen"] = list(self.seen)[-20000:]
+        self.state["seen"] = self.seen_list[-20000:]
+        self.seen_list = self.state["seen"]
+        self.seen = set(self.seen_list)
         write_json_atomic(self.state_path, self.state)
 
     def add_events(self, events):
         new = [e for e in events if e["id"] not in self.seen]
         for e in new:
-            self.seen.add(e["id"])
+            if e["id"] not in self.seen:
+                self.seen.add(e["id"])
+                self.seen_list.append(e["id"])
         if new:
             with open(self.events_path, "a", encoding="utf-8") as f:
                 for e in new:
@@ -1157,7 +1170,9 @@ class DLFRReader:
         new = self.add_events(events)
         if fronts:
             write_json_atomic(self.fronts_path, {"t": time.time(), "fronts": fronts})
-        self.state["seen"] = list(self.seen)[-20000:]
+        self.state["seen"] = self.seen_list[-20000:]
+        self.seen_list = self.state["seen"]
+        self.seen = set(self.seen_list)
         write_json_atomic(self.state_path, self.state)
         return new
 
@@ -1680,7 +1695,9 @@ def build_data(cfg, snaps) -> dict:
             conflicts.append(row)
         else:
             unplaced.append(row)
+    conflicts.sort(key=lambda r: float(r.get("t") or 0))
     conflicts = conflicts[-int(cfg["max_conflicts"]):]
+    unplaced.sort(key=lambda r: float(r.get("t") or 0))
 
     groups, actors, player, trail, groups_t = [], [], None, [], None
     if snaps and m:
