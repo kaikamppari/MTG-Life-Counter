@@ -73,6 +73,7 @@ DEFAULTS = {
     "zonesensor_file": "%LOCALAPPDATA%\\Stalker2\\Saved\\ZoneSensor_snap.jsonl",
     "wanderers_events_file": "%LOCALAPPDATA%\\Stalker2\\Saved\\ZoneWanderers_Events.txt",
     "wanderers_log_file": "%LOCALAPPDATA%\\Stalker2\\Saved\\ZoneWanderersAsi.log",
+    "zone_messages_dir": "%LOCALAPPDATA%\\Stalker2\\Saved\\ZoneMessagesAsi\\Saves",
     "battle_cluster_m": 200,
     "battle_cluster_s": 90,
     "discovery_extra_dirs": ["%LOCALAPPDATA%\\Stalker2\\Saved"],
@@ -286,6 +287,7 @@ ZW_SETOFF_RE = re.compile(
     r"^(?P<t>\d{2}:\d{2}:\d{2})\s+(?:group|pack) (?P<id>\d+) \((?P<f>[^,]+), (?P<n>\d+)\) sets off:"
     r".*from \((?P<fx>-?[\d.]+), (?P<fy>-?[\d.]+)\) to \((?P<tx>-?[\d.]+), (?P<ty>-?[\d.]+)\)"
 )
+ZW_ACT_RE = re.compile(r"sets off:\s*([A-Za-z_]+)")
 ZW_ARRIV_RE = re.compile(
     r"^(?P<t>\d{2}:\d{2}:\d{2})\s+(?:group|pack) (?P<id>\d+) arrived.*?\((?P<x>-?[\d.]+), (?P<y>-?[\d.]+)"
 )
@@ -2022,6 +2024,8 @@ class LiveTracker:
         self.ev_group = {}    # gid -> latest row
         self.prev_eid = None
         self.session_start = None   # epoch of the newest Asi header
+        self.zm = ZoneMessagesReader(cfg, self)
+        self.activity = {}    # gid -> (t, activity word from the 'sets off: <activity>' line)
 
     # ---- time helpers --------------------------------------------------
     def _line_time(self, hms: str, now: float) -> float | None:
@@ -2079,6 +2083,8 @@ class LiveTracker:
             if m:
                 self.setoff[m["id"]] = (t, float(m["fx"]), float(m["fy"]), float(m["tx"]), float(m["ty"]),
                                         m["f"], int(m["n"]))
+                ma = ZW_ACT_RE.search(ln)
+                self.activity[m["id"]] = (t, ma.group(1).lower() if ma else None)
                 self.arrived.pop(m["id"], None)
                 continue
             m = ZW_ARRIV_RE.match(ln)
@@ -2249,6 +2255,7 @@ class LiveTracker:
                 "lost": sum(s["lost"] for s in sides),
                 "clashes": len(cs),
                 "text": " vs ".join(f"{s['faction']} {s['fielded']}" for s in sides),
+                "group_ids": sorted(gids),
             }
             if xy:
                 x = sum(p[0] for p in xy) / len(xy)
@@ -2263,6 +2270,7 @@ class LiveTracker:
         fights.sort(key=lambda f: (not f["active"], -f["last"]))
 
         groups = []
+        fighting = {g for f in fights if f.get("active") for g in (f.get("group_ids") or [])}
         for gid in set(self.setoff) | set(self.arrived) | set(self.ev_group):
             so, ar, er = self.setoff.get(gid), self.arrived.get(gid), self.ev_group.get(gid)
             t_known = max([q for q in (so[0] if so else None, ar[0] if ar else None,
@@ -2276,14 +2284,35 @@ class LiveTracker:
             fac = (so[5] if so else None) or (er["faction"] if er else None) or "Unknown"
             moving = bool(so and (not ar or so[0] > ar[0]) and
                           ZW_SPEED_MPS * (now - so[0]) < math.hypot(so[3] - so[1], so[4] - so[2]))
-            groups.append({"id": gid, "faction": _zw_canon(self.lex, fac), "n": so[6] if so else None,
-                           "u": u, "v": v, "moving": moving, "age_s": round(now - t_known)})
+            act_t, act = self.activity.get(gid, (None, None))
+            if er and er.get("act") and (act_t is None or (er["seen"] or 0) >= act_t):
+                act = er["act"].lower()
+            g = {"id": gid, "faction": _zw_canon(self.lex, fac), "n": so[6] if so else None,
+                 "u": u, "v": v, "moving": moving, "age_s": round(now - t_known), "activity": act,
+                 "fighting": gid in fighting}
+            if so and moving:
+                du, dv = self._uv(so[3], so[4])
+                g["dest"] = {"u": du, "v": dv}
+                poi = self._poi(du, dv)
+                if poi:
+                    g["dest"]["near"] = poi
+            poi = self._poi(u, v)
+            if poi:
+                g["near"] = poi
+            groups.append(g)
         groups.sort(key=lambda g: g["age_s"])
         log_age = (now - self.log_tail.mtime) if self.log_tail.mtime else None
         ev_age = (now - self.ev_tail.mtime) if self.ev_tail.mtime else None
         ages = [a for a in (log_age, ev_age) if a is not None]
+        try:
+            zm_info, messages, alerts = self.zm.build(now, fights)
+        except Exception as e:  # messages are optional; never break the fight feed
+            print(f"[zm] messages skipped: {e!r}")
+            zm_info, messages, alerts = {"found": False, "error": type(e).__name__}, [], []
+        if zm_info.get("file_age_s") is not None:
+            ages.append(zm_info["file_age_s"])
         return {
-            "schema": "zoneheat-live/1",
+            "schema": "zoneheat-live/2",
             "now": round(now, 1),
             "setup": self.cfg.get("setup"),
             "active_s": self.active_s,
@@ -2295,6 +2324,9 @@ class LiveTracker:
             "map": {"width": self.map_w, "height": self.map_h, "calibrated": bool(self.m)},
             "fights": fights,
             "groups": groups[:400],
+            "messages_info": zm_info,
+            "messages": messages,
+            "alerts": alerts,
         }
 
     def snapshot_bytes(self) -> bytes:
@@ -2304,11 +2336,568 @@ class LiveTracker:
                 try:
                     data = self.build(now)
                 except Exception as e:  # never take the server down over a parse problem
-                    data = {"schema": "zoneheat-live/1", "now": round(now, 1), "error": repr(e)[:300],
+                    data = {"schema": "zoneheat-live/2", "now": round(now, 1), "error": repr(e)[:300],
                             "fights": [], "groups": [], "game_active": False}
                 self.cache = json.dumps(data, separators=(",", ":")).encode("utf-8")
                 self.cache_t = now
             return self.cache
+
+
+# =============================================================================
+# Zone Messages (Danyo123, ZoneMessagesAsi) radio history -> live messages + alerts
+# =============================================================================
+# %LOCALAPPDATA%\Stalker2\Saved\ZoneMessagesAsi\Saves\<playtime_s>\History.txt, newest line first:
+#   id|playtime_s|?(always 1)|hour|minute|kind|variant|speaker_id|speaker_fac|subject_id|fac_a|fac_b|
+#   place_id|?|area?|extra|worldX_cm|worldY_cm [|rNNN reply-to] [|zNNN wanderer group] [|dNNN]
+# Zone-wide lines (dlfr_*, emi_*, fl_*) stop after `extra` (16 fields, no coordinates).
+# World coordinates are UE centimetres (= Zone Wanderers metres x 100).
+
+# Field meanings (checked over all 300 sample lines, with Gray's decode /workspace/stalker2/zm_decode/zm_fields.json):
+#   f2 constant 1 (not the day) | f7 speaker id (0 system, 4294967294 player, zw_* = ZW group id)
+#   f9 subject id (the dead, or the one in trouble) | f10 fac_a = subject's / own side | f11 fac_b = other side
+#   (enemy / attacker / killer; >=100 = a mutant type) | f12 place id | f13 unknown | f14 region id | f15 extra
+#   (reward on bitte, 1256 on emi_da) | tags rNNN reply-to, zNNN ZW group, dNNN (bitte only, unknown)
+ZM_FACTIONS_DEFAULT = {   # Zone Messages' own faction indices (not DLFR ids). Only these are backed by the data:
+    0: "Loners",          # Zone Wanderers group 1465 'Neutrals' speaks as faction 0
+    1: "Duty?",           # likely Duty (Gray + Claude: death next to a ZW Duty departure point, gloats over Bandits)
+    3: "Bandits",         # kanal_bandits, the player's own channel (Kai plays Bandits), Sultansk
+    8: "Scientists",      # all 'wissenschaft' lines, Malachite
+}                         # everything else is shown as "Faction N" (override: zone_messages_factions)
+ZM_AREAS = {0: "Lesser Zone", 1: "Garbage", 2: "Chemical Plant", 3: "Wild Island", 4: "Zaton", 5: "Swamps",
+            7: "Cooling Towers", 8: "Malachite", 9: "Chemical Plant", 10: "Rostok", 11: "Yantar", 12: "Orbita",
+            13: "Cordon", 15: "Yaniv", 16: "Jupiter", 18: "Iron Forest", 21: "Cement Factory"}   # f14, "likely"
+
+# kind -> (label, level, category). level 3 = alert, 2 = notable, 1 = info, 0 = chatter
+ZM_KINDS = {
+    "gefecht": ("Firefight reported", 3, "fight"),
+    "zw_gefecht": ("Wanderer group in a fight", 3, "fight"),
+    "notruf": ("Distress call", 3, "distress"),
+    "todnetz": ("Death on the network", 3, "death"),
+    "leiche": ("Body found", 2, "death"),
+    "augenzeuge": ("Eyewitness: saw someone die", 2, "death"),
+    "mutanten": ("Mutants sighted", 2, "mutant"),
+    "feind": ("Enemy spotted", 2, "enemy"),
+    "gehoert": ("Gunfire heard", 2, "fight"),
+    "aktivitaet": ("Activity reported", 1, "info"),
+    "bitte": ("Request for help (errand)", 1, "job"),
+    "wissenschaft": ("Science report", 0, "chatter"),
+    "geschwaetz": ("Chatter", 0, "chatter"),
+    "geruecht": ("Rumour", 0, "chatter"),
+    "uhr_morgen": ("Morning check-in", 0, "chatter"), "uhr_tag": ("Midday check-in", 0, "chatter"),
+    "uhr_abend": ("Evening check-in", 0, "chatter"), "uhr_nacht": ("Night check-in", 0, "chatter"),
+    "wetter_klar": ("Weather: clear", 0, "weather"), "wetter_wolken": ("Weather: clouding over", 0, "weather"),
+    "wetter_nebel": ("Weather: fog", 0, "weather"), "wetter_vorboten": ("Weather: storm signs", 1, "weather"),
+    "emi_da": ("Emission starting!", 3, "emission"), "emi_reaktion": ("Emission chatter", 0, "emission"),
+    "emi_weg": ("Emission warning", 3, "emission"),   # comes ~185 s BEFORE emi_da, so it is the warning
+    "zw_ankunft": ("Wanderer group arrived", 1, "wanderers"),
+    "zw_aufbruch": ("Wanderer group set off", 1, "wanderers"),
+    "fl_annahme": ("Faction job accepted", 1, "job"), "fl_abbruch": ("Faction job abandoned", 1, "job"),
+    "fl_fertig": ("Faction job done", 1, "job"), "fl_zurueck": ("Faction job: report back", 1, "job"),
+    "dlfr_krieg": ("War declared", 3, "war"), "dlfr_waffenstillstand": ("Ceasefire", 3, "peace"),
+    "dlfr_ruhe_ende": ("Truce over", 2, "war"), "dlfr_misstrauen": ("Distrust grows", 2, "war"),
+    "dlfr_entspannung": ("Tensions easing", 2, "peace"), "dlfr_buendnis": ("Alliance", 2, "peace"),
+    "dlfr_reaktion_krieg": ("Reaction to the war", 0, "chatter"),
+    "dlfr_reaktion_frieden": ("Reaction to the peace", 0, "chatter"),
+    "antw_zustimmung": ("Reply: agrees", 0, "reply"), "antw_trauer": ("Reply: mourns", 0, "reply"),
+    "antw_dank": ("Reply: thanks", 0, "reply"), "antw_warnung": ("Reply: warns", 0, "reply"),
+    "antw_plauder": ("Reply: chats", 0, "reply"), "antw_haeme": ("Reply: gloats", 0, "reply"),
+    "antw_konter": ("Reply: snaps back", 0, "reply"), "antw_kanal": ("Reply on the channel", 0, "reply"),
+    "skif_kanal_a": ("Your answer on the faction channel", 0, "reply"),
+}
+# banners: these always; dlfr_krieg / dlfr_waffenstillstand only when the player's faction (3) is involved;
+# todnetz only when linked to a live fight or 2+ within 200 m / 120 s; emi_da once per emission
+ZM_TOAST = {"gefecht", "zw_gefecht", "notruf", "emi_weg", "emi_da"}
+ZM_TOAST_PLAYER_FAC = 3
+ZM_TOAST_MIN_GAP_S, ZM_TOAST_PER_MIN, ZM_TOAST_COOLDOWN_S = 20, 3, 180
+# message -> fight distance gates (m); default ZM_LINK_M. Reject a different region unless within 100 m.
+ZM_LINK_GATE = {"todnetz": 75, "gefecht": 200, "notruf": 200, "zw_gefecht": 200, "feind": 300, "mutanten": 300,
+                "augenzeuge": 300, "gehoert": 500}
+ZM_LINK_SAME_REGION_M = 100
+ZM_ALERT_S = 600          # an important message counts as "happening now" this long (real seconds)
+ZM_LINK_M = 300           # message <-> live fight: this close in metres ...
+ZM_LINK_BEFORE_S, ZM_LINK_AFTER_S = 180, 240   # ... and within this time of the fight
+ZM_CLUSTER_M, ZM_CLUSTER_S, ZM_CLUSTER_N = 300, 240, 3
+ZM_CLUSTER_KINDS = {"gefecht", "zw_gefecht", "todnetz", "leiche", "augenzeuge", "notruf"}
+
+
+ZM_FIELDS_FACTIONS = {}
+
+
+def load_zm_fields(cfg):
+    """Optional drop-in table (zm_fields.json next to this script, or cfg zone_messages_fields):
+    {"factions": {"0": "Loners", ...}, "kinds": {"gefecht": {"label": "...", "level"|"importance": 3, "cat": "fight"}, ...}}
+    Entries there replace ZM_KINDS / ZM_FACTIONS_DEFAULT; anything missing keeps the built-in value."""
+    global ZM_FIELDS_FACTIONS
+    path = cfg.get("zone_messages_fields")
+    q = expand(path) if path else HERE / "zm_fields.json"
+    if not q.is_file():
+        return
+    try:
+        d = json.loads(q.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as e:
+        print(f"[zm] {q.name}: {e!r}")
+        return
+    fac = d.get("factions") or d.get("faction_ids") or {}
+    if isinstance(fac, dict):
+        ZM_FIELDS_FACTIONS = {str(k): (v.get("name") if isinstance(v, dict) else v) for k, v in fac.items()}
+    for k, v in (d.get("kinds") or {}).items():
+        old = ZM_KINDS.get(k, (k, 1, "info"))
+        if isinstance(v, str):
+            ZM_KINDS[k] = (v, old[1], old[2])
+        elif isinstance(v, dict):
+            lvl = v.get("level", v.get("importance", old[1]))
+            if isinstance(lvl, str):   # Gray's table: high / med / low; its labels are notes, so keep ours
+                lvl = {"high": 3, "med": 2, "medium": 2}.get(lvl.lower(), min(old[1], 1))
+                ZM_KINDS[k] = (old[0], lvl, old[2])
+                continue
+            try:
+                lvl = max(0, min(3, int(lvl)))
+            except (TypeError, ValueError):
+                lvl = old[1]
+            ZM_KINDS[k] = (v.get("label") or old[0], lvl, v.get("cat") or v.get("category") or old[2])
+
+
+def _zm_int(s):
+    try:
+        return int(s)
+    except (TypeError, ValueError):
+        return None
+
+
+def parse_zm_line(line: str):
+    p = line.strip().split("|")
+    if len(p) < 16 or not p[0].isdigit():
+        return None
+    tags = {}
+    while len(p) > 16 and p[-1][:1] in "rzd" and p[-1][1:].isdigit():
+        tags[p[-1][0]] = int(p[-1][1:])
+        p.pop()
+    n = [_zm_int(x) for x in p]
+    if n[0] is None or n[1] is None:
+        return None
+    r = {"id": n[0], "secs": n[1], "hour": n[3], "minute": n[4], "kind": p[5].strip(), "variant": n[6],
+         "speaker": n[7], "speaker_fac": n[8], "subject": n[9], "fac_a": n[10], "fac_b": n[11],
+         "place_id": n[12], "f13": n[13], "area": n[14], "extra": n[15],
+         "x": None, "y": None, "reply_to": tags.get("r"),
+         "group": (tags["z"] & 0xFFFF) if "z" in tags else None, "d": tags.get("d")}
+    if len(p) >= 18 and n[16] is not None and n[17] is not None:
+        r["x"], r["y"] = n[16], n[17]
+    if r["group"] is None and r["kind"].startswith("zw_") and r["speaker"]:
+        r["group"] = r["speaker"] & 0xFFFF          # zw_* lines: the speaker id IS the Zone Wanderers group
+    return r
+
+
+def zm_label(kind: str):
+    if kind in ZM_KINDS:
+        return ZM_KINDS[kind]
+    if kind.startswith("kanal_"):
+        return (f"{kind[6:].capitalize()} channel", 1, "channel")
+    if kind.startswith("dlfr_"):
+        return ("Faction relations: " + kind[5:].replace("_", " "), 1, "war")
+    if kind.startswith("emi"):
+        return ("Emission: " + kind.split("_", 1)[-1], 2, "emission")
+    return (kind.replace("_", " ").capitalize(), 1, "info")
+
+
+class ZoneMessagesReader:
+    """Reads the newest Zone Messages History.txt (only its first bytes; it is newest-first)."""
+
+    def __init__(self, cfg, tracker):
+        self.cfg, self.tr = cfg, tracker
+        self.saves_dir = expand(cfg.get("zone_messages_dir") or DEFAULTS["zone_messages_dir"])
+        fixed = cfg.get("zone_messages_file")
+        self.fixed = expand(fixed) if fixed else None
+        self.path = None
+        self.scan_t = 0.0
+        self.key = None
+        self.rows = []
+        self.mtime = None
+        self.root = self.saves_dir.parent / "History.txt"   # ZoneMessagesAsi\History.txt (same format)
+        self.store = {}          # id -> row: our own history, the file only keeps ~300 lines
+        self.max_id = self.max_secs = None
+        self.backlog = set()     # ids seen on startup / right after a save load: feed only, no banners
+        self.reloads = 0         # "save epoch": alert ids carry it, so reused ids after a reload are new alerts
+        self.last_path = None
+        self.last_pt = None
+        self.overflow_alert = None
+        self.toast_dec = {}      # alert id -> True/False, decided once (rate limits)
+        self.toast_log = []      # (wall time, incident key) of banners sent
+        self.overflow = []       # alert ids that lost the rate limit, merged into one "N new" banner
+        names = dict(ZM_FACTIONS_DEFAULT)
+        load_zm_fields(cfg)
+        for k, v in (ZM_FIELDS_FACTIONS | (cfg.get("zone_messages_factions") or {})).items():
+            if str(k).lstrip("-").isdigit() and v:
+                names[int(k)] = str(v)
+        self.fac_names = names
+
+    def fac(self, i):
+        if i is None or i < 0:
+            return None
+        if i >= 100:
+            return "Mutants"
+        return self.fac_names.get(i, f"Faction {i}")
+
+    def _find(self, now):
+        if self.fixed:
+            return self.fixed if self.fixed.is_file() else None
+        try:
+            dm = self.saves_dir.stat().st_mtime     # a new save folder changes this at once
+        except OSError:
+            dm = None
+        if not (self.saves_best and now - self.scan_t < 30 and dm == getattr(self, "saves_dm", None)):
+            self.scan_t, self.saves_dm = now, dm
+            self.saves_best = self._scan_saves()
+        # the root History.txt or the newest Saves\<n>\History.txt, whichever was written last
+        best, bm = None, -1.0
+        for h in (self.root, self.saves_best):
+            try:
+                m = h.stat().st_mtime if h else -1
+            except OSError:
+                continue
+            if m > bm:
+                best, bm = h, m
+        self.path = best
+        return best
+
+    saves_best = None
+
+    def _scan_saves(self):
+        # ~120 save folders: stat each History.txt (cheap; this runs at most every 30 s) and take the newest
+        try:
+            dirs = [d for d in os.scandir(self.saves_dir) if d.is_dir()]
+        except OSError:
+            return None
+        best, bm = None, -1.0
+        try:
+            for d in dirs:
+                h = Path(d.path) / "History.txt"
+                try:
+                    m = h.stat().st_mtime
+                except OSError:
+                    continue
+                if m > bm:
+                    best, bm = h, m
+        except OSError:
+            return None
+        return best
+
+    def read(self, now):
+        p = self._find(now)
+        if not p:
+            self.rows, self.mtime = [], None
+            return self.rows
+        try:
+            st = p.stat()
+        except OSError:
+            return self.rows
+        key = (str(p), st.st_mtime, st.st_size)
+        if key == self.key:
+            return self.rows
+        try:
+            with open(p, "rb") as f:
+                raw = f.read(128 * 1024)
+        except OSError:
+            return self.rows
+        text = decode_bytes(raw)
+        lines = text.splitlines()
+        if len(raw) == 128 * 1024 and lines:
+            lines = lines[:-1]   # last line may be cut
+        rows = [r for r in (parse_zm_line(l) for l in lines) if r]
+        if not rows:
+            return self.rows
+        top_id = max(r["id"] for r in rows)
+        top_secs = max(r["secs"] for r in rows)
+        first = self.max_id is None
+        pt = int(p.parent.name) if p.parent.name.isdigit() else None   # save folder name = its playtime
+        reload_why = None
+        if not first:
+            if str(p) == self.last_path:
+                # same file: content going backwards = an older save was loaded
+                if top_id < self.max_id or top_secs < self.max_secs - 5:
+                    reload_why = f"seq {self.max_id} -> {top_id}"
+            else:
+                # another file (new save folder or the root file): a lower folder playtime, or our newest line
+                # missing / different although the new file covers that id range, means another timeline
+                prev = self.store.get(self.max_id)
+                by = {r["id"]: r for r in rows}
+                if pt is not None and self.last_pt is not None and pt < self.last_pt:
+                    reload_why = f"save {self.last_pt} -> {pt}"
+                else:
+                    # same timeline = every id we already know has the same line in the new file (a copy that
+                    # lags behind, like the root file, is fine); any id with a different line = another timeline
+                    clash = sum(1 for i, r in by.items() if i in self.store
+                                and (self.store[i]["secs"] != r["secs"] or self.store[i]["kind"] != r["kind"]))
+                    if clash:
+                        reload_why = f"{Path(self.last_path).parent.name} -> {p.parent.name}"
+        if reload_why:
+            # an older save was loaded: start over; its backlog goes to the feed only
+            self.store.clear(); self.toast_dec.clear(); self.overflow = []
+            self.backlog = set(); self.overflow_alert = None
+            self.reloads += 1
+            first = True
+            print(f"[zm] older save loaded ({reload_why}); rebuilding the message store")
+        self.last_path, self.last_pt = str(p), pt
+        for r in rows:
+            if first:
+                self.backlog.add(r["id"])
+            self.store[r["id"]] = r
+        self.max_id, self.max_secs = top_id, top_secs
+        if len(self.store) > 1500:
+            for i in sorted(self.store, key=lambda i: (self.store[i]["secs"], i))[:len(self.store) - 1200]:
+                del self.store[i]
+        rows = sorted(self.store.values(), key=lambda r: (r["secs"], r["id"]), reverse=True)
+        self.rows, self.key, self.mtime = rows, key, st.st_mtime
+        return rows
+
+    ZM_PRIO = {"emi_da": 0, "emi_weg": 1, "notruf": 2, "gefecht": 2, "zw_gefecht": 2,
+               "dlfr_krieg": 3, "dlfr_waffenstillstand": 3, "cluster": 4, "todnetz": 5}
+
+    def _rate_limit(self, now, alerts):
+        """Banner budget: 1 per 20 s, 3 per minute, 3-minute cooldown per incident. New alerts are decided most
+        important first (emission > distress/firefight > war/peace > heavy fighting > deaths), newest first within a
+        class. Decisions stick per alert id; budget losers are merged into one 'N new reports' banner later."""
+        self.toast_log = [x for x in self.toast_log if now - x[0] < 600]
+        def key(a):
+            if a.get("incident"):
+                return a["incident"]
+            if a["kind"] in ("emi_weg", "emi_da"):
+                return "emission:" + a["kind"]
+            if a["kind"].startswith("dlfr_"):
+                fa = a.get("fac_ids") or []
+                return a["kind"] + ":" + "-".join(str(x) for x in sorted(x for x in fa if x is not None))
+            if a.get("fight_id"):
+                return "f:" + str(a["fight_id"])
+            if a["kind"] == "todnetz" and a.get("subject"):
+                return "death:" + str(a["subject"])
+            pid = a.get("place_id")
+            if pid is not None and pid >= 0:
+                return "p:" + str(pid)
+            return a["id"]
+        def budget_ok():
+            recent = [t for t, _ in self.toast_log if now - t < 60]
+            return not recent or (now - max(recent) >= ZM_TOAST_MIN_GAP_S and len(recent) < ZM_TOAST_PER_MIN)
+        for a in alerts:
+            if a["id"] in self.toast_dec:
+                a["toast"] = self.toast_dec[a["id"]]
+        pending = [a for a in alerts if a["toast"] and a["id"] not in self.toast_dec]
+        pending.sort(key=lambda a: (self.ZM_PRIO.get(a["kind"], 4), -a["t"]))
+        for a in pending:
+            k = key(a)
+            if any(k == kk and now - t < ZM_TOAST_COOLDOWN_S for t, kk in self.toast_log):
+                ok = False                       # same incident just bannered: feed only
+            elif a["kind"] == "emi_da" or budget_ok():
+                ok = True                        # "emission starting" always gets through
+            else:
+                ok = False
+                self.overflow.append(a)
+            self.toast_dec[a["id"]] = ok
+            a["toast"] = ok
+            if ok:
+                self.toast_log.append((now, k))
+        # flush the overflow as one banner once the budget allows
+        if self.overflow and budget_ok():
+            n = len(self.overflow)
+            self.overflow_alert = {"id": f"more:{self.reloads}:{self.overflow[-1]['id']}", "kind": "more", "level": 3,
+                                   "toast": True, "label": f"{n} new report{'s' if n > 1 else ''} - see the Radio tab",
+                                   "t": now, "age_s": 0.0, "factions": [],
+                                   "msg_ids": [i for a in self.overflow for i in (a.get("msg_ids") or [])][:20]}
+            self.overflow = []
+            self.toast_log.append((now, "more"))
+        oa = self.overflow_alert
+        if oa and now - oa["t"] < ZM_ALERT_S:
+            alerts.append(dict(oa, age_s=round(now - oa["t"], 1)))
+
+    def build(self, now, fights, limit=60):
+        rows = self.read(now)
+        if not rows:
+            return {"found": self.path is not None, "file": self.path.name if self.path else None}, [], []
+        newest = rows[0]["secs"]
+        # playtime seconds -> wall clock: the file was written at the save's playtime (folder name), which can be
+        # later than its newest line
+        src = self.path or self.fixed
+        pt = int(src.parent.name) if src and src.parent.name.isdigit() else None
+        anchor = max(newest, pt) if pt is not None and pt - newest < 3600 else newest
+        offset = (self.mtime or now) - anchor
+        tr = self.tr
+        by_id = {}
+        out = []
+        for r in rows[: max(limit, 200)]:
+            label, level, cat = zm_label(r["kind"])
+            facs = []
+            for i in (r["fac_a"], r["fac_b"], r["speaker_fac"]):
+                nm = self.fac(i)
+                if nm and nm not in facs:
+                    facs.append(nm)
+            k = r["kind"]
+            if k in ("dlfr_krieg", "dlfr_waffenstillstand", "dlfr_buendnis", "dlfr_entspannung",
+                     "dlfr_misstrauen", "dlfr_ruhe_ende") and self.fac(r["fac_a"]) and self.fac(r["fac_b"]):
+                joiner = " vs " if k in ("dlfr_krieg", "dlfr_misstrauen", "dlfr_ruhe_ende") else " and "
+                label = f"{label}: {self.fac(r['fac_a'])}{joiner}{self.fac(r['fac_b'])}"
+            elif k == "gefecht" and self.fac(r["fac_a"]) and self.fac(r["fac_b"]):
+                label = f"{label}: {self.fac(r['fac_a'])} vs {self.fac(r['fac_b'])}"
+            elif k in ("todnetz", "leiche", "augenzeuge", "notruf") and self.fac(r["fac_a"]):
+                label = f"{label} ({self.fac(r['fac_a'])})"
+                if k in ("todnetz", "notruf") and self.fac(r["fac_b"]):
+                    label += (" - killed by " if k == "todnetz" else " - attacked by ") + self.fac(r["fac_b"])
+            elif k in ("feind", "gehoert") and self.fac(r["fac_b"]):
+                label = f"{label}: {self.fac(r['fac_b'])}"
+            t = offset + r["secs"]
+            m = {"id": r["id"], "kind": k, "label": label, "level": level, "cat": cat,
+                 "toast": k in ZM_TOAST, "secs": r["secs"],
+                 "game_time": f"{r['hour']:02d}:{r['minute']:02d}" if r["hour"] is not None and r["minute"] is not None else None,
+                 "age_game_s": newest - r["secs"], "t": round(t, 1), "age_s": round(now - t, 1),
+                 "factions": facs, "speaker_faction": self.fac(r["speaker_fac"]),
+                 "fac_ids": [r["fac_a"], r["fac_b"], r["speaker_fac"]], "subject": r["subject"],
+                 "reply_to": r["reply_to"], "group": r["group"], "place_id": r["place_id"],
+                 "area": ZM_AREAS.get(r["area"]) if r["area"] is not None else None}
+            if r["x"] is not None:
+                xm, ym = r["x"] / 100.0, r["y"] / 100.0
+                u, v = tr._uv(xm, ym)
+                m.update(x=round(xm, 1), y=round(ym, 1), u=u, v=v)
+                poi = tr._poi(u, v)
+                if poi:
+                    m["near"] = poi
+            by_id[r["id"]] = m
+            out.append(m)
+        # replies (rNNN) copy their thread root's location: not a new map point, they bump the root's reply count
+        for m in out:
+            src = by_id.get(m["reply_to"]) if m["reply_to"] is not None else None
+            if src is not None:
+                m["is_reply"] = True
+                src["replies"] = src.get("replies", 0) + 1
+                for kk in ("x", "y", "u", "v", "near"):
+                    if kk in src and kk not in m:
+                        m[kk] = src[kk]
+        # link to live fights (per-kind distance gates; a different region only counts within 100 m)
+        for f in fights:
+            f.setdefault("message_ids", [])
+        def region(o):
+            nr = o.get("near") or {}
+            return nr.get("theater") if isinstance(nr, dict) else None
+        for m in out:
+            if m.get("is_reply"):
+                continue
+            gate = ZM_LINK_GATE.get(m["kind"], ZM_LINK_M)
+            best, bd = None, float("inf")
+            for f in fights:
+                if not (f["start"] - ZM_LINK_BEFORE_S <= m["t"] <= f["last"] + ZM_LINK_AFTER_S):
+                    continue
+                if m["group"] is not None and m["group"] in {int(g) & 0xFFFF for g in (f.get("group_ids") or [])
+                                                             if str(g).isdigit()} and (
+                        "u" not in m or "u" not in f or math.hypot(m["u"] - f["u"], m["v"] - f["v"]) / tr.ppm <= 500):
+                    best, bd = f, -1
+                    break
+                if "u" not in m or "u" not in f:
+                    continue
+                d = math.hypot(m["u"] - f["u"], m["v"] - f["v"]) / tr.ppm
+                rm, rf = region(m), region(f)
+                if rm and rf and rm != rf and d > ZM_LINK_SAME_REGION_M:
+                    continue
+                if d <= gate and d < bd:
+                    best, bd = f, d
+            if best is not None:
+                m["fight_id"] = best["id"]
+                m["fight_active"] = bool(best.get("active"))
+                best["message_ids"].append(m["id"])
+        for m in out:   # replies follow their root's fight
+            src = by_id.get(m["reply_to"]) if m.get("is_reply") else None
+            if src is not None and "fight_id" in src:
+                m["fight_id"] = src["fight_id"]
+                for f in fights:
+                    if f["id"] == src["fight_id"]:
+                        f["message_ids"].append(m["id"])
+        # which messages may raise a banner
+        def toastable(m):
+            k = m["kind"]
+            if m.get("is_reply"):
+                return False
+            if k in ("dlfr_krieg", "dlfr_waffenstillstand"):
+                return ZM_TOAST_PLAYER_FAC in (m["fac_ids"][0], m["fac_ids"][1])
+            if k == "todnetz":
+                if m.get("fight_active"):          # only for a fight that is still going
+                    return True
+                return "u" in m and any(q is not m and q["kind"] == "todnetz" and "u" in q
+                                        and abs(q["secs"] - m["secs"]) <= 120
+                                        and math.hypot(q["u"] - m["u"], q["v"] - m["v"]) / tr.ppm <= 200 for q in out)
+            if k == "emi_da":   # once per emission
+                return not any(q["kind"] == "emi_da" and 0 < m["secs"] - q["secs"] <= 900 for q in out)
+            return k in ZM_TOAST
+        for m in out:
+            m["backlog"] = m["id"] in self.backlog
+            m["toast"] = toastable(m) and not m["backlog"]
+        # alerts: important things happening now
+        alerts = []
+        for m in out:
+            if (m["level"] >= 3 or m["toast"]) and not m.get("is_reply") and m["age_s"] <= ZM_ALERT_S:
+                a = {"id": f"msg:{self.reloads}:{m['id']}", "kind": m["kind"], "label": m["label"], "level": 3,
+                     "toast": m["toast"], "t": m["t"], "age_s": m["age_s"], "msg_ids": [m["id"]],
+                     "factions": m["factions"], "place_id": m.get("place_id"), "fac_ids": m["fac_ids"][:2],
+                     "subject": m.get("subject"), "cat": m["cat"]}
+                for kk in ("u", "v", "near", "fight_id"):
+                    if kk in m:
+                        a[kk] = m[kk]
+                alerts.append(a)
+        hot = [m for m in out if m["kind"] in ZM_CLUSTER_KINDS and "u" in m and m["age_s"] <= ZM_ALERT_S
+               and not m.get("is_reply")]
+        used = set()
+        for m in sorted(hot, key=lambda q: -q["t"]):
+            if m["id"] in used:
+                continue
+            grp = [q for q in hot if q["id"] not in used and abs(q["t"] - m["t"]) <= ZM_CLUSTER_S
+                   and math.hypot(q["u"] - m["u"], q["v"] - m["v"]) / tr.ppm <= ZM_CLUSTER_M]
+            if len(grp) < ZM_CLUSTER_N:
+                continue
+            used.update(q["id"] for q in grp)
+            # one death is often reported 2-3 times (todnetz, leiche, augenzeuge): count distinct subjects
+            seen_subj, reports, deaths = set(), 0, 0
+            for q in grp:
+                subj = q.get("subject")
+                if q["cat"] == "death" and subj:
+                    if subj in seen_subj:
+                        continue
+                    seen_subj.add(subj)
+                    deaths += 1
+                elif q["cat"] == "death":
+                    deaths += 1
+                reports += 1
+            if reports < ZM_CLUSTER_N:
+                continue
+            u = sum(q["u"] for q in grp) / len(grp)
+            v = sum(q["v"] for q in grp) / len(grp)
+            facs = list(dict.fromkeys(f for q in grp for f in q["factions"]))
+            fid = next((q["fight_id"] for q in grp if "fight_id" in q), None)
+            places = [q.get("place_id") for q in grp if q.get("place_id") is not None and q.get("place_id") >= 0]
+            if fid:
+                ikey = "f:" + str(fid)
+            elif places:
+                ikey = "p:" + str(max(set(places), key=places.count))
+            else:
+                cell = ZM_CLUSTER_M * tr.ppm
+                ikey = f"c:{int(u // cell)}:{int(v // cell)}"
+            a = {"id": f"cluster:{self.reloads}:{ikey}", "kind": "cluster", "incident": ikey,
+                 "label": f"Heavy fighting: {reports} reports" + (f", {deaths} dead" if deaths else ""),
+                 "level": 3, "cat": "cluster",
+                 "toast": any(q["cat"] == "fight" for q in grp)
+                          and any(not q["backlog"] and now - q["t"] <= 120 for q in grp),
+                 "t": max(q["t"] for q in grp),
+                 "age_s": round(now - max(q["t"] for q in grp), 1), "msg_ids": sorted(q["id"] for q in grp),
+                 "factions": facs, "u": round(u, 1), "v": round(v, 1)}
+            poi = tr._poi(u, v)
+            if poi:
+                a["near"] = poi
+            if fid:
+                a["fight_id"] = fid
+            alerts.append(a)
+        self._rate_limit(now, alerts)
+        alerts.sort(key=lambda a: -a["t"])
+        age = now - self.mtime if self.mtime else None
+        src = self.path or self.fixed
+        info = {"found": True, "file": src.name,   # basename only: live.json is on the LAN, no user paths
+                "save": "root" if src == self.root else src.parent.name, "reloads": self.reloads,
+                "newest_id": rows[0]["id"], "newest_secs": newest,
+                "file_age_s": None if age is None else round(age),
+                "time_note": "t/age_s are estimated from the file time and playtime seconds"}
+        return info, out[:limit], alerts[:20]
 
 
 def make_live_server(cfg, port: int, serve_dir: Path, bind="0.0.0.0"):
@@ -2591,6 +3180,8 @@ def main():
         ld = Path(args.logs_dir)
         cfg["wanderers_events_file"] = str(ld / "ZoneWanderers_Events.txt")
         cfg["wanderers_log_file"] = str(ld / "ZoneWanderersAsi.log")
+        if (ld / "ZoneMessagesAsi" / "Saves").is_dir():
+            cfg["zone_messages_dir"] = str(ld / "ZoneMessagesAsi" / "Saves")
     try:
         if args.cmd in (None, "run"):
             cmd_run(cfg, push_every=getattr(args, "push_every", 0), serve=getattr(args, "serve", 0),

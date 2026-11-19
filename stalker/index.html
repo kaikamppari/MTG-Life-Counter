@@ -264,21 +264,106 @@ h4 { font: 700 11px/1 var(--mono); }
 .live-mark.ended svg { filter: grayscale(.55) drop-shadow(0 0 2px rgba(0,0,0,.9)); }
 @keyframes lvpulse { 0% { transform: scale(.85); opacity: .95; } 100% { transform: scale(2.1); opacity: 0; } }
 body.region-view #filters { max-width: calc(100% - 150px); }
+@media (max-width: 699.98px) { body.sheet-open #region-card { display: none; } }   /* the open sheet takes the card's place on small screens */
+@media (min-width: 560px) and (max-width: 699.98px) { #filters, #btn-back { top: calc(64px + var(--safe-t)); } }
 body.live-mode .theater-mark, body.live-mode .fight-mark { opacity: .32 !important; }
 body.live-mode .theater-name { opacity: .45 !important; }
 .fight-pop .live-tag { display: inline-block; font: 700 10px/1 var(--mono); letter-spacing: .12em; color: #fff; background: #c8352a;
   border-radius: 3px; padding: 3px 5px; margin-bottom: 5px; }
 .fight-pop .live-tag.ended { background: #4a4a40; }
+/* ---- Live groups ---- */
+.leaflet-group-pane { z-index: 650; }
+.grp-ico { background: none; border: 0; }
+.grp-mark { position: relative; filter: drop-shadow(0 0 2px #000) drop-shadow(0 0 1px #000); }
+.grp-mark svg { display: block; width: 100%; height: 100%; }
+.grp-mark .cnt { position: absolute; right: -14%; bottom: -12%; min-width: 46%; height: 46%; padding: 0 3px; border-radius: 9px;
+  background: #0b0c0a; border: 1.5px solid #e8e4d4; color: #fff; font: 700 calc(10px * var(--ui, 1))/1 var(--mono);
+  display: flex; align-items: center; justify-content: center; box-shadow: 0 0 0 1px #000; }
+.grp-mark.act-fighting::after { content: ""; position: absolute; inset: 0; border-radius: 50%; border: 3px solid #ff2a1a;
+  animation: lvpulse 1.4s ease-out infinite; pointer-events: none; }
+.leaflet-tooltip.grp-tip { background: var(--panel); color: var(--text); border: 1px solid var(--line); border-top: 2px solid var(--accent);
+  border-radius: 6px; padding: 6px 9px; box-shadow: 0 6px 18px rgba(0,0,0,.5); white-space: nowrap; }
+.leaflet-tooltip.grp-tip::before { display: none; }
+.grp-tip .fight-pop .sides { font-size: 13px !important; }
+#legend .lg-live { display: none; margin-top: 6px; border-top: 1px solid var(--line); padding-top: 5px; }
+body.live-mode #legend .lg-live { display: block; }
+#legend .lg-live .h { font: 700 10px/1.2 var(--mono); letter-spacing: .12em; color: var(--accent); text-transform: uppercase; margin: 2px 0 4px; }
+#legend .lg-glyphs, #legend .lg-rings { display: grid; grid-template-columns: repeat(2, auto); gap: 3px 10px; }
+#legend .lg-glyphs span, #legend .lg-rings span { display: inline-flex; align-items: center; gap: 5px; font-size: 10.5px; color: var(--text); white-space: nowrap; }
+#legend .lg-glyphs svg, #legend .lg-rings svg { width: 18px; height: 18px; flex: 0 0 18px; }
+/* ---- Live: radio messages + alerts (Zone Messages) ---- */
+.lp-tabs { display: flex; gap: 4px; margin: 2px 0 3px; }
+.lp-tabs button { appearance: none; flex: 1; background: rgba(0,0,0,.3); border: 1px solid var(--line); border-radius: 5px; color: var(--muted);
+  font: 700 10.5px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; padding: 6px 6px; min-height: 26px; }
+.lp-tabs button.on { color: var(--text); border-color: #6b2a20; background: rgba(200,53,42,.22); }
+.lp-tabs .badge { display: inline-block; min-width: 15px; padding: 1px 4px; margin-left: 4px; border-radius: 8px; background: #c8352a; color: #fff;
+  font: 700 9.5px/1.2 var(--mono); letter-spacing: 0; }
+.lp-msgs { display: flex; flex-direction: column; gap: 3px; max-height: 214px; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
+.lp-row.msg { min-height: 28px; padding: 4px 7px; font-size: 12px; }
+.lp-row.msg.lvl0 { opacity: .62; }
+.lp-row.msg.lvl3 { border-color: #6b2a20; }
+.lp-row.msg.hot { border-color: #e2553f; background: rgba(200,53,42,.16); }
+.lp-row.msg.alert { border-color: #e2553f; background: rgba(200,53,42,.26); }
+.lp-row.msg.linked .lp-txt::after { content: ""; display: inline-block; width: 7px; height: 7px; margin-left: 6px; border-radius: 50%;
+  border: 1.5px solid #ff8a70; vertical-align: 1px; }
+.mi { width: 16px; height: 16px; flex: 0 0 16px; display: block; }
+.mi svg { width: 100%; height: 100%; display: block; }
+.lp-row.msg .lp-t { color: var(--muted); }
+.lp-row.msg.hot .lp-t, .lp-row.msg.alert .lp-t { color: #ffb9ab; }
+.leaflet-msg-pane { z-index: 655; }
+.msg-ico { transition: opacity 1.5s linear; }
+.msg-mark { position: relative; width: 100%; height: 100%; border-radius: 50%; background: rgba(11,12,10,.82); border: 1.5px solid var(--c, #8e8a78);
+  box-shadow: 0 0 3px rgba(0,0,0,.9); display: flex; align-items: center; justify-content: center; }
+.msg-mark svg { width: 66%; height: 66%; display: block; }
+.msg-mark.hot::before { content: ""; position: absolute; inset: -2px; border-radius: 50%; border: 2px solid var(--c, #e2553f); animation: lvpulse 1.8s ease-out infinite; pointer-events: none; }
+.fight-pop .pop-msgs { margin-top: 6px; border-top: 1px solid var(--line); padding-top: 5px; display: flex; flex-direction: column; gap: 2px; }
+.fight-pop .pop-msgs .h { font: 700 10px/1.2 var(--mono); letter-spacing: .12em; color: var(--muted); text-transform: uppercase; }
+.pop-msg { appearance: none; display: flex; align-items: center; gap: 6px; background: none; border: 0; padding: 3px 0; color: var(--text);
+  font: 600 12.5px/1.25 var(--display); text-align: left; width: 100%; cursor: pointer; }
+.pop-msg .t { margin-left: auto; color: var(--muted); font: 600 10.5px/1 var(--mono); white-space: nowrap; padding-left: 6px; }
+.pop-link { appearance: none; margin-top: 6px; background: rgba(200,53,42,.22); border: 1px solid #6b2a20; border-radius: 5px; color: #ffcfc4;
+  font: 700 11px/1 var(--mono); letter-spacing: .08em; padding: 6px 8px; cursor: pointer; }
+.fight-pop .live-tag.radio { background: #3a3d2e; color: var(--text); }
+#lv-alert { position: fixed; z-index: 830; left: 10px; top: 120px; width: min(420px, calc(100vw / var(--z, 1) - 20px));
+  display: flex; align-items: center; gap: 9px; padding: 9px 11px; border-radius: 10px; cursor: pointer;
+  background: rgba(60, 16, 12, .96); border: 1px solid #ff7a5c; border-left: 4px solid var(--c, #ff7a5c); color: #fff;
+  box-shadow: 0 10px 28px rgba(0,0,0,.55); transition: opacity .35s ease, transform .35s ease; }
+#lv-alert[hidden] { display: none; }
+#lv-alert.out { opacity: 0; transform: translateY(-6px); }
+#lv-alert .mi { width: 22px; height: 22px; flex: 0 0 22px; }
+#lv-alert .al-txt { min-width: 0; flex: 1; }
+#lv-alert .al-k { font: 700 10px/1.2 var(--mono); letter-spacing: .14em; color: #ffb9ab; text-transform: uppercase; }
+#lv-alert .al-l { font: 700 14px/1.25 var(--display); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#lv-alert .al-m { font: 600 11.5px/1.2 var(--display); color: #e8cfc8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#lv-alert .al-x { appearance: none; background: none; border: 0; color: #ffcfc4; font-size: 18px; padding: 0 2px 0 6px; cursor: pointer; }
 @media (min-width: 700px) {
-  #topbar, #filters, #fabs, #legend, #sheet, #btn-back, #live-panel { zoom: min(var(--ui, 1), 1.7); }
+  #topbar, #filters, #fabs, #legend, #sheet, #btn-back, #live-panel, #lv-alert, #banner { zoom: var(--z, 1); }
+  #live-panel { max-width: min(440px, calc(100vw / var(--z, 1) - 96px)); }
+  /* caps in real screen px: zoomed elements multiply their own lengths, so divide by --z (= the zoom) */
+  #sheet { max-height: calc(64vh / var(--z, 1)); }
+  body.region-view #sheet { max-height: calc(45vh / var(--z, 1)); }
+  #banner { right: auto; width: min(560px, calc((100vw - 20px) / var(--z, 1))); }
 }
-@media (min-width: 900px) {
+@media (max-width: 699.98px) {
+  /* region view: the round buttons sit in one row above the bottom card, clear of the top bar */
+  body.region-view #fabs { flex-direction: row; }
+}
+@media (min-width: 700px) {   /* from 700 px the region card is a left column, the map gets the full height */
   #region-card { zoom: min(var(--ui, 1), 1.35); right: auto; width: 380px; top: 120px; bottom: 150px; max-height: none; }
+  body.region-view #fabs { bottom: calc(126px + var(--safe-b)); flex-direction: column; }
+}
+@media (min-width: 700px) and (max-width: 1279.98px) {
+  /* mid-size windows: a slimmer card column so the region still gets most of the width */
+  #region-card { zoom: min(var(--ui, 1), 1.1); width: 300px; }
 }
 </style>
 </head>
 <body>
 <div id="map"></div>
+<svg width="0" height="0" style="position:absolute;left:0;top:0;pointer-events:none" aria-hidden="true"><defs><filter id="grp-halo" x="-30%" y="-30%" width="160%" height="160%">
+    <feMorphology in="SourceAlpha" operator="dilate" radius="0.9" result="d"/><feFlood flood-color="#FFD9C8"/><feComposite in2="d" operator="in" result="o"/>
+    <feMerge><feMergeNode in="o"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs></svg>
+
 
 <header id="topbar">
   <div class="brand">
@@ -295,6 +380,7 @@ body.live-mode .theater-name { opacity: .45 !important; }
   <button type="button" id="btn-live" class="live-btn" aria-pressed="false" title="Live firefights from your PC"><i></i>Live</button>
 </div>
 <div id="live-panel" hidden aria-live="polite"></div>
+<div id="lv-alert" hidden role="status" aria-live="assertive"></div>
 <button type="button" id="btn-back" hidden>← Theaters</button>
 <aside id="region-card" hidden></aside>
 <div id="banner" hidden></div>
@@ -312,6 +398,8 @@ body.live-mode .theater-name { opacity: .45 !important; }
   <div class="lg-row"><span class="lg-ring"></span><span>group (count)</span></div>
   <div class="lg-row"><span class="lg-ring dashed"></span><span>mutant pack</span></div>
   <div class="lg-factions" id="lg-factions" hidden></div>
+  <div class="lg-live" id="lg-live"></div>
+
   <div class="lg-note" id="lg-approx" hidden>Fight positions are approximate until the map is calibrated.</div>
 </div>
 
@@ -372,6 +460,76 @@ body.live-mode .theater-name { opacity: .45 !important; }
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="anonymous"></script>
 <script>
+/* faction_icons.js (Square), inlined */
+/* Faction symbols for the Stalker 2 live map group markers.
+ * 24x24 single-colour glyphs drawn in currentColor: set `color` on the wrapper (or use .color).
+ * Keys and colours match FACTION_COLORS in /workspace/zoneheat/index.html; aliases match its
+ * alias map there (note Varta -> Ward there, Military stays its own key).
+ * Glyph ideas follow the existing 16px GRP_GLYPH set so the two stay recognisable.
+ */
+(function () {
+  const S = (body) => '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none">' + body + '</svg>';
+  const C = 'currentColor';
+  window.FACTION_ICONS = {
+    // tent/peak with a solid core: free stalkers
+    Loners: { color: '#FFE14A', svg: S(`<path d="M12 2.5 22 20.5H2z" stroke="${C}" stroke-width="2.6" stroke-linejoin="round"/><path d="M12 11 15.6 20.5H8.4z" fill="${C}"/>`) },
+    // crossed blades (X); dark crimson, so draw with a light outline (outline: true)
+    Bandits: { color: '#6A121C', outline: true, svg: S(`<path d="M4.5 4.5l15 15M19.5 4.5l-15 15" stroke="${C}" stroke-width="4" stroke-linecap="round"/>`) },
+    // solid heater shield
+    Duty: { color: '#FF3A4F', svg: S(`<path d="M12 1.8 21 5.6v6.2c0 5-3.9 8.4-9 9.9-5.1-1.5-9-4.9-9-9.9V5.6z" fill="${C}"/><path d="M12 6v11" stroke="#000" stroke-opacity=".35" stroke-width="1.6"/>`) },
+    // three-leaf clover
+    Freedom: { color: '#00C853', svg: S(`<circle cx="12" cy="6.6" r="4.3" fill="${C}"/><circle cx="6.6" cy="14.4" r="4.3" fill="${C}"/><circle cx="17.4" cy="14.4" r="4.3" fill="${C}"/><path d="M12 13v9.5" stroke="${C}" stroke-width="2.4" stroke-linecap="round"/>`) },
+    // crosshair diamond: guns for hire
+    Mercenaries: { color: '#2F7BFF', svg: S(`<path d="M12 2 22 12 12 22 2 12z" stroke="${C}" stroke-width="2.6" stroke-linejoin="round"/><circle cx="12" cy="12" r="3.4" fill="${C}"/>`) },
+    // the obelisk
+    Monolith: { color: '#F3F0E8', svg: S(`<path d="M8 22.5V6.5L12 1.5l4 5v16z" fill="${C}"/><path d="M5 22.5h14" stroke="${C}" stroke-width="2.4" stroke-linecap="round"/>`) },
+    // five-point star
+    Military: { color: '#8A9A3C', svg: S(`<path d="M12 1.5l3 6.9 7.5.6-5.7 5 1.8 7.3L12 17.4l-6.6 3.9 1.8-7.3-5.7-5 7.5-.6z" fill="${C}"/>`) },
+    // double chevron (Varta / Ward)
+    Ward: { color: '#C8F04A', svg: S(`<path d="M3.5 13 12 5.5l8.5 7.5M3.5 20 12 12.5l8.5 7.5" stroke="${C}" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>`) },
+    // atom
+    Scientists: { color: '#7AD7FF', svg: S(`<g stroke="${C}" stroke-width="1.9"><ellipse cx="12" cy="12" rx="10" ry="4"/><ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(-60 12 12)"/></g><circle cx="12" cy="12" r="2.6" fill="${C}"/>`) },
+    // sun at noon
+    Noon: { color: '#A060FF', svg: S(`<circle cx="12" cy="12" r="5" fill="${C}"/><path d="M12 1.5v3.4M12 19.1v3.4M1.5 12h3.4M19.1 12h3.4M4.6 4.6l2.4 2.4M17 17l2.4 2.4M4.6 19.4 7 17M17 7l2.4-2.4" stroke="${C}" stroke-width="2.3" stroke-linecap="round"/>`) },
+    // lightning bolt (Iskra)
+    Spark: { color: '#00D2C8', svg: S(`<path d="M14.5 1.2 4.8 13.6h6.3L9.4 22.8l9.8-12.4h-6.3z" fill="${C}"/>`) },
+    // hexagon with cross (Corpus)
+    Corps: { color: '#A8B4E0', svg: S(`<path d="M12 2 20.7 7v10L12 22l-8.7-5V7z" stroke="${C}" stroke-width="2.6" stroke-linejoin="round"/><path d="M12 7.6v8.8M7.6 12h8.8" stroke="${C}" stroke-width="2.6" stroke-linecap="round"/>`) },
+    // sack/bag
+    Scavengers: { color: '#E8D0B0', svg: S(`<path d="M4.5 9h15l-1.6 12.5H6.1z" fill="${C}"/><path d="M8.3 9V6.2a3.7 3.7 0 0 1 7.4 0V9" stroke="${C}" stroke-width="2.2"/>`) },
+    // broken circular arrow
+    Renegades: { color: '#FF6A3C', svg: S(`<path d="M17.9 5.4A9 9 0 1 0 20.9 13.5" stroke="${C}" stroke-width="3" stroke-linecap="round"/><path d="M15.6 2.4 21 4.2l-2.4 5" stroke="${C}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>`) },
+    // three claw marks
+    Mutants: { color: '#E018C8', svg: S(`<path d="M4.5 20.5C6 14 6.8 8 6 2.5M11.2 21.5c1.1-6.6 1.7-12.6.8-18.5M17.4 20.5c1.4-6.4 2.3-12.3 1.4-17" stroke="${C}" stroke-width="3" stroke-linecap="round"/>`) },
+    // question mark in a ring
+    Unknown: { color: '#8A9098', svg: S(`<circle cx="12" cy="12" r="9.5" stroke="${C}" stroke-width="2.4"/><path d="M9 9.3a3.1 3.1 0 1 1 4.4 2.8c-.9.5-1.4 1.1-1.4 2.2v.6" stroke="${C}" stroke-width="2.4" stroke-linecap="round"/><circle cx="12" cy="17.6" r="1.5" fill="${C}"/>`) }
+  };
+  // same aliases as index.html, so any game spelling resolves to a key above
+  window.FACTION_ALIASES = { Neutrals: 'Loners', Neutral: 'Loners', Loner: 'Loners', Varta: 'Ward', Iskra: 'Spark',
+    Corpus: 'Corps', Korpus: 'Corps', Bandit: 'Bandits' };
+  window.factionIcon = function (name) {
+    const k = window.FACTION_ALIASES[name] || name;
+    return window.FACTION_ICONS[k] || window.FACTION_ICONS.Unknown;
+  };
+  // ring drawn around the glyph: stroke colour + dasharray (stroke width in px for a ~30px marker)
+  window.ACTIVITY_RINGS = {
+    roam:     { name: 'Roaming',    stroke: '#f2eee2', width: 2.4, dasharray: null },
+    hunt:     { name: 'Hunting',    stroke: '#ff3b30', width: 3.0, dasharray: '4.2 2.8' },
+    loot:     { name: 'Looting',    stroke: '#ffc531', width: 3.0, dasharray: '1.5 3', linecap: 'round' },
+    explore:  { name: 'Exploring',  stroke: '#f2eee2', width: 3.2, dasharray: '0.01 4.6', linecap: 'round' },
+    shelter:  { name: 'Sheltering', stroke: '#4aa3ff', width: 3.2, dasharray: '10 3' },
+    fighting: { name: 'Fighting',   stroke: '#ff2a1a', width: 3.4, dasharray: null },
+    unknown:  { name: 'Unknown',    stroke: '#8a9098', width: 2.0, dasharray: '2 4' }
+  };
+  // convenience: ring attributes as an SVG attribute string
+  window.activityRingAttrs = function (act) {
+    const r = window.ACTIVITY_RINGS[act] || window.ACTIVITY_RINGS.unknown;
+    return `stroke="${r.stroke}" stroke-width="${r.width}"` + (r.dasharray ? ` stroke-dasharray="${r.dasharray}"` : '') +
+      (r.linecap ? ` stroke-linecap="${r.linecap}"` : '');
+  };
+})();
+</script>
+<script>
 "use strict";
 /* =====================================================================
    SETTINGS - swap these
@@ -413,6 +571,9 @@ function factionKey(f) {
   if (!f) return "Unknown";
   if (Object.prototype.hasOwnProperty.call(FACTION_COLORS, f)) return f;
   if (FACTION_ALIASES[f]) return FACTION_ALIASES[f];
+  const g = String(f).replace(/\?+$/, "");          // "Duty?" = likely Duty (Zone Messages guess)
+  if (g !== f) return factionKey(g);
+  if (/^Faction \d+$/.test(f)) return "Unknown";    // Zone Messages faction index we can't name yet
   return "Mutants";
 }
 function facColor(f) {
@@ -656,7 +817,7 @@ function windowSince(now) {
 }
 const visibleFac = (list) => !list || !list.length || list.some(f => !facHidden(f));
 const fmtAgo = (s) => s < 90 ? `${Math.round(s)} s` : s < 5400 ? `${Math.round(s / 60)} min` : s < 172800 ? `${(s / 3600).toFixed(1)} h` : `${Math.round(s / 86400)} d`;
-const esc = (s) => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
 function recencyOpacity(age) {
   if (age <= 30 * 60) return 1;
@@ -790,13 +951,68 @@ function inFocusedTheater(u, v) {
   const t = theaterOf(u, v);
   return !!(t && t.id === S.focusedTheater);
 }
+function visRect(sel) {
+  const e = typeof sel === "string" ? document.querySelector(sel) : sel;
+  if (!e || e.hidden || getComputedStyle(e).display === "none" || getComputedStyle(e).visibility === "hidden") return null;
+  const r = e.getBoundingClientRect();
+  return r.width && r.height ? r : null;
+}
 function regionFitOptions(animate) {
-  return {
-    paddingTopLeft: [window.innerWidth >= 900 ? Math.round(410 * Math.min(UI, 1.35)) + 20 : 16, (typeof LV !== "undefined" && LV.on) ? Math.max(108, liveTopInset()) : 108],
-    paddingBottomRight: [16, window.innerWidth >= 900 ? 160 : 260],
-    maxZoom: 2.2,
-    animate: animate !== false
-  };
+  // padding (viewport px) from the panels actually on screen, so the region is fitted into the free part of the map
+  const W = window.innerWidth, H = window.innerHeight, wide = W >= 700;
+  const z = ZOOM;
+  let top = 60, left = 16, right = 16, bottom = 16;
+  for (const sel of ["#topbar .brand", "#status", "#filters", "#btn-back"]) { const r = visRect(sel); if (r) top = Math.max(top, r.bottom + 8); }
+  const lp = visRect("#live-panel");
+  const card = visRect("#region-card");
+  const sheet = visRect("#sheet");
+  if (sheet) bottom = Math.max(bottom, H - sheet.top + 8);
+  if (wide) {
+    left = card ? card.right + 14 : Math.round((W >= 1280 ? 380 * Math.min(UI, 1.35) : 300 * Math.min(UI, 1.1))) + 24;
+    if (lp && lp.left < left - 20) top = Math.max(top, lp.bottom + 8);   // panel still in the left column
+    else if (lp) top = Math.max(top, lp.bottom + 8);
+    const fabs = visRect("#fabs"); if (fabs) right = Math.max(right, W - fabs.left + 8);
+  } else {
+    if (lp) top = Math.max(top, lp.bottom + 8);
+    const cardTop = card ? card.top : H - (Math.min(0.42 * H, 360) + 120) * (W >= 700 ? z : 1);
+    bottom = Math.max(bottom, H - cardTop + 8);
+    const fabs = visRect("#fabs"); if (fabs && card && fabs.bottom > card.top - 4) bottom = Math.max(bottom, H - fabs.top + 6);
+  }
+  // wheels are drawn around their point (and nudged apart): keep half a wheel of room inside every edge
+  const halfWheel = Math.round(20 * UI);
+  top += halfWheel; left += halfWheel; right += halfWheel; bottom += halfWheel;
+  // never squeeze the map below ~120 px
+  const freeH = H - top - bottom; if (freeH < 120) bottom = Math.max(16, bottom - (120 - freeH));
+  return { paddingTopLeft: [Math.round(left), Math.round(top)], paddingBottomRight: [Math.round(right), Math.round(bottom)],
+    maxZoom: 2.2, animate: animate !== false };
+}
+function refitRegion() {
+  // second pass once the region card is on screen: fit again with its real size, then redraw at the new zoom
+  const t = THEATERS.find(x => x.id === S.focusedTheater);
+  if (!t) return;
+  const opts = regionFitOptions(false);
+  map.fitBounds(theaterBounds(t), opts);
+  render();
+  // wheels get nudged apart around their spots: if that pushed some past the fitted area, fit those too (once)
+  const pts = (S.regionFights || []).filter(it => it.pu != null).map(it => ll(it.pu, it.pv));
+  if (pts.length && window.innerWidth >= 900) {   // narrow screens: zooming out only bunches the wheels up more
+    const b = theaterBounds(t), all = L.latLngBounds(b.getSouthWest(), b.getNorthEast());
+    pts.forEach(p => all.extend(p));
+    if (!b.contains(all)) { map.fitBounds(all, opts); render(); }
+  }
+  // then pan (no zoom change, so the wheel layout stays) to bring every wheel into the free part of the map
+  const marks = [...document.querySelectorAll("#map .fight-mark")].map(e => e.getBoundingClientRect()).filter(r => r.width);
+  if (marks.length) {
+    const c = map.getContainer().getBoundingClientRect();
+    const x0 = Math.min(...marks.map(r => r.left)) - c.left, x1 = Math.max(...marks.map(r => r.right)) - c.left;
+    const y0 = Math.min(...marks.map(r => r.top)) - c.top, y1 = Math.max(...marks.map(r => r.bottom)) - c.top;
+    const [pl, pt] = opts.paddingTopLeft, [pr, pb] = opts.paddingBottomRight;
+    const fx0 = pl - Math.round(20 * UI), fy0 = pt - Math.round(20 * UI);   // padding without the half-wheel margin
+    const fx1 = c.width - pr + Math.round(20 * UI), fy1 = c.height - pb + Math.round(20 * UI);
+    const shift = (a0, a1, f0, f1) => (a1 - a0 > f1 - f0) ? ((f0 + f1) - (a0 + a1)) / 2 : a0 < f0 ? f0 - a0 : a1 > f1 ? f1 - a1 : 0;
+    const dx = shift(x0, x1, fx0, fx1), dy = shift(y0, y1, fy0, fy1);
+    if (Math.abs(dx) > 1 || Math.abs(dy) > 1) map.panBy([-dx, -dy], { animate: false });
+  }
 }
 function visibleEvents(d, since) {
   return d.conflicts.filter(c => c.t >= since && c.u != null && c.v != null && visibleFac(c.factions));
@@ -902,6 +1118,10 @@ function openTheater(id, opts) {
   map.closePopup();
   map.fitBounds(theaterBounds(t), regionFitOptions(!opts || opts.animate !== false));
   render();
+  let done = false;
+  const again = () => { if (done || S.focusedTheater !== id) return; done = true; requestAnimationFrame(refitRegion); };
+  map.once("moveend", again);
+  setTimeout(again, 900);
 }
 function closeTheaters() {
   S.focusedTheater = null;
@@ -909,7 +1129,7 @@ function closeTheaters() {
   if (back) back.hidden = true;
   const card = document.getElementById("region-card");
   if (card) card.hidden = true;
-  document.body.classList.remove("region-view");
+  document.body.classList.remove("region-view"); setTimeout(fitCardToSheet, 0);
   document.body.style.removeProperty("--region-card-h");
   if (S.imgW) map.fitBounds(L.latLngBounds([-S.imgH, 0], [0, S.imgW]));
   render();
@@ -1049,10 +1269,12 @@ function renderRegionCard(d, since, now) {
   card.querySelectorAll(".rc-battle").forEach(btn => {
     btn.onclick = ev => { ev.preventDefault(); highlightFight(btn.dataset.id); };
   });
-  document.body.classList.add("region-view");
+  document.body.classList.add("region-view"); setTimeout(fitCardToSheet, 0);
   card.hidden = false;
   requestAnimationFrame(() => {
-    document.body.style.setProperty("--region-card-h", Math.ceil(card.getBoundingClientRect().height) + "px");
+    // viewport px -> the #fabs' own CSS px (it is zoomed on wider screens)
+    const fz = parseFloat(getComputedStyle(document.getElementById("fabs")).zoom) || 1;
+    document.body.style.setProperty("--region-card-h", Math.ceil(card.getBoundingClientRect().height / fz) + "px");
   });
 }
 function addTheaterOutline(t, opts) {
@@ -1080,12 +1302,16 @@ function theaterWeight(rec) {
   // "how much fighting": fighters fielded plus extra weight for losses
   return Math.max(1, (rec.fielded || rec.fights || 1) + (rec.lost || 0));
 }
-let UI = 1;
+let UI = 1, ZOOM = 1;
 function computeUI() {
   // phones stay at 1; big screens scale markers and names up so they don't shrink to specks
   const v = Math.min(window.innerWidth, window.innerHeight * 1.15) / 420;
   UI = Math.max(1, Math.min(2.4, v));
   document.documentElement.style.setProperty("--ui", UI.toFixed(3));
+  // the CSS zoom of the top bar / sheet / buttons: full size on big screens, gentler on mid-size windows
+  const W = window.innerWidth;
+  ZOOM = W >= 1280 ? Math.min(UI, 1.7) : W >= 900 ? Math.min(UI, 1.4) : W >= 700 ? Math.min(UI, 1.2) : 1;
+  document.documentElement.style.setProperty("--z", ZOOM.toFixed(3));
 }
 computeUI();
 function theaterVisualSize(rec) {
@@ -1152,29 +1378,57 @@ const spots = [[0, r + 2 + lh / 2], [0, -(r + 2 + lh / 2)], [r + 3 + lw / 2, 0],
   }
   return out;
 }
+function poiLabelBoxes(scale) {
+  // screen-size boxes (in map px * scale) of the region's place-name labels (.poi-label: centred, just above the point)
+  const t = S.focusedTheater && THEATERS.find(x => x.id === S.focusedTheater);
+  if (!t) return [];
+  const fs = 9 * UI, out = [];
+  // use the real rendered label sizes when the labels are on the map (font, letter-spacing, caps), else estimate
+  const real = new Map();
+  for (const e of document.querySelectorAll(".poi-label")) if (e.offsetWidth) real.set(e.textContent, [e.offsetWidth, e.offsetHeight]);
+  for (const p of POIS) {
+    if (p.theater ? p.theater !== t.id : !pointInRing(p.u, p.v, t.ring)) continue;
+    const m = real.get(p.name);
+    const w = (m ? m[0] : p.name.length * fs * 0.78) + 6, h = (m ? m[1] : fs * 1.15) + 2;
+    const x = p.u * scale, y = p.v * scale;
+    out.push({ x0: x - w / 2, x1: x + w / 2, y0: y - h * 1.1 - 1, y1: y - h * 0.1 + 1 });
+  }
+  return out;
+}
 function spreadBattles(items) {
   const scale = mapScale();
   const gap = 3;
   const placed = [];
+  const boxes = poiLabelBoxes(scale);
+  const clearOfLabels = (u, v, r) => boxes.every(b => {
+    const x = u * scale, y = v * scale;
+    const dx = Math.max(b.x0 - x, 0, x - b.x1), dy = Math.max(b.y0 - y, 0, y - b.y1);
+    return dx * dx + dy * dy >= (r + 2) * (r + 2);
+  });
   for (const it of items) {
-    let u = it.u, v = it.v;
-    const r = it.visual / 2;
-    for (let k = 0; k < 48; k++) {
+    const px = Math.max(it.visual, 28) * UI;   // on-screen size of the wheel (battleIcon scales by UI)
+    const r = px / 2;
+    let best = null, fallback = null;
+    for (let k = 0; k < 90; k++) {
+      let u = it.u, v = it.v;
       if (k > 0) {
-        const radMap = ((6 + k * 4) / scale);
+        const radMap = ((6 + k * 4) * Math.max(1, UI * 0.8) / scale);
         const ang = k * 2.399963229728653;
         u = it.u + radMap * Math.cos(ang);
         v = it.v + radMap * Math.sin(ang);
       }
       const ok = placed.every(p => {
         const du = (u - p.u) * scale, dv = (v - p.v) * scale;
-        const need = r + p.visual / 2 + gap;
+        const need = r + p.px / 2 + gap;
         return du * du + dv * dv >= need * need;
       });
-      if (ok) break;
+      if (!ok) continue;
+      if (!fallback && k < 48) fallback = [u, v];
+      if (clearOfLabels(u, v, r)) { best = [u, v]; break; }
     }
-    it.pu = u; it.pv = v;
-    placed.push({ u, v, visual: it.visual });
+    const pick = best || fallback || [it.u, it.v];
+    it.pu = pick[0]; it.pv = pick[1];
+    placed.push({ u: it.pu, v: it.pv, px });
   }
   return items;
 }
@@ -1347,7 +1601,16 @@ function renderLists(since) {
    ===================================================================== */
 function setStatus(cls, text) { const el = document.getElementById("status"); el.className = "pill " + cls; el.textContent = text; }
 function showBanner(msg) { const b = document.getElementById("banner"); b.innerHTML = `<button aria-label="Dismiss">✕</button>${esc(msg)}`; b.hidden = false;
-  b.querySelector("button").onclick = () => { b.hidden = true; }; }
+  b.querySelector("button").onclick = () => { b.hidden = true; }; positionBanner(); }
+function positionBanner() {
+  // just under the filters (and the live panel when it is open), in the banner's own zoomed px
+  const b = document.getElementById("banner"); if (!b || b.hidden) return;
+  let y = 0;
+  for (const sel of ["#topbar", "#filters", "#live-panel"]) { const r = visRect(sel); if (r) y = Math.max(y, r.bottom); }
+  const z = parseFloat(getComputedStyle(b).zoom) || 1;
+  b.style.top = Math.round((y + 6) / z) + "px";
+  lvAlertPlace();
+}
 function hideBanner() { document.getElementById("banner").hidden = true; }
 
 function updateStatus() {
@@ -1422,7 +1685,24 @@ function applyTimeFilter(id) {
 
 // tabs + sheet
 const sheet = document.getElementById("sheet");
-document.getElementById("sheet-handle").onclick = () => sheet.classList.toggle("collapsed");
+function fitCardToSheet() {
+  // wide screens: the region card is a left column; keep its bottom above the sheet (collapsed or expanded)
+  const card = document.getElementById("region-card");
+  if (!card) return;
+  if (window.innerWidth < 700 || !document.body.classList.contains("region-view")) { card.style.bottom = ""; return; }
+  const sh = visRect("#sheet"); if (!sh) { card.style.bottom = ""; return; }
+  const z = parseFloat(getComputedStyle(card).zoom) || 1;
+  card.style.bottom = Math.max(0, (window.innerHeight - sh.top + 10) / z) + "px";
+}
+document.getElementById("sheet-handle").onclick = () => {
+  sheet.classList.toggle("collapsed");
+  fitCardToSheet(); setTimeout(fitCardToSheet, 380);
+};
+window.addEventListener("resize", () => setTimeout(fitCardToSheet, 50));
+new MutationObserver(() => {   // keep body.sheet-open in step with the sheet, whoever opens or closes it
+  const open = !sheet.classList.contains("collapsed");
+  if (document.body.classList.contains("sheet-open") !== open) { document.body.classList.toggle("sheet-open", open); setTimeout(fitCardToSheet, 380); }
+}).observe(sheet, { attributes: true, attributeFilter: ["class"] });
 document.querySelectorAll("#tabs button").forEach(b => b.onclick = () => {
   document.querySelectorAll("#tabs button").forEach(x => x.classList.toggle("on", x === b));
   document.querySelectorAll(".tab").forEach(t => { t.hidden = t.id !== "tab-" + b.dataset.tab; });
@@ -1476,7 +1756,11 @@ pickBtn.onclick = () => { S.picking = !S.picking; pickBtn.classList.toggle("on",
   if (!S.picking) { pp.hidden = true; layer.pick.clearLayers(); } else { showBanner("Pick mode: tap a spot on the map."); } };
 document.getElementById("pp-close").onclick = () => { pp.hidden = true; layer.pick.clearLayers(); S.picking = false; pickBtn.classList.remove("on"); };
 let _zoomT = null;
-map.on("zoomend", () => { if (S.focusedTheater) return; clearTimeout(_zoomT); _zoomT = setTimeout(render, 60); });
+map.on("zoomend", () => {
+  // region view: wheels are spread in screen px, so re-spread after a zoom (unless a fight popup is open)
+  if (S.focusedTheater && (S.fightMarkers || []).some(m => m.marker ? m.marker.isPopupOpen() : (m.isPopupOpen && m.isPopupOpen()))) return;
+  clearTimeout(_zoomT); _zoomT = setTimeout(render, S.focusedTheater ? 120 : 60);
+});
 document.getElementById("lg-toggle").addEventListener("click", (ev) => {
   ev.stopPropagation();
   const lg = document.getElementById("legend");
@@ -1523,7 +1807,9 @@ const LV = {
   on: false, connected: false, everOk: false, data: null, fetchedAt: 0, lastOk: 0, fails: 0, timer: null, tick: null,
   markers: new Map(),   // id -> { marker, key, fight, goneAt }
   firstSeen: new Map(), // id -> local time first seen (for the "new" flash)
-  min: store.get("liveMin", false), inflight: false
+  min: store.get("liveMin", false), inflight: false,
+  msgs: [], msgById: new Map(), msgMarkers: new Map(), tab: store.get("liveTab", "fights"),
+  alertSeen: new Set(), alertInit: false, alertTimer: null
 };
 const lvNow = () => Date.now() / 1000;
 function lvServerNow() { return LV.data ? LV.data.now + (lvNow() - LV.fetchedAt) : lvNow(); }
@@ -1594,7 +1880,7 @@ function lvPopup(f, st) {
   if (f.pos_source === "group_position") bits.push("position estimated from group routes");
   const when = st.active ? `started ${fmtDur(st.elapsed)} ago · last shots ${fmtDur(st.age)} ago` : `ended · last shots ${fmtDur(st.age)} ago`;
   return `<div class="fight-pop"><span class="live-tag${st.active ? "" : " ended"}">${st.active ? "● LIVE" : "ENDED"}</span>` +
-    `<div class="sides">${sides}</div><div class="when">${when}</div>` + (bits.length ? `<div class="meta">${bits.join(" · ")}</div>` : "") + `</div>`;
+    `<div class="sides">${sides}</div><div class="when">${when}</div>` + (bits.length ? `<div class="meta">${bits.join(" · ")}</div>` : "") + fightMsgsHtml(f) + `</div>`;
 }
 function lvSpread(items) {
   // keep live markers from covering each other (screen space, greedy, biggest first)
@@ -1612,9 +1898,387 @@ function lvSpread(items) {
   }
   return items;
 }
+/* ---- Live radio messages (Zone Messages History.txt via /live.json) ---- */
+map.createPane("msgPane");
+map.getPane("msgPane").style.zIndex = 655;
+layer.msgs = L.layerGroup().addTo(map);
+const MSG_ALERT_S = 600;
+const MSG_CAT_COLOR = { fight: "#ff6a4a", distress: "#ffb020", death: "#d8d0b8", mutant: "#9fd36a", enemy: "#ff8a70",
+  emission: "#c58cff", war: "#ff4a4a", peace: "#7ec8ff", wanderers: "#8fb3c9", job: "#d4a35c", channel: "#d4a35c",
+  weather: "#9fb8c8", reply: "#8e8a78", chatter: "#8e8a78", info: "#b9b4a0", cluster: "#ff4a4a" };
+const MSG_CAT_NAME = { fight: "Firefight", distress: "Distress call", death: "Death", mutant: "Mutants", enemy: "Enemy",
+  emission: "Emission", war: "War", peace: "Peace", wanderers: "Wanderers", job: "Job", channel: "Channel",
+  weather: "Weather", reply: "Reply", chatter: "Chatter", info: "Radio", cluster: "Heavy fighting" };
+const MSG_ICON = {
+  fight: '<circle cx="8" cy="8" r="4.6" fill="none" stroke="C" stroke-width="1.6"/><path d="M8 1.5v4M8 10.5v4M1.5 8h4M10.5 8h4" stroke="C" stroke-width="1.6"/>',
+  distress: '<path d="M8 1.8 15 14.2H1z" fill="none" stroke="C" stroke-width="1.6" stroke-linejoin="round"/><path d="M8 6v4" stroke="C" stroke-width="1.8"/><circle cx="8" cy="12" r="1" fill="C"/>',
+  death: '<path d="M8 1.5v13M3.5 5.5h9" stroke="C" stroke-width="2"/>',
+  mutant: '<path d="M3 13c0-5 2-9 5-11 3 2 5 6 5 11M5.5 9.5l2.5 1.5 2.5-1.5" fill="none" stroke="C" stroke-width="1.6"/>',
+  enemy: '<path d="M1.5 8s2.5-4.5 6.5-4.5S14.5 8 14.5 8 12 12.5 8 12.5 1.5 8 1.5 8z" fill="none" stroke="C" stroke-width="1.5"/><circle cx="8" cy="8" r="2" fill="C"/>',
+  emission: '<path d="M9.5 1 3.5 9h4L6.5 15l6-8.5h-4z" fill="C"/>',
+  war: '<path d="M3.5 15V1.5M3.5 2h9l-2 3.2 2 3.3h-9" fill="none" stroke="C" stroke-width="1.6" stroke-linejoin="round"/>',
+  peace: '<path d="M2 9l3-3 3 2 3-3 3 3M4 11l2 2M7 10.5l2 2M10 10l1.5 1.5" fill="none" stroke="C" stroke-width="1.6" stroke-linecap="round"/>',
+  cluster: '<circle cx="5" cy="6" r="2.4" fill="C"/><circle cx="11" cy="6" r="2.4" fill="C"/><circle cx="8" cy="11.5" r="2.4" fill="C"/>',
+  radio: '<circle cx="8" cy="9" r="1.7" fill="C"/><path d="M4.8 12.2a4.5 4.5 0 0 1 0-6.4M11.2 5.8a4.5 4.5 0 0 1 0 6.4M2.6 14.4a7.6 7.6 0 0 1 0-10.8M13.4 3.6a7.6 7.6 0 0 1 0 10.8" fill="none" stroke="C" stroke-width="1.4" stroke-linecap="round"/>'
+};
+function msgColor(m) { return MSG_CAT_COLOR[m.cat || m.kind] || MSG_CAT_COLOR.info; }
+function msgSvg(m, col) {
+  const k = MSG_ICON[m.cat] ? m.cat : (m.kind === "cluster" ? "cluster" : "radio");
+  return `<svg viewBox="0 0 16 16" aria-hidden="true">${MSG_ICON[k].replace(/C/g, col || msgColor(m))}</svg>`;
+}
+function msgAge(m) { return (m.age_s || 0) + (lvNow() - LV.fetchedAt); }
+function msgHot(m) { return m.level >= 3 && msgAge(m) <= MSG_ALERT_S; }
+function msgRegion(m) { if (m.u == null) return m.area || "Zone-wide"; const t = theaterOf(m.u, m.v); return t ? t.name : (m.area || ""); }
+function msgWhere(m) {
+  if (m.u == null) return "Zone-wide";
+  const n = lvNear(m), r = msgRegion(m);
+  return n && r && !n.endsWith(r) ? `${n} (${r})` : (n || r);
+}
+function msgLabelHtml(m) {
+  // faction names in the label get their colours
+  let h = esc(m.label || m.kind);
+  for (const f of (m.factions || [])) {
+    if (/^Faction \d+$/.test(f)) continue;
+    h = h.split(esc(f)).join(`<span style="color:${lvTextColor(f)}">${esc(f)}</span>`);
+  }
+  return h;
+}
+function msgVisible(m) {
+  if (S.focusedTheater && m.u != null && !inFocusedTheater(m.u, m.v)) return false;
+  const facs = (m.factions || []).filter(f => !/^Faction \d+$/.test(f));
+  return !facs.length || visibleFac(facs);
+}
+function msgPopup(m) {
+  const col = msgColor(m);
+  const replies = LV.msgs.filter(q => q.reply_to === m.id);
+  const bits = [esc(msgWhere(m))];
+  if (m.group != null) bits.push(`wanderer group ${m.group}`);
+  let h = `<div class="fight-pop msg-pop"><span class="live-tag radio" style="border-left:3px solid ${col}">RADIO · ${esc(MSG_CAT_NAME[m.cat] || "Message")}</span>` +
+    `<div class="sides">${msgLabelHtml(m)}</div><div class="when">${m.game_time ? `game ${esc(m.game_time)} · ` : ""}${fmtDur(msgAge(m))} ago</div>` +
+    `<div class="meta">${bits.join(" · ")}</div>`;
+  if (replies.length) h += `<div class="pop-msgs"><div class="h">Replies</div>` +
+    replies.slice(0, 4).map(q => `<div class="pop-msg"><span class="mi">${msgSvg(q)}</span><span>${msgLabelHtml(q)}</span><span class="t">${fmtDur(msgAge(q))}</span></div>`).join("") + `</div>`;
+  if (m.fight_id && LV.markers.has(m.fight_id)) h += `<button type="button" class="pop-link" data-fid="${esc(m.fight_id)}">Show the firefight ›</button>`;
+  return h + `</div>`;
+}
+function fightMsgsHtml(f) {
+  const ms = (f.message_ids || []).map(id => LV.msgById.get(id)).filter(Boolean).sort((a, b) => b.t - a.t);
+  if (!ms.length) return "";
+  return `<div class="pop-msgs"><div class="h">On the radio</div>` + ms.slice(0, 5).map(m =>
+    `<button type="button" class="pop-msg" data-mid="${m.id}"><span class="mi">${msgSvg(m)}</span><span>${msgLabelHtml(m)}</span><span class="t">${fmtDur(msgAge(m))}</span></button>`).join("") +
+    (ms.length > 5 ? `<div class="lp-more">+${ms.length - 5} more</div>` : "") + `</div>`;
+}
+function msgSize(m) { return Math.round((m.level >= 3 ? 19 : 15) * UI); }
+function mapObstacleRects() {
+  // things already drawn on the map that live markers must not sit on: region wheels + names, place labels,
+  // historical fight wheels (map-container px)
+  const c = map.getContainer().getBoundingClientRect(), out = [];
+  for (const e of map.getContainer().querySelectorAll(".theater-mark, .theater-name, .poi-label, .fight-mark")) {
+    const r = e.getBoundingClientRect();
+    if (!r.width || r.right < c.left || r.left > c.right || r.bottom < c.top || r.top > c.bottom) continue;
+    out.push({ x0: r.left - c.left, y0: r.top - c.top, x1: r.right - c.left, y1: r.bottom - c.top });
+  }
+  return out;
+}
+function freeSpot(p0, size, placed, rects, tries) {
+  // golden-angle spiral from the true spot: first point clear of other markers and of the map's own drawings;
+  // if nothing is fully clear, the one clear of markers that touches the fewest drawings
+  const half = size / 2 + 2;
+  let best = null, bestHits = Infinity;
+  for (let k = 0; k < tries; k++) {
+    const rad = k ? 4 + k * 3 : 0, ang = k * 2.399963229728653;
+    const p = k ? L.point(p0.x + rad * Math.cos(ang), p0.y + rad * Math.sin(ang)) : p0;
+    if (!placed.every(q => Math.hypot(p.x - q.p.x, p.y - q.p.y) >= (size + q.size) / 2 + 2)) continue;
+    let hits = 0;
+    for (const r of rects) {
+      const dx = Math.max(r.x0 - p.x, 0, p.x - r.x1), dy = Math.max(r.y0 - p.y, 0, p.y - r.y1);
+      if (dx * dx + dy * dy < half * half) hits++;
+    }
+    if (!hits) return p;
+    if (hits < bestHits) { bestHits = hits; best = p; }
+  }
+  return best || p0;
+}
+function renderMsgMarkers(placedFights) {
+  layer.msgs.clearLayers();
+  LV.msgMarkers = new Map();
+  if (!LV.on || !LV.connected || !map._loaded) return;
+  const placed = placedFights.slice();
+  const rects = mapObstacleRects();
+  // one marker per conversation: the first message; replies show in its popup
+  const roots = LV.msgs.filter(m => m.u != null && m.level >= 1 && !(m.reply_to && LV.msgById.has(m.reply_to)) && msgVisible(m))
+    .sort((a, b) => (b.level - a.level) || (b.t - a.t)).slice(0, 45);
+  for (const m of roots) {
+    const size = msgSize(m);
+    const p0 = map.latLngToContainerPoint(ll(m.u, m.v));
+    const p = freeSpot(p0, size, placed, rects, 120);
+    placed.push({ p, size });
+    const hot = msgHot(m), age = msgAge(m);
+    const op = hot ? 1 : age < 1800 ? 0.9 : 0.5;
+    const mk = L.marker(map.containerPointToLatLng(p), { pane: "msgPane", keyboard: true, zIndexOffset: hot ? 2000 : 1000, opacity: op,
+      icon: L.divIcon({ className: "msg-ico", iconSize: [size, size], iconAnchor: [size / 2, size / 2],
+        html: `<div class="msg-mark${hot ? " hot" : ""}" style="--c:${msgColor(m)}" title="${esc(m.label)}">${msgSvg(m)}</div>` }) });
+    mk.bindPopup("", { maxWidth: 290 });
+    mk.on("click", () => { mk.getPopup().options.autoPanPaddingTopLeft = L.point(10, Math.max(60, liveTopInset())); mk.setPopupContent(msgPopup(m)); });
+    layer.msgs.addLayer(mk);
+    LV.msgMarkers.set(m.id, mk);
+  }
+}
+function msgFocus(id) {
+  const m = LV.msgById.get(Number(id)); if (!m) return;
+  if (m.fight_id && LV.markers.has(m.fight_id)) { const rec = LV.markers.get(m.fight_id); if (rec.fight.u != null) return lvFocus(m.fight_id); }
+  if (m.u == null) return lvShowRadio(m.id);
+  if (S.focusedTheater && !inFocusedTheater(m.u, m.v)) closeTheaters();
+  const root = (m.reply_to && LV.msgById.has(m.reply_to)) ? LV.msgById.get(m.reply_to) : m;
+  const z = Math.max(map.getZoom(), (S.fitZoom != null ? S.fitZoom : 0) + 1.5);
+  map.flyTo(ll(m.u, m.v), Math.min(z, map.getMaxZoom()), { duration: 0.6 });
+  map.once("moveend", () => {
+    renderLive();
+    const mk = LV.msgMarkers.get(root.id);
+    if (mk) { mk.getPopup().options.autoPanPaddingTopLeft = L.point(10, Math.max(60, liveTopInset())); mk.setPopupContent(msgPopup(root)); mk.openPopup(); }
+  });
+}
+function alertFocus(a) {
+  lvAlertHide();
+  if (a.kind === "more") return lvShowRadio();   // combined "N new reports" banner: open the Radio list
+  if (a.fight_id && LV.markers.has(a.fight_id)) return lvFocus(a.fight_id);
+  const mid = (a.msg_ids || [])[0];
+  if (mid != null && LV.msgById.has(mid)) return msgFocus(mid);
+  if (a.u != null) return map.flyTo(ll(a.u, a.v), Math.max(map.getZoom(), (S.fitZoom || 0) + 1.5), { duration: 0.6 });
+  lvShowRadio(mid);
+}
+function lvShowRadio(mid) {
+  // zone-wide news (wars, ceasefires, emissions) has no place on the map: open the radio list on it
+  map.closePopup();
+  LV.tab = "msgs"; store.set("liveTab", "msgs");
+  if (S.focusedTheater) LV.regionOpen = true; else LV.min = false;
+  LV._msgScroll = 0;
+  renderLivePanel();
+  const row = document.querySelector(`#live-panel .lp-row.msg[data-mid="${mid}"]`);
+  if (row) { row.scrollIntoView({ block: "nearest" }); row.classList.add("new"); }
+}
+function renderMsgList() {
+  const al = (LV.data && LV.data.alerts) || [];
+  const inRegion = (x) => !S.focusedTheater || x.u == null || inFocusedTheater(x.u, x.v);
+  const alerts = al.filter(a => (a.age_s || 0) + (lvNow() - LV.fetchedAt) <= MSG_ALERT_S && inRegion(a) && a.kind === "cluster");
+  const ms = LV.msgs.filter(msgVisible).slice(0, 40);
+  if (!ms.length && !alerts.length) {
+    const info = (LV.data && LV.data.messages_info) || {};
+    return `<div class="lp-note">${info.found ? "No radio messages yet." : "No Zone Messages history found on the PC yet (it appears after the game writes its first radio message)."}</div>`;
+  }
+  let h = `<div class="lp-msgs">`;
+  for (const a of alerts) {
+    h += `<button type="button" class="lp-row msg alert" data-aid="${esc(a.id)}"><span class="mi">${msgSvg({ cat: "cluster", kind: "cluster" })}</span>` +
+      `<span class="lp-txt">${esc(a.label)} <span class="m">· ${esc(msgWhere(a))}</span></span><span class="lp-t">${fmtDur((a.age_s || 0) + lvNow() - LV.fetchedAt)}</span></button>`;
+  }
+  for (const m of ms) {
+    const cls = `lvl${m.level}${msgHot(m) ? " hot" : ""}${m.fight_id && LV.markers.has(m.fight_id) ? " linked" : ""}`;
+    h += `<button type="button" class="lp-row msg ${cls}" data-mid="${m.id}"><span class="mi">${msgSvg(m)}</span>` +
+      `<span class="lp-txt">${msgLabelHtml(m)} <span class="m">· ${esc(m.u == null ? "Zone-wide" : msgRegion(m))}</span></span>` +
+      `<span class="lp-t">${fmtDur(msgAge(m))}</span></button>`;
+  }
+  return h + `</div>`;
+}
+function lvAlertHide() {
+  const el = document.getElementById("lv-alert");
+  clearTimeout(LV.alertTimer);
+  if (el.hidden) return;
+  el.classList.add("out");
+  setTimeout(() => { if (el.classList.contains("out")) { el.hidden = true; el.classList.remove("out"); } }, 380);
+}
+function lvAlertPlace() {
+  // first spot that covers no control: top centre (wide screens), else under the live panel, else under the filters
+  const el = document.getElementById("lv-alert");
+  if (el.hidden) return;
+  const ids = ["#topbar .brand", "#status", "#filters", "#live-panel", "#btn-back", "#region-card", "#fabs", "#legend", "#sheet", "#banner"];
+  const obs = ids.map(s => visRect(s)).filter(Boolean);
+  const zoom = parseFloat(getComputedStyle(el).zoom) || 1;
+  const W = window.innerWidth;
+  el.style.left = "0px"; el.style.top = "0px";
+  const w = el.getBoundingClientRect().width, hgt = el.getBoundingClientRect().height;
+  const hit = (x, y) => obs.some(r => x < r.right + 4 && x + w > r.left - 4 && y < r.bottom + 4 && y + hgt > r.top - 4);
+  const fl = document.querySelector("#filters").getBoundingClientRect();
+  const lp = document.getElementById("live-panel");
+  const lpr = lp && !lp.hidden ? lp.getBoundingClientRect() : fl;
+  const fabs = visRect("#fabs");
+  const rightEdge = fabs ? fabs.left - 8 : W - 10;
+  const cands = [[(W - w) / 2, 8], [(W - w) / 2, fl.top], [lpr.right + 8, lpr.top], [lpr.right + 8, fl.top], [lpr.left, lpr.bottom + 8],
+    [rightEdge - w, lpr.bottom + 8], [10, fl.bottom + 8], [(W - w) / 2, lpr.bottom + 8]];
+  const count = (x, y) => obs.filter(r => x < r.right + 4 && x + w > r.left - 4 && y < r.bottom + 4 && y + hgt > r.top - 4).length;
+  let pick = null, best = Infinity;
+  for (const [x, y] of cands) {
+    if (x < 0 || x + w > W || y + hgt > window.innerHeight) continue;
+    const n = count(x, y);
+    if (n === 0) { pick = [x, y]; break; }
+    if (n < best) { best = n; pick = [x, y]; }
+  }
+  if (best > 0) {   // nothing free among the usual spots: scan the screen for the highest free slot
+    scan: for (let y = 8; y + hgt < window.innerHeight - 8; y += 16)
+      for (let x = Math.max(8, (W - w) / 2); ; ) {
+        if (count(x, y) === 0) { pick = [x, y]; break scan; }
+        x = x === (W - w) / 2 ? 8 : x + 24;
+        if (x + w > W - 8) break;
+      }
+  }
+  pick = pick || cands[4];
+  el.style.left = (pick[0] / zoom) + "px"; el.style.top = (pick[1] / zoom) + "px";
+}
+function lvAlertShow(a, more) {
+  const el = document.getElementById("lv-alert");
+  const cat = a.kind === "cluster" ? "cluster" : a.kind === "more" ? "info" : ((LV.msgById.get((a.msg_ids || [])[0]) || {}).cat || "info");
+  const col = MSG_CAT_COLOR[cat] || "#ff7a5c";
+  el.style.setProperty("--c", col);
+  el.innerHTML = `<span class="mi">${msgSvg({ cat, kind: a.kind }, col)}</span><span class="al-txt"><span class="al-k">${esc(MSG_CAT_NAME[cat] || "Alert")} · ${fmtDur((a.age_s || 0) + lvNow() - LV.fetchedAt)} ago${more ? ` · +${more} more` : ""}</span>` +
+    `<div class="al-l">${msgLabelHtml(a)}</div><div class="al-m">${esc(msgWhere(a))} · tap to see it</div></span><button type="button" class="al-x" aria-label="Dismiss">×</button>`;
+  el.classList.remove("out");
+  el.hidden = false;
+  lvAlertPlace();
+  el.onclick = (e) => { if (e.target.closest(".al-x")) { e.stopPropagation(); return lvAlertHide(); } alertFocus(a); };
+  clearTimeout(LV.alertTimer);
+  LV.alertTimer = setTimeout(lvAlertHide, 9000);
+}
+function lvApplyMsgs(d) {
+  if (!Array.isArray(d.messages)) d.messages = [];
+  if (!Array.isArray(d.alerts)) d.alerts = [];
+  d.messages = d.messages.filter(m => m && typeof m === "object" && m.id != null);
+  d.alerts = d.alerts.filter(a => a && typeof a === "object" && a.id != null);
+  LV.msgs = d.messages;
+  LV.msgById = new Map(LV.msgs.map(m => [m.id, m]));
+  const toasts = (d.alerts || []).filter(a => a.toast);
+  if (!LV.alertInit) {
+    LV.alertInit = true;
+    toasts.forEach(a => LV.alertSeen.add(a.id));
+    const fresh = toasts.filter(a => a.age_s <= 180);
+    if (fresh.length) lvAlertShow(fresh[0], fresh.length - 1);
+    return;
+  }
+  const fresh = toasts.filter(a => !LV.alertSeen.has(a.id) && !(a.age_s > 180));
+  fresh.forEach(a => LV.alertSeen.add(a.id));
+  if (fresh.length) lvAlertShow(fresh[0], fresh.length - 1);
+}
+document.addEventListener("click", (e) => {
+  const pm = e.target.closest(".pop-msg[data-mid]"); if (pm) { map.closePopup(); return msgFocusList(pm.dataset.mid); }
+  const pl = e.target.closest(".pop-link[data-fid]"); if (pl) { map.closePopup(); return lvFocus(pl.dataset.fid); }
+});
+function msgFocusList(id) {
+  // from a fight popup: show the message itself (its own marker), not the fight again
+  const m = LV.msgById.get(Number(id)); if (!m) return;
+  const root = (m.reply_to && LV.msgById.has(m.reply_to)) ? LV.msgById.get(m.reply_to) : m;
+  const mk = LV.msgMarkers.get(root.id);
+  if (mk) { mk.getPopup().options.autoPanPaddingTopLeft = L.point(10, Math.max(60, liveTopInset())); mk.setPopupContent(msgPopup(root)); mk.openPopup(); }
+}
+window.addEventListener("resize", () => lvAlertPlace());
+/* ---- Live Zone Wanderers groups: faction emblem + activity ring + member count ---- */
+map.createPane("groupPane");
+map.getPane("groupPane").style.zIndex = 650;   // under radio messages (655) and live fights (660)
+map.getPane("tooltipPane").style.zIndex = 690;  // hover cards above every marker pane (popups stay at 700)
+const GRP_GLYPH = {   // 16x16 emblems, drawn in the faction colour ({c})
+  Loners: '<path d="M8 2 14.5 14h-13z" fill="none" stroke="{c}" stroke-width="1.8" stroke-linejoin="round"/><path d="M8 8.5 10.3 14H5.7z" fill="{c}"/>',
+  Bandits: '<path d="M3 3l10 10M13 3 3 13" stroke="{c}" stroke-width="2.6" stroke-linecap="round"/>',
+  Duty: '<path d="M8 1.5 14 4v4.2c0 3.3-2.6 5.6-6 6.6-3.4-1-6-3.3-6-6.6V4z" fill="{c}"/>',
+  Freedom: '<circle cx="8" cy="4.6" r="2.9" fill="{c}"/><circle cx="4.6" cy="10" r="2.9" fill="{c}"/><circle cx="11.4" cy="10" r="2.9" fill="{c}"/><path d="M8 9v6" stroke="{c}" stroke-width="1.6"/>',
+  Mercenaries: '<path d="M8 1.5 14.5 8 8 14.5 1.5 8z" fill="none" stroke="{c}" stroke-width="1.8"/><circle cx="8" cy="8" r="2.2" fill="{c}"/>',
+  Monolith: '<path d="M5.5 15V4L8 1l2.5 3v11z" fill="{c}"/>',
+  Military: '<path d="M8 1.2l2 4.6 5 .4-3.8 3.3 1.2 4.9L8 11.8l-4.4 2.6 1.2-4.9L1 6.2l5-.4z" fill="{c}"/>',
+  Ward: '<path d="M2.5 9 8 4l5.5 5M2.5 13.5 8 8.5l5.5 5" fill="none" stroke="{c}" stroke-width="2.2" stroke-linejoin="round"/>',
+  Scientists: '<ellipse cx="8" cy="8" rx="6.5" ry="2.6" fill="none" stroke="{c}" stroke-width="1.3"/><ellipse cx="8" cy="8" rx="6.5" ry="2.6" fill="none" stroke="{c}" stroke-width="1.3" transform="rotate(60 8 8)"/><ellipse cx="8" cy="8" rx="6.5" ry="2.6" fill="none" stroke="{c}" stroke-width="1.3" transform="rotate(-60 8 8)"/><circle cx="8" cy="8" r="1.6" fill="{c}"/>',
+  Noon: '<circle cx="8" cy="8" r="3.4" fill="{c}"/><path d="M8 .8v2.4M8 12.8v2.4M.8 8h2.4M12.8 8h2.4M2.9 2.9l1.7 1.7M11.4 11.4l1.7 1.7M2.9 13.1l1.7-1.7M11.4 4.6l1.7-1.7" stroke="{c}" stroke-width="1.5"/>',
+  Spark: '<path d="M9.6 .8 3.4 9h4.1L6.4 15.2 12.6 7H8.5z" fill="{c}"/>',
+  Corps: '<path d="M8 1.3 13.8 4.6v6.8L8 14.7 2.2 11.4V4.6z" fill="none" stroke="{c}" stroke-width="1.9"/><path d="M8 5.2v5.6M5.2 8h5.6" stroke="{c}" stroke-width="1.7"/>',
+  Scavengers: '<path d="M3 6h10l-1 8.5H4z" fill="{c}"/><path d="M5.5 6V4a2.5 2.5 0 0 1 5 0v2" fill="none" stroke="{c}" stroke-width="1.5"/>',
+  Renegades: '<path d="M11.9 3.6A6 6 0 1 0 13.9 9" fill="none" stroke="{c}" stroke-width="2.2" stroke-linecap="round"/><path d="M10.5 1.5l3.5 1.2-1.6 3.3" fill="none" stroke="{c}" stroke-width="1.6"/>',
+  Mutants: '<path d="M3 13.5C4 9 4.6 5 4 2M7.2 14c.8-4.5 1.2-8.5.6-12.2M11.3 13.5c1-4.4 1.6-8.4 1-11.5" fill="none" stroke="{c}" stroke-width="2" stroke-linecap="round"/>',
+  Unknown: '<circle cx="8" cy="8" r="3.6" fill="{c}"/>'
+};
+const GRP_ACT = {   // ring around the emblem = what the group is doing
+  roam: { name: "Roaming", ring: 'stroke="#f2eee2" stroke-width="2.4"' },
+  hunt: { name: "Hunting", ring: 'stroke="#ff3b30" stroke-width="3" stroke-dasharray="4.2 2.8"' },
+  loot: { name: "Looting", ring: 'stroke="#ffc531" stroke-width="3.2"' },
+  explore: { name: "Exploring", ring: 'stroke="#f2eee2" stroke-width="3.2" stroke-dasharray="0.01 4.6" stroke-linecap="round"' },
+  shelter: { name: "Sheltering", ring: 'stroke="#4aa3ff" stroke-width="3.2"' },
+  visit: { name: "Visiting", ring: 'stroke="#4fe0c0" stroke-width="2.4" stroke-dasharray="9 2"' },
+  fighting: { name: "Fighting", ring: 'stroke="#ff2a1a" stroke-width="3.4"' }
+};
+if (window.ACTIVITY_RINGS) {
+  window.ACTIVITY_RINGS.visit = window.ACTIVITY_RINGS.visit || { name: "Visiting", stroke: "#4fe0c0", width: 2.4, dasharray: "9 2" };
+  for (const [a, r] of Object.entries(window.ACTIVITY_RINGS)) {
+    if (a === "unknown") continue;
+    GRP_ACT[a] = { name: r.name, ring: window.activityRingAttrs(a) };
+  }
+}
+function grpAct(g) {
+  if (g.fighting) return "fighting";
+  const a = String(g.activity || "").toLowerCase();
+  if (/hunt/.test(a)) return "hunt";
+  if (/loot/.test(a)) return "loot";
+  if (/expl/.test(a)) return "explore";
+  if (/rest|shelter|hide|flee|emission|camp/.test(a)) return "shelter";
+  if (/visit/.test(a)) return "visit";
+  return "roam";
+}
+function grpGlyphSvg(fac) {
+  const k = factionKey(fac);
+  // pluggable glyph map: window.FACTION_ICONS = { Name: { color, svg } } (16x16 inner svg markup) overrides the built-ins
+  const FI = window.FACTION_ICONS;
+  if (FI && (FI[k] || FI.Unknown)) {
+    const ic = FI[k] || FI.Unknown;
+    const halo = ic.outline || OUTLINED_FACTIONS.has(k) ? ' filter="url(#grp-halo)"' : "";
+    // place the 24x24 icon in the 16x16 slot the marker reserves
+    return `<g style="color:${ic.color || facColor(fac)}"${halo}>` + String(ic.svg).replace(/<svg[^>]*>/, '<svg x="0" y="0" width="16" height="16" viewBox="0 0 24 24" fill="none" overflow="visible">') + `</g>`;
+  }
+  return (GRP_GLYPH[k] || GRP_GLYPH.Unknown).replace(/\{c\}/g, lvTextColor(fac));
+}
+function grpSize() { return Math.round(30 * Math.min(UI, 1.8)); }   // 30px at UI 1, grows with the UI scale
+function grpIconHtml(g, size) {
+  const act = grpAct(g), A = GRP_ACT[act];
+  return `<div class="grp-mark act-${act}" style="width:${size}px;height:${size}px">` +
+    `<svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="15.2" fill="#050605" fill-opacity=".9" stroke="#000" stroke-width="1.2"/>` +
+    `<circle cx="16" cy="16" r="13" fill="none" ${A.ring}/><circle cx="16" cy="16" r="10.4" fill="none" stroke="#000" stroke-opacity=".7" stroke-width="1"/>` +
+    `<g transform="translate(8.4 8.4) scale(.95)">${grpGlyphSvg(g.faction)}</g></svg>` +
+    (g.n ? `<span class="cnt" style="border-color:${lvTextColor(g.faction)}">${g.n}</span>` : "") + `</div>`;
+}
+function grpInfoHtml(g) {
+  const A = GRP_ACT[grpAct(g)];
+  const bits = [`<b style="color:${lvTextColor(g.faction)}">${esc(g.faction)}</b>${g.n ? ` · ${g.n} member${g.n > 1 ? "s" : ""}` : ""}`];
+  let doing = A.name + (g.activity && grpAct(g) !== "fighting" && !A.name.toLowerCase().startsWith(String(g.activity).slice(0, 4)) ? ` (${esc(g.activity)})` : "");
+  if (g.dest) doing += g.dest.near ? ` · heading ${esc(lvNear(g.dest))}` : " · on the move";
+  else if (g.near) doing += ` · ${esc(lvNear(g))}`;
+  bits.push(doing);
+  bits.push(`last report ${fmtDur((g.age_s || 0) + lvNow() - LV.fetchedAt)} ago · group ${esc(g.id)}`);
+  return `<div class="fight-pop grp-pop"><span class="live-tag radio">GROUP</span><div class="sides" style="font-size:14px">${bits[0]}</div><div class="when">${bits[1]}</div><div class="meta">${bits[2]}</div></div>`;
+}
+function renderGroupMarkers(placed) {
+  layer.liveGroups.clearLayers();
+  if (!S.layers.groups || !LV.data || !LV.connected || !map._loaded) return placed;
+  const size = grpSize();
+  const gs = (LV.data.groups || []).filter(g => g.u != null && !facHidden(g.faction) && inFocusedTheater(g.u, g.v))
+    .sort((a, b) => (b.fighting - a.fighting) || (a.age_s - b.age_s)).slice(0, 300);
+  const out = placed.slice();
+  const W = map.getSize();
+  for (const g of gs) {
+    const p0 = map.latLngToContainerPoint(ll(g.u, g.v));
+    let p = p0;
+    const visible = p0.x > -60 && p0.y > -60 && p0.x < W.x + 60 && p0.y < W.y + 60;
+    if (visible) {
+      for (let k = 0; k < 40; k++) {
+        if (k > 0) { const rad = 3 + k * 2.5, ang = k * 2.399963229728653; p = L.point(p0.x + rad * Math.cos(ang), p0.y + rad * Math.sin(ang)); }
+        if (out.every(q => Math.hypot(p.x - q.p.x, p.y - q.p.y) >= (size + q.size) / 2 + 2)) break;
+      }
+    }
+    out.push({ p, size });
+    const op = g.age_s > 900 ? 0.55 : 1;
+    const mk = L.marker(map.containerPointToLatLng(p), { pane: "groupPane", keyboard: false, opacity: op, zIndexOffset: g.fighting ? 500 : 0,
+      icon: L.divIcon({ className: "grp-ico", iconSize: [size, size], iconAnchor: [size / 2, size / 2], html: grpIconHtml(g, size) }) });
+    mk.bindTooltip(() => grpInfoHtml(g), { direction: "top", offset: L.point(0, -size / 2), className: "grp-tip", opacity: 1 });
+    mk.bindPopup(() => grpInfoHtml(g), { maxWidth: 280 });
+    mk.on("click", () => mk.closeTooltip());
+    layer.liveGroups.addLayer(mk);
+  }
+  return out;
+}
 function renderLive() {
   document.body.classList.toggle("live-mode", LV.on);
-  if (!LV.on) { layer.live.clearLayers(); layer.liveGroups.clearLayers(); LV.markers.clear(); return; }
+  if (!LV.on) { layer.live.clearLayers(); layer.liveGroups.clearLayers(); layer.msgs.clearLayers(); LV.msgKey = null; LV.markers.clear(); lvAlertHide(); return; }
   positionLivePanel();
   // markers
   const items = [];
@@ -1637,7 +2301,7 @@ function renderLive() {
     const key = `${size}|${st.active ? 1 : 0}|${f.fielded}|${(f.sides || []).map(s => s.faction + s.fielded).join(",")}`;
     if (!rec.marker) {
       rec.marker = L.marker(it.latlng, { pane: "livePane", keyboard: true, zIndexOffset: 3000 });
-      rec.marker.on("click", () => { rec.marker.setPopupContent(lvPopup(rec.fight, lvState(rec))); });
+      rec.marker.on("click", () => { rec.marker.getPopup().options.autoPanPaddingTopLeft = L.point(10, Math.max(160, liveTopInset())); rec.marker.setPopupContent(lvPopup(rec.fight, lvState(rec))); });
       rec.marker.bindPopup("", { autoPanPaddingTopLeft: L.point(10, 160) });
       layer.live.addLayer(rec.marker);
     } else rec.marker.setLatLng(it.latlng);
@@ -1648,21 +2312,52 @@ function renderLive() {
     rec.marker.setOpacity(st.op);
     if (rec.marker.isPopupOpen()) rec.marker.setPopupContent(lvPopup(f, st));
   }
-  // roaming groups: tiny faint dots, only in live mode
-  layer.liveGroups.clearLayers();
-  if (S.layers.groups && LV.data && LV.connected) {
-    for (const g of (LV.data.groups || [])) {
-      if (g.u == null || facHidden(g.faction) || !inFocusedTheater(g.u, g.v)) continue;
-      layer.liveGroups.addLayer(L.circleMarker(ll(g.u, g.v), { radius: 2.6, weight: 0, fillColor: facColor(g.faction),
-        fillOpacity: g.age_s > 900 ? 0.3 : 0.6, interactive: false }));
-    }
+  // fights first, then groups nudged off them, then radio markers nudged off both
+  const openMsg = [...LV.msgMarkers.entries()].find(([, mk]) => mk.isPopupOpen());
+  const openGrp = layer.liveGroups.getLayers().some(mk => mk.isPopupOpen && mk.isPopupOpen());
+  const mkKey = `${LV.fetchedAt}|${map.getZoom()}|${S.focusedTheater}|${[...S.hidden].join(",")}|${Math.floor(lvNow() / 30)}|${items.length}|${S.layers.groups}|${UI}|${Math.round(map.getCenter().lat)},${Math.round(map.getCenter().lng)}`;
+  if (!openMsg && !openGrp && mkKey !== LV.msgKey) {
+    LV.msgKey = mkKey;
+    const placed = renderGroupMarkers(items.map(it => ({ p: map.latLngToContainerPoint(it.latlng), size: it.size })));
+    renderMsgMarkers(placed);
   }
   renderLivePanel(items);
 }
 function positionLivePanel() {
   const fl = document.getElementById("filters"), lp = document.getElementById("live-panel");
   if (!fl || !lp) return;
-  lp.style.top = Math.round(fl.getBoundingClientRect().bottom + 6) + "px";
+  const z = parseFloat(getComputedStyle(lp).zoom) || 1;
+  const rc = document.getElementById("region-card");
+  const rcr = rc && !rc.hidden && window.innerWidth >= 700 ? rc.getBoundingClientRect() : null;
+  // wide screens in region view: the region card owns the left column, so the live panel sits right of it
+  lp.style.left = rcr && rcr.width ? Math.round((rcr.right + 10) / z) + "px" : "";
+  const top = fl.getBoundingClientRect().bottom + 6;
+  lp.style.top = Math.round(top / z) + "px";
+  // keep it above the Key button / legend in the same column (short desktop windows)
+  const lg = visRect("#legend"), lr = lp.getBoundingClientRect();
+  if (lg && !lp.style.left && lg.left < lr.right && lg.right > lr.left && lg.top > top + 120) {
+    lp.style.maxHeight = Math.floor((lg.top - 8 - top) / z) + "px"; lp.style.overflowY = "auto";
+  } else { lp.style.maxHeight = ""; lp.style.overflowY = ""; }
+}
+function lpSameShape(a, b) {
+  if (a.childNodes.length !== b.childNodes.length) return false;
+  for (let i = 0; i < a.childNodes.length; i++) {
+    const x = a.childNodes[i], y = b.childNodes[i];
+    if (x.nodeType !== y.nodeType) return false;
+    if (x.nodeType === 1) {
+      if (x.tagName !== y.tagName || x.attributes.length !== y.attributes.length) return false;
+      for (const at of y.attributes) if (x.getAttribute(at.name) !== at.value) return false;
+      if (!lpSameShape(x, y)) return false;
+    }
+  }
+  return true;
+}
+function lpPatchText(a, b) {
+  for (let i = 0; i < a.childNodes.length; i++) {
+    const x = a.childNodes[i], y = b.childNodes[i];
+    if (x.nodeType === 3) { if (x.nodeValue !== y.nodeValue) x.nodeValue = y.nodeValue; }
+    else if (x.nodeType === 1) lpPatchText(x, y);
+  }
 }
 function renderLivePanel() {
   const lp = document.getElementById("live-panel");
@@ -1678,7 +2373,7 @@ function renderLivePanel() {
   const staleS = LV.lastOk ? lvNow() - LV.lastOk : Infinity;
   const connected = LV.connected && staleS < 15;
   btn.classList.toggle("off-air", !connected);
-  let title, upd, body = "";
+  let title, upd, body = "", tabs = "";
   const allRecs = [...LV.markers.entries()].map(([id, r]) => ({ id, r, st: r.st || lvState(r) })).filter(x => x.st.op > 0.02);
   const inRegion = (x) => x.r.fight.u != null && inFocusedTheater(x.r.fight.u, x.r.fight.v);
   const recs = S.focusedTheater ? allRecs.filter(inRegion) : allRecs;
@@ -1689,11 +2384,19 @@ function renderLivePanel() {
     title = `<span class="lp-title off">Live · not connected</span>`;
     upd = LV.everOk ? `lost ${fmtDur(staleS)} ago` : "";
     const here = (!ON_PAGES && location.port === "8787") ? location.host : "&lt;PC-IP&gt;:8787";
-    body = `<div class="lp-note">${LV.everOk ? "Can't reach the PC right now - retrying every 3 s." : "Live view needs the page from your PC."} ` +
+    body = `<div class="lp-note">${LV.everOk ? "Can't reach the PC right now - retrying." : "Live view needs the page from your PC."} ` +
       `Open <b>http://${here}</b> on home Wi-Fi (run <b>start_live.ps1</b> on the PC; it prints the address).</div>`;
   } else {
     title = `<span class="lp-title">● Live${act.length ? ` · ${act.length} firefight${act.length > 1 ? "s" : ""}${S.focusedTheater ? " here" : ""}` : ""}</span>`;
     upd = `updated ${fmtDur(lvNow() - LV.lastOk)} ago`;
+    const hasMsgs = !!(d.messages_info && d.messages_info.found) || LV.msgs.length > 0;
+    const nHot = LV.msgs.filter(m => msgHot(m) && msgVisible(m)).length;
+    if (hasMsgs) {
+      const tab = LV.tab === "msgs" ? "msgs" : "fights";
+      tabs = `<div class="lp-tabs" role="tablist"><button type="button" role="tab" data-tab="fights" class="${tab === "fights" ? "on" : ""}" aria-selected="${tab === "fights"}">Fights${act.length ? `<span class="badge">${act.length}</span>` : ""}</button>` +
+        `<button type="button" role="tab" data-tab="msgs" class="${tab === "msgs" ? "on" : ""}" aria-selected="${tab === "msgs"}">Radio${nHot ? `<span class="badge">${nHot}</span>` : ""}</button></div>`;
+      if (nHot) title = title.replace("</span>", ` · ⚠ ${nHot}</span>`);
+    }
     const rows = act.concat(ended).slice(0, S.focusedTheater ? 2 : 3);
     for (const x of rows) {
       const f = x.r.fight;
@@ -1714,14 +2417,29 @@ function renderLivePanel() {
         ? `<div class="lp-note">No firefights right now.${nG ? ` ${nG} group${nG > 1 ? "s" : ""} on the move (faint dots).` : ""}</div>`
         : `<div class="lp-note">No new Zone Wanderers events${d.files && d.files.log_age_s != null ? ` for ${fmtDur(d.files.log_age_s)}` : ""} - is the game running?</div>`;
     }
+    if (tabs && LV.tab === "msgs") body = renderMsgList();
+    body = tabs + body;
   }
-  lp.innerHTML = `<button type="button" class="lp-head" id="lp-head" aria-expanded="${!compact}">${title}<span class="lp-upd">${upd}<span class="lp-chev">${compact ? "▸" : "▾"}</span></span></button><div class="lp-body">${body}</div>`;
+  const html = `<button type="button" class="lp-head" id="lp-head" aria-expanded="${!compact}">${title}<span class="lp-upd">${upd}<span class="lp-chev">${compact ? "▸" : "▾"}</span></span></button><div class="lp-body">${body}</div>`;
+  // called every second: if only the times changed, patch the text in place (keeps scroll, focus and hover)
+  if (html === LV._panelHtml) return;
+  const tpl = document.createElement("div"); tpl.innerHTML = html;
+  const LVshape = LV._panelHtml != null && lpSameShape(lp, tpl);
+  LV._panelHtml = html;
+  if (LVshape) { lpPatchText(lp, tpl); lvAlertPlace(); return; }
+  lp.innerHTML = html;
   lp.querySelector("#lp-head").onclick = () => {
     if (S.focusedTheater) LV.regionOpen = !LV.regionOpen;
     else { LV.min = !LV.min; store.set("liveMin", LV.min); }
     renderLivePanel();
   };
-  lp.querySelectorAll(".lp-row").forEach(b => b.onclick = () => lvFocus(b.dataset.id));
+  const sc = LV._msgScroll || 0;
+  const lm = lp.querySelector(".lp-msgs"); if (lm) { lm.scrollTop = sc; lm.onscroll = () => { LV._msgScroll = lm.scrollTop; }; }
+  lp.querySelectorAll(".lp-row[data-id]").forEach(b => b.onclick = () => lvFocus(b.dataset.id));
+  lp.querySelectorAll(".lp-row[data-mid]").forEach(b => b.onclick = () => msgFocus(b.dataset.mid));
+  lp.querySelectorAll(".lp-row[data-aid]").forEach(b => b.onclick = () => { const a = ((LV.data && LV.data.alerts) || []).find(x => x.id === b.dataset.aid); if (a) alertFocus(a); });
+  lvAlertPlace();
+  lp.querySelectorAll(".lp-tabs button").forEach(b => b.onclick = (e) => { e.stopPropagation(); LV.tab = b.dataset.tab; store.set("liveTab", LV.tab); LV._msgScroll = 0; renderLivePanel(); lvAlertPlace(); });
 }
 function lvFocus(id) {
   const rec = LV.markers.get(id); if (!rec) return;
@@ -1729,7 +2447,7 @@ function lvFocus(id) {
   if (S.focusedTheater && !inFocusedTheater(f.u, f.v)) closeTheaters();
   const z = Math.max(map.getZoom(), (S.fitZoom != null ? S.fitZoom : 0) + 1.5);
   map.flyTo(ll(f.u, f.v), Math.min(z, map.getMaxZoom()), { duration: 0.6 });
-  map.once("moveend", () => { renderLive(); if (rec.marker) { rec.marker.setPopupContent(lvPopup(rec.fight, lvState(rec))); rec.marker.openPopup(); } });
+  map.once("moveend", () => { renderLive(); if (rec.marker) { rec.marker.getPopup().options.autoPanPaddingTopLeft = L.point(10, Math.max(160, liveTopInset())); rec.marker.setPopupContent(lvPopup(rec.fight, lvState(rec))); rec.marker.openPopup(); } });
 }
 function lvApply(d) {
   const seen = new Set();
@@ -1744,7 +2462,7 @@ function lvApply(d) {
   for (const [id, rec] of LV.markers) if (!seen.has(id) && !rec.goneAt) rec.goneAt = lvNow();
 }
 async function lvPoll() {
-  if (!LV.on || LV.inflight || document.visibilityState !== "visible") { renderLive(); return; }
+  if (!LV.on || LV.inflight || document.visibilityState !== "visible" || (LV.backoffUntil && lvNow() < LV.backoffUntil)) { renderLive(); return; }
   LV.inflight = true;
   const ctl = typeof AbortController !== "undefined" ? new AbortController() : null;
   const to = ctl ? setTimeout(() => ctl.abort(), 2800) : null;
@@ -1752,13 +2470,16 @@ async function lvPoll() {
     const r = await fetch(LIVE_URL + "?_=" + Date.now(), { cache: "no-store", signal: ctl ? ctl.signal : undefined });
     if (!r.ok) throw new Error("HTTP " + r.status);
     const d = await r.json();
-    if (!d || d.schema !== "zoneheat-live/1") throw new Error("not a live feed");
+    if (!d || !/^zoneheat-live\/[12]$/.test(d.schema)) throw new Error("not a live feed");
     LV.data = d; LV.fetchedAt = lvNow(); LV.lastOk = LV.fetchedAt; LV.connected = true; LV.fails = 0;
     lvApply(d);
-    LV.everOk = true;
+    try { lvApplyMsgs(d); } catch (e) { console.warn("radio feed skipped:", e); LV.msgs = []; LV.msgById = new Map(); }
+    LV.everOk = true; LV.backoffUntil = 0;
   } catch (e) {
     LV.fails++;
     if (!LV.everOk || LV.fails >= 3) LV.connected = false;
+    // back off while the PC is unreachable: 3 s, 6 s, 12 s ... up to 30 s between tries
+    LV.backoffUntil = lvNow() + Math.min(30, 1.5 * Math.pow(2, Math.min(LV.fails, 5)));
   } finally {
     if (to) clearTimeout(to);
     LV.inflight = false;
@@ -1778,10 +2499,37 @@ function setLive(on, persist) {
   renderLivePanel();
 }
 document.getElementById("btn-live").onclick = () => setLive(!LV.on, true);
-document.addEventListener("visibilitychange", () => { if (LV.on && document.visibilityState === "visible") lvPoll(); });
+(function buildGroupLegend() {
+  const el = document.getElementById("lg-live"); if (!el) return;
+  const fac = ["Loners", "Bandits", "Duty", "Freedom", "Mercenaries", "Monolith", "Military", "Ward", "Scientists", "Noon", "Spark", "Corps", "Mutants"];
+  const glyph = f => `<svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="15" fill="#050605" stroke="#555" stroke-width="1"/><g transform="translate(8.4 8.4) scale(.95)">${grpGlyphSvg(f)}</g></svg>`;
+  const ring = a => `<svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="15" fill="#050605"/><circle cx="16" cy="16" r="12" fill="none" ${GRP_ACT[a].ring}/></svg>`;
+  el.innerHTML = `<div class="h">Live groups · emblem = faction</div><div class="lg-glyphs">${fac.map(f => `<span>${glyph(f)}${esc(f)}</span>`).join("")}</div>` +
+    `<div class="h" style="margin-top:6px">Ring = what it's doing · number = members</div><div class="lg-rings">${Object.keys(GRP_ACT).map(a => `<span>${ring(a)}${GRP_ACT[a].name}</span>`).join("")}</div>`;
+})();
+document.addEventListener("visibilitychange", () => { if (LV.on && document.visibilityState === "visible") { LV.backoffUntil = 0; lvPoll(); } });
 map.on("zoomend", () => { if (LV.on) renderLive(); });
 let _rzT = null;
-window.addEventListener("resize", () => { if (LV.on) positionLivePanel(); clearTimeout(_rzT); _rzT = setTimeout(() => { const o = UI; computeUI(); if (o !== UI) render(); }, 150); });
+let _rzBand = window.innerWidth >= 900 ? 2 : window.innerWidth >= 700 ? 1 : 0;
+window.addEventListener("resize", () => {
+  if (LV.on) positionLivePanel();
+  clearTimeout(_rzT);
+  _rzT = setTimeout(() => {
+    const o = UI; computeUI();
+    const band = window.innerWidth >= 900 ? 2 : window.innerWidth >= 700 ? 1 : 0;
+    const crossed = band !== _rzBand; _rzBand = band;
+    const wChanged = window.innerWidth !== window._rzW; window._rzW = window.innerWidth;
+    if (S.focusedTheater && (wChanged || crossed)) {   // same as openTheater: fit now, then once more when settled
+      // (height-only changes, e.g. the iPhone toolbar or keyboard, keep the user's view)
+      render(); fitCardToSheet(); requestAnimationFrame(refitRegion);
+      clearTimeout(window._rzT2); window._rzT2 = setTimeout(() => { fitCardToSheet(); if (S.focusedTheater) refitRegion(); }, 900);
+    }   // card may have moved (bottom <-> left column)
+    else { if (crossed && S.imgW) map.fitBounds(L.latLngBounds([-S.imgH, 0], [0, S.imgW])); if (o !== UI || crossed) render(); }
+    fitCardToSheet();
+    if (LV.on) positionLivePanel();
+    positionBanner();
+  }, 150);
+});
 (async () => {
   // Served from the PC? Turn Live on by itself unless it was switched off here before.
   const pref = store.get("live", null);
@@ -1789,7 +2537,7 @@ window.addEventListener("resize", () => { if (LV.on) positionLivePanel(); clearT
   if (pref === false || ON_PAGES) return;
   try {
     const r = await fetch(LIVE_URL + "?_=" + Date.now(), { cache: "no-store" });
-    if (r.ok && (await r.json()).schema === "zoneheat-live/1") setLive(true, false);
+    if (r.ok && /^zoneheat-live\/[12]$/.test((await r.json()).schema)) setLive(true, false);
   } catch (e) { /* not on the PC */ }
 })();
 
