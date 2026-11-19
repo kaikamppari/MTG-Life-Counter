@@ -185,7 +185,7 @@ body.region-view #fabs { bottom: calc(128px + var(--safe-b) + var(--region-card-
 .rc-battle .meta { font: 600 10px/1.3 var(--mono); color: var(--muted); margin-top: 2px; }
 .rc-battle.on { border-color: var(--accent); background: rgba(212,163,92,.12); }
 .poi-label { position: absolute; left: 0; top: 0; transform: translate(-50%, -110%);
-  font: 600 9px/1.1 var(--display); letter-spacing: .06em; text-transform: uppercase;
+  font: 600 calc(9px * var(--ui, 1))/1.1 var(--display); letter-spacing: .06em; text-transform: uppercase;
   color: rgba(200, 196, 178, .42); text-shadow: 0 1px 2px rgba(0,0,0,.7);
   white-space: nowrap; pointer-events: none; }
 .leaflet-poi-pane { z-index: 450; pointer-events: none; }
@@ -195,9 +195,9 @@ body.region-view #fabs { bottom: calc(128px + var(--safe-b) + var(--region-card-
 .theater-mark svg { display: block; width: 100%; height: 100%; }
 .theater-label-ico { overflow: visible; background: none; border: 0; }
 .theater-name { position: absolute; left: 0; top: 0; transform: translate(-50%, 0);
-  font: 700 8.5px/1.15 var(--display); letter-spacing: .04em; height: 16px; box-sizing: border-box; line-height: 10px; text-transform: uppercase;
+  font: 700 calc(8.5px * var(--ui, 1))/1.15 var(--display); letter-spacing: .04em; height: calc(16px * var(--ui, 1)); box-sizing: border-box; line-height: calc(10px * var(--ui, 1)); text-transform: uppercase;
   color: var(--text); background: rgba(11,12,10,.82); border: 1px solid rgba(212,163,92,.4);
-  border-radius: 3px; padding: 2px 5px; white-space: nowrap; pointer-events: none; }
+  border-radius: 3px; padding: calc(2px * var(--ui, 1)) calc(5px * var(--ui, 1)); white-space: nowrap; pointer-events: none; }
 .lg-factions .outlined i, .chip.outlined i { box-shadow: 0 0 0 1px #FFD9C8; }
 
 .fight-mark { position: relative; width: 100%; height: 100%; filter: drop-shadow(0 0 2px rgba(0,0,0,.85)); }
@@ -269,6 +269,12 @@ body.live-mode .theater-name { opacity: .45 !important; }
 .fight-pop .live-tag { display: inline-block; font: 700 10px/1 var(--mono); letter-spacing: .12em; color: #fff; background: #c8352a;
   border-radius: 3px; padding: 3px 5px; margin-bottom: 5px; }
 .fight-pop .live-tag.ended { background: #4a4a40; }
+@media (min-width: 700px) {
+  #topbar, #filters, #fabs, #legend, #sheet, #btn-back, #live-panel { zoom: min(var(--ui, 1), 1.7); }
+}
+@media (min-width: 900px) {
+  #region-card { zoom: min(var(--ui, 1), 1.35); right: auto; width: 380px; top: 120px; bottom: 150px; max-height: none; }
+}
 </style>
 </head>
 <body>
@@ -749,8 +755,8 @@ function drawRegionPois(theater) {
 function battleIcon(sides, fielded, age, visualSize) {
   const counts = sides.map(s => Math.max(1, Number(s.fielded) || 1));
   const total = fielded || counts.reduce((a, b) => a + b, 0) || sides.length || 1;
-  const visual = visualSize || battleVisualSize(fielded, sides);
-  const size = Math.max(visual, 28);
+  const visual = Math.round((visualSize || battleVisualSize(fielded, sides)) * UI);
+  const size = Math.max(visual, Math.round(28 * UI));
   const r = 12, cx = 16, cy = 16;
   let acc = 0;
   const slices = [];
@@ -786,8 +792,8 @@ function inFocusedTheater(u, v) {
 }
 function regionFitOptions(animate) {
   return {
-    paddingTopLeft: [16, (typeof LV !== "undefined" && LV.on) ? Math.max(108, liveTopInset()) : 108],
-    paddingBottomRight: [16, 260],
+    paddingTopLeft: [window.innerWidth >= 900 ? Math.round(410 * Math.min(UI, 1.35)) + 20 : 16, (typeof LV !== "undefined" && LV.on) ? Math.max(108, liveTopInset()) : 108],
+    paddingBottomRight: [16, window.innerWidth >= 900 ? 160 : 260],
     maxZoom: 2.2,
     animate: animate !== false
   };
@@ -859,7 +865,7 @@ function theaterIcon(rec, now, visualOverride) {
   const counts = sides.map(s => Math.max(1, s.fielded || s.fights || 1));
   const total = rec.fielded || rec.fights || counts.reduce((a, b) => a + b, 0);
   const visual = visualOverride || theaterVisualSize(rec);
-  const size = Math.max(visual, 32);
+  const size = Math.max(visual, Math.round(32 * UI));
   const r = 12, cx = 16, cy = 16;
   let acc = 0, sum = counts.reduce((a, b) => a + b, 0), slices = [];
   sides.forEach((s, i) => {
@@ -1074,9 +1080,17 @@ function theaterWeight(rec) {
   // "how much fighting": fighters fielded plus extra weight for losses
   return Math.max(1, (rec.fielded || rec.fights || 1) + (rec.lost || 0));
 }
+let UI = 1;
+function computeUI() {
+  // phones stay at 1; big screens scale markers and names up so they don't shrink to specks
+  const v = Math.min(window.innerWidth, window.innerHeight * 1.15) / 420;
+  UI = Math.max(1, Math.min(2.4, v));
+  document.documentElement.style.setProperty("--ui", UI.toFixed(3));
+}
+computeUI();
 function theaterVisualSize(rec) {
   const frac = Math.sqrt(theaterWeight(rec)) / Math.sqrt(Math.max(THEATER_MAX, 1));
-  return Math.round(14 + Math.min(1, frac) * 22);
+  return Math.round((14 + Math.min(1, frac) * 22) * UI);
 }
 const SHORT_NAMES = { "Chornobyl NPP": "NPP", "Cement Factory": "Cement", "Cooling Towers": "Towers",
   "Chemical Plant": "Chem Plant", "Lesser Zone": "Lesser Zone", "Wild Island": "Wild Isl." };
@@ -1086,15 +1100,15 @@ function layoutTheaters(recs) {
   // to its region centre; its name goes beside it only if it fits cleanly.
   // Nothing (wheel or name) may overlap anything already placed.
   const scale = mapScale() * (S.scale || 1);
-  const gap = 3, lh = 16;
+  const gap = 3 * UI, lh = 16 * UI;
   const boxes = [];
   const hits = (b) => boxes.some(o => b.x0 < o.x1 + gap && b.x1 + gap > o.x0 && b.y0 < o.y1 + gap && b.y1 + gap > o.y0);
   const order = recs.slice().sort((a, b) => theaterWeight(b) - theaterWeight(a));
   const out = [];
   const spiral = (maxRad, fn) => {
     for (let k = 0; k < 80; k++) {
-      const rad = k === 0 ? 0 : 2 + k * 0.9;
-      if (rad > maxRad) return null;
+      const rad = k === 0 ? 0 : (2 + k * 0.9) * UI;
+      if (rad > maxRad * UI) return null;
       const ang = k * 2.399963229728653;
       const res = fn(rad * Math.cos(ang), rad * Math.sin(ang));
       if (res) return res;
@@ -1104,10 +1118,10 @@ function layoutTheaters(recs) {
   for (const rec of order) {
     const full = theaterVisualSize(rec);
     const cx0 = rec.theater.u * scale, cy0 = rec.theater.v * scale;
-    const lw = Math.round(shortName(rec.theater).length * 6.0 + 12);
+    const lw = Math.round((shortName(rec.theater).length * 6.0 + 12) * UI);
     let pick = null;
     // 1) wheel + label, shrinking the wheel a little if needed
-    for (let visual = full; visual >= Math.max(10, full - 14) && !pick; visual -= 2) {
+    for (let visual = full; visual >= Math.max(10 * UI, full - 14 * UI) && !pick; visual -= 2) {
       const r = visual / 2;
 const spots = [[0, r + 2 + lh / 2], [0, -(r + 2 + lh / 2)], [r + 3 + lw / 2, 0], [-(r + 3 + lw / 2), 0]];
       pick = spiral(16, (dx, dy) => {
@@ -1122,7 +1136,7 @@ const spots = [[0, r + 2 + lh / 2], [0, -(r + 2 + lh / 2)], [r + 3 + lw / 2, 0],
       });
     }
     // 2) wheel only (name shows when the region is tapped)
-    for (let visual = full; visual >= 10 && !pick; visual -= 2) {
+    for (let visual = full; visual >= 10 * UI && !pick; visual -= 2) {
       const r = visual / 2;
       pick = spiral(40, (dx, dy) => {
         const cx = cx0 + dx, cy = cy0 + dy;
@@ -1541,7 +1555,7 @@ function lvState(rec) {
 function lvSize(f, maxF) {
   const n = Math.max(1, f.fielded || 1);
   const k = Math.sqrt(Math.min(1, n / Math.max(12, maxF || 12)));
-  return Math.round(24 + 14 * k);
+  return Math.round((24 + 14 * k) * UI);
 }
 function lvIconHtml(f, size, ended) {
   const sides = (f.sides && f.sides.length) ? f.sides : [{ faction: "Unknown", fielded: 1 }];
@@ -1766,7 +1780,8 @@ function setLive(on, persist) {
 document.getElementById("btn-live").onclick = () => setLive(!LV.on, true);
 document.addEventListener("visibilitychange", () => { if (LV.on && document.visibilityState === "visible") lvPoll(); });
 map.on("zoomend", () => { if (LV.on) renderLive(); });
-window.addEventListener("resize", () => { if (LV.on) positionLivePanel(); });
+let _rzT = null;
+window.addEventListener("resize", () => { if (LV.on) positionLivePanel(); clearTimeout(_rzT); _rzT = setTimeout(() => { const o = UI; computeUI(); if (o !== UI) render(); }, 150); });
 (async () => {
   // Served from the PC? Turn Live on by itself unless it was switched off here before.
   const pref = store.get("live", null);
