@@ -53,6 +53,11 @@ html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text);
 .lg-heat { width: 34px; height: 8px; border-radius: 4px; background: linear-gradient(90deg, #3b0f70, #8c2981, #de4968, #fe9f6d, #fcfdbf); }
 .lg-ring { width: 13px; height: 13px; border-radius: 50%; border: 2px solid var(--text); margin: 0 10px; }
 .lg-ring.dashed { border-style: dashed; border-color: #ff7043; }
+.lg-dot { width: 9px; height: 9px; border-radius: 50%; border: 1px solid #111; background: #e2553f; margin: 0 12px 0 2px; flex: 0 0 9px; }
+#legend .lg-factions { display: flex; flex-wrap: wrap; gap: 3px 8px; margin-top: 5px; max-width: 180px; }
+#legend .lg-factions i { width: 8px; height: 8px; border-radius: 50%; border: 1px solid #111; display: inline-block; }
+#legend .lg-factions span { display: inline-flex; align-items: center; gap: 3px; font-size: 10px; }
+#legend .lg-note { margin-top: 4px; font-size: 10px; color: var(--accent); max-width: 180px; line-height: 1.3; }
 
 #sheet { position: fixed; left: 0; right: 0; bottom: 0; z-index: 900; background: var(--panel);
   border-top: 1px solid var(--line); border-radius: 16px 16px 0 0; max-height: 64vh;
@@ -139,6 +144,9 @@ h4 { margin: 10px 0 6px; font-size: 12px; letter-spacing: .08em; text-transform:
   <div class="lg-row"><span class="lg-heat"></span><span>fights &amp; deaths</span></div>
   <div class="lg-row"><span class="lg-ring"></span><span>group (count)</span></div>
   <div class="lg-row"><span class="lg-ring dashed"></span><span>mutant pack</span></div>
+  <div class="lg-row" id="lg-fights-row"><span class="lg-dot"></span><span>fights (by faction)</span></div>
+  <div class="lg-factions" id="lg-factions" hidden></div>
+  <div class="lg-note" id="lg-approx" hidden>Fight positions are approximate until the map is calibrated.</div>
 </div>
 
 <section id="sheet" class="collapsed">
@@ -158,6 +166,7 @@ h4 { margin: 10px 0 6px; font-size: 12px; letter-spacing: .08em; text-transform:
     <label class="row"><span>Conflict heat</span><input type="checkbox" data-layer="heat" checked></label>
     <label class="row"><span>Enemy groups</span><input type="checkbox" data-layer="groups" checked></label>
     <label class="row"><span>Single NPCs</span><input type="checkbox" data-layer="actors"></label>
+    <label class="row"><span>Fight dots</span><input type="checkbox" data-layer="fights" checked></label>
     <label class="row"><span>Hottest fronts</span><input type="checkbox" data-layer="fronts" checked></label>
     <label class="row"><span>Me + my trail</span><input type="checkbox" data-layer="player" checked></label>
     <div class="row"><span>Heat fades (half-life)</span>
@@ -227,8 +236,10 @@ const FACTION_COLORS = {
   Mercenaries: "#4a90d9", Ward: "#8fae3c", Scientists: "#26c6da", Spark: "#ffd54f", Noon: "#ab47bc",
   Corps: "#90a4ae", Scavengers: "#bcaaa4", Renegades: "#f06292", Mutants: "#ff7043", Unknown: "#bdbdbd"
 };
+const FACTION_ALIASES = { Neutrals: "Loners", Varta: "Ward", Militaries: "Ward", Military: "Ward" };
 function facColor(f) {
-  if (FACTION_COLORS[f]) return FACTION_COLORS[f];
+  const canon = FACTION_COLORS[f] ? f : (FACTION_ALIASES[f] || f);
+  if (FACTION_COLORS[canon]) return FACTION_COLORS[canon];
   let h = 0; for (const c of String(f)) h = (h * 31 + c.charCodeAt(0)) >>> 0;
   return `hsl(${h % 360} 55% 60%)`;
 }
@@ -293,7 +304,7 @@ const store = {
 };
 const S = {
   data: null, sourceLabel: "", isSample: false,
-  layers: store.get("layers", { heat: true, groups: true, actors: false, fronts: true, player: true }),
+  layers: Object.assign({ heat: true, groups: true, actors: false, fights: true, fronts: true, player: true }, store.get("layers", {})),
   windowIdx: store.get("win", WINDOW_STEPS_H.length - 1), halflife: store.get("hl", 0), gain: store.get("gain", 1),
   hidden: new Set(store.get("hidden", [])), auto: store.get("auto", true),
   picking: false, imgW: 0, imgH: 0, scale: 1, mapKey: ""
@@ -305,7 +316,7 @@ const S = {
 const map = L.map("map", { crs: L.CRS.Simple, minZoom: -6, maxZoom: 4, zoomSnap: 0.25, zoomDelta: 0.5,
   attributionControl: false, zoomControl: false, bounceAtZoomLimits: false, preferCanvas: true });
 const layer = { base: null, heat: null, groups: L.layerGroup().addTo(map), actors: L.layerGroup().addTo(map),
-  fronts: L.layerGroup().addTo(map), player: L.layerGroup().addTo(map), pick: L.layerGroup().addTo(map) };
+  fights: L.layerGroup().addTo(map), fronts: L.layerGroup().addTo(map), player: L.layerGroup().addTo(map), pick: L.layerGroup().addTo(map) };
 
 // data pixel (u right, v down) -> Leaflet latlng in image pixels
 const ll = (u, v) => L.latLng(-v * S.scale, u * S.scale);
@@ -454,6 +465,42 @@ function render() {
     }
   }
 
+  // --- fight dots (Zone Wanderers battle/losses, plus any other kind=fight)
+  layer.fights.clearLayers();
+  const fightFacs = [];
+  if (S.layers.fights) {
+    const seenFac = new Set();
+    for (const c of d.conflicts) {
+      if (c.kind !== "fight" || c.t < since || c.u == null || c.v == null || !visibleFac(c.factions)) continue;
+      const fac = (c.factions && c.factions[0]) || "Unknown";
+      const col = facColor(fac);
+      if (!seenFac.has(fac)) { seenFac.add(fac); fightFacs.push(fac); }
+      const sub = c.zw_event || "fight";
+      const when = c.t ? fmtAgo(now - c.t) + " ago" : "";
+      const approx = c.approximate || d.map.wanderers_approximate ? "<br><small>position approximate</small>" : "";
+      const rad = sub === "losses" ? 6 : 7;
+      layer.fights.addLayer(L.circleMarker(ll(c.u, c.v), {
+        radius: rad, color: "#111", weight: 1, fillColor: col, fillOpacity: 0.92, pane: "markerPane"
+      }).bindPopup(`<b style="color:${col}">${esc(fac)}</b> · ${esc(sub)}` +
+        `${c.activity ? " · " + esc(c.activity) : ""}<br>${esc(c.text || "")}` +
+        `${when ? "<br><small>first seen " + when + "</small>" : ""}${approx}`));
+    }
+  }
+  const facBox = document.getElementById("lg-factions");
+  const approxNote = document.getElementById("lg-approx");
+  const fightsRow = document.getElementById("lg-fights-row");
+  if (fightsRow) fightsRow.hidden = !S.layers.fights;
+  if (facBox) {
+    facBox.hidden = !S.layers.fights || !fightFacs.length;
+    const order = Object.keys(FACTION_COLORS);
+    fightFacs.sort((a, b) => ((order.indexOf(a) + 1 || 99) - (order.indexOf(b) + 1 || 99)) || a.localeCompare(b));
+    facBox.innerHTML = fightFacs.map(f => `<span><i style="background:${facColor(f)}"></i>${esc(f)}</span>`).join("");
+  }
+  if (approxNote) {
+    const nFights = d.conflicts.filter(c => c.kind === "fight").length;
+    approxNote.hidden = !S.layers.fights || !nFights || !d.map.wanderers_approximate;
+  }
+
   // --- fronts
   layer.fronts.clearLayers();
   if (S.layers.fronts) {
@@ -515,8 +562,9 @@ function updateStatus() {
   else setStatus("stale", `${d.setup || ""} · ${fmtAgo(age)} old`);
   document.getElementById("data-info").innerHTML =
     `Source: <b>${esc(S.sourceLabel)}</b><br>Generated ${d.generated ? new Date(d.generated * 1000).toLocaleString() : "?"} · setup ${esc(d.setup || "?")}<br>` +
-    `${d.conflicts.length} placed events, ${d.unplaced.length} without position, ${d.groups.length} groups<br>` +
-    `Map: ${S.realMap ? "your image" : "<b>placeholder</b> (set MAP_IMAGE_URL)"} · ${d.map.calibrated ? "calibrated" : "<b>not calibrated</b> - ZoneSensor positions hidden"}`;
+    `${d.conflicts.length} placed events (${d.conflicts.filter(c => c.kind === "fight").length} fights), ${d.unplaced.length} without position, ${d.groups.length} groups<br>` +
+    `Map: ${S.realMap ? "your image" : "<b>placeholder</b> (set MAP_IMAGE_URL)"} · ${d.map.calibrated ? "calibrated" : "<b>not calibrated</b> - ZoneSensor positions hidden"}` +
+    `${d.map.wanderers_approximate ? "<br>Fight coordinates are an <b>approximate</b> fit until you run calib-add." : ""}`;
 }
 
 function buildChips() {

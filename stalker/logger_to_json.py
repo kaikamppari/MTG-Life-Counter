@@ -11,6 +11,8 @@ Reads what the mods write and turns it into data.json for index.html:
     'front'/'hotspot' entries -> hottest fronts); log files are tailed line by line.
   * ZoneSensor (the UE4SS Lua mod): %LOCALAPPDATA%\\Stalker2\\Saved\\ZoneSensor_snap.jsonl
     -> NPC groups around you (clustered), your position/trail, and deaths it saw.
+  * Zone Wanderers events: %LOCALAPPDATA%\\Stalker2\\Saved\\ZoneWanderers_Events.txt
+     -> battle and losses lines (faction + map metres) become fight events.
 
 Writes data.json every 60 s (default). Never writes into the game or mod folders.
 
@@ -66,6 +68,7 @@ DEFAULTS = {
         "%LOCALAPPDATA%\\Stalker2\\Saved\\DLFR.log",
     ],
     "zonesensor_file": "%LOCALAPPDATA%\\Stalker2\\Saved\\ZoneSensor_snap.jsonl",
+    "wanderers_events_file": "%LOCALAPPDATA%\\Stalker2\\Saved\\ZoneWanderers_Events.txt",
     "discovery_extra_dirs": ["%LOCALAPPDATA%\\Stalker2\\Saved"],
     "locations_file": "locations.json",
     "calib_points_file": "calib_points.json",
@@ -109,6 +112,166 @@ DEFAULT_LOCATIONS = {
         ("Burnt Forest", []), ("Red Forest", []), ("Duga", []), ("Pripyat", ["Prypiat"]), ("SIRCAA", []),
         ("Chornobyl NPP", ["ChNPP", "Chernobyl NPP"])]},
 }
+
+
+# Approximate Zone Wanderers metres -> map pixels. THIS IS NOT A CALIBRATED FIT.
+# Reuses the two PDA landmarks already used in dlfr_regions.json (Pripyat, SIRCAA).
+# Wanderers logs distances in metres; those metres appear to share origin (0, 0)
+# with the DLFR cell grid at about 215 m per cell, with Y increasing south
+# (down on the PDA image). The 215 m figure comes from lining SIRCAA's grid
+# centroid up with a player position at the eastern compound; it will be wrong
+# at the edges until calib-add is run. Override any of these keys in
+# logger_config.json under "wanderers_map" to recalibrate later, in one place.
+# If calib_points.json has 3+ points, metres are converted to UE cm (*100) and
+# the affine world-to-pixel fit is used instead.
+DEFAULT_WANDERERS_MAP = {
+    "approximate": True,
+    "cell_size_m": 215.0,
+    "y_down": True,
+    "pripyat_grid": [12.588, 8.059],
+    "pripyat_px": [455.0, 175.0],
+    "sircaa_grid": [33.615, 26.615],
+    "sircaa_px": [1228.0, 710.0],
+    "sx_per_cell": 36.762,
+    "sy_per_cell": 28.83077,
+    "note": "Approximate axis-aligned linear map from Zone Wanderers metres to PDA-map pixels, via the DLFR grid. Replace by running calib-add, or edit wanderers_map in logger_config.json.",
+}
+
+WANDERERS_FIGHT_KINDS = {"battle", "losses"}
+
+
+def wanderers_map(cfg) -> dict:
+    wm = dict(DEFAULT_WANDERERS_MAP)
+    user = cfg.get("wanderers_map") or {}
+    if isinstance(user, dict):
+        wm.update({k: v for k, v in user.items() if not str(k).startswith("_")})
+    return wm
+
+
+def wanderers_to_pixel(cfg, x, y, affine=None):
+    """Map Zone Wanderers metres to map pixels (u right, v down).
+
+    Prefer the calibrated affine (world cm) when 3+ calib points exist.
+    Otherwise use the approximate linear map in wanderers_map().
+    """
+    if affine:
+        return apply_affine(affine, float(x) * 100.0, float(y) * 100.0)
+    wm = wanderers_map(cfg)
+    cs = float(wm["cell_size_m"])
+    gx, gy = float(x) / cs, float(y) / cs
+    pg, pp = wm["pripyat_grid"], wm["pripyat_px"]
+    u = float(pp[0]) + float(wm["sx_per_cell"]) * (gx - float(pg[0]))
+    v = float(pp[1]) + float(wm["sy_per_cell"]) * (gy - float(pg[1]))
+    return u, v
+
+
+def parse_wanderers_events(path: Path) -> list:
+    """Parse ZoneWanderers_Events.txt into session-aware records.
+
+    Line format: id|event|groupId|Faction|X|Y|activity
+    IDs restart at 1 on a new game / save / logger reset, and earlier
+    sessions stay in the file, so the id alone is not unique. A new
+    session starts whenever the id goes down. session_key is a hash of
+    that session's first line (stable if the file is only appended).
+    """
+    if not path.exists():
+        return []
+    try:
+        raw = read_text(path)
+    except OSError:
+        return []
+    records = []
+    session_key = None
+    prev_id = None
+    for line in raw.splitlines():
+        s = line.strip()
+        if not s or s.startswith("#"):
+            continue
+        parts = s.split("|")
+        if len(parts) < 7:
+            continue
+        try:
+            eid = int(parts[0])
+            x = float(parts[4])
+            y = float(parts[5])
+        except (TypeError, ValueError):
+            continue
+        kind = parts[1].strip()
+        group = parts[2].strip()
+        faction = parts[3].strip()
+        activity = parts[6].strip()
+        if prev_id is None or eid < prev_id:
+            session_key = hashlib.sha1(s.encode("utf-8")).hexdigest()[:12]
+        prev_id = eid
+        records.append({
+            "eid": eid,
+            "kind": kind,
+            "group": group,
+            "faction": faction,
+            "x": x,
+            "y": y,
+            "activity": activity,
+            "session_key": session_key,
+            "raw": s,
+        })
+    return records
+
+
+def wanderers_ingest(cfg, reader: "DLFRReader"):
+    """Turn battle/losses events into fight records and append new ones to history."""
+    path = expand(cfg.get("wanderers_events_file") or DEFAULTS["wanderers_events_file"])
+    recs = parse_wanderers_events(path)
+    if not recs:
+        return []
+    lex = make_lexicon(cfg)
+    now = time.time()
+    seen_path = cfg["_state"] / "wanderers_seen.json"
+    try:
+        seen = json.loads(seen_path.read_text(encoding="utf-8")) if seen_path.exists() else {}
+    except (OSError, json.JSONDecodeError):
+        seen = {}
+    first_seen = seen.get("first_seen") or {}
+    events = []
+    for r in recs:
+        if r["kind"] not in WANDERERS_FIGHT_KINDS:
+            continue
+        key = f"zw:{r['session_key']}:{r['eid']}"
+        if key in first_seen:
+            t = float(first_seen[key])
+        else:
+            t = now
+            first_seen[key] = t
+        facs = lex.factions_in(r["faction"]) or ([r["faction"]] if r["faction"] else ["Unknown"])
+        dead = 1 if r["kind"] == "losses" else 0
+        weight = 0.7 if r["kind"] == "losses" else 1.0
+        act = r["activity"] or "unknown"
+        text = f"{facs[0]} {r['kind']} ({act})"
+        events.append({
+            "id": key,
+            "t": round(t, 1),
+            "setup": cfg["setup"],
+            "source": "ZoneWanderers",
+            "kind": "fight",
+            "factions": facs,
+            "location": None,
+            "x": r["x"],
+            "y": r["y"],
+            "coord_space": "wanderers_m",
+            "dead": dead,
+            "weight": weight,
+            "text": text[:240],
+            "zw_event": r["kind"],
+            "activity": act,
+            "group_id": r["group"],
+            "approximate": True,
+        })
+    seen["first_seen"] = first_seen
+    if len(first_seen) > 20000:
+        keep = sorted(first_seen.items(), key=lambda kv: kv[1])[-15000:]
+        seen["first_seen"] = dict(keep)
+    write_json_atomic(seen_path, seen)
+    return reader.add_events(events)
+
 
 DEATH_WORDS = {"death", "deaths", "dead", "died", "dies", "killed", "kill", "kills", "casualty", "casualties",
                "loss", "losses", "lost", "victims", "fallen", "slain"}
@@ -1138,7 +1301,9 @@ def build_data(cfg, snaps) -> dict:
         wars[pair]["events"] += 1
         wars[pair]["last"] = max(wars[pair]["last"], t)
         uv = None
-        if e.get("x") is not None and e.get("y") is not None and m:
+        if e.get("x") is not None and e.get("y") is not None and e.get("coord_space") == "wanderers_m":
+            uv = wanderers_to_pixel(cfg, e["x"], e["y"], m)
+        elif e.get("x") is not None and e.get("y") is not None and m:
             uv = apply_affine(m, float(e["x"]), float(e["y"]))
         elif e.get("location") and loc_px(e["location"]):
             px = loc_px(e["location"])
@@ -1149,6 +1314,12 @@ def build_data(cfg, snaps) -> dict:
             uv = (float(e["u_hint"]) + dx, float(e["v_hint"]) + dy)
         row = {"t": round(t, 1), "kind": e.get("kind", "fight"), "factions": facs, "location": e.get("location"),
                "dead": int(e.get("dead") or 0), "text": (e.get("text") or "")[:160], "source": e.get("source")}
+        if e.get("zw_event"):
+            row["zw_event"] = e["zw_event"]
+        if e.get("activity"):
+            row["activity"] = e["activity"]
+        if e.get("approximate"):
+            row["approximate"] = True
         if uv:
             row.update(u=round(uv[0], 1), v=round(uv[1], 1), w=float(e.get("weight") or 1.0))
             conflicts.append(row)
@@ -1187,7 +1358,9 @@ def build_data(cfg, snaps) -> dict:
         "setup": cfg["setup"],
         "map": {"width": w, "height": h, "calibrated": bool(m),
                 "pixels_per_meter": round(pixels_per_meter(m), 5) if m else None,
-                "labels": {k: v["pixel"][:2] for k, v in locs.items() if v.get("pixel")}},
+                "labels": {k: v["pixel"][:2] for k, v in locs.items() if v.get("pixel")},
+                "wanderers_approximate": not bool(m),
+                "wanderers_note": (None if m else wanderers_map(cfg).get("note"))},
         "conflicts": conflicts,
         "groups": groups,
         "groups_t": groups_t,
@@ -1202,7 +1375,7 @@ def build_data(cfg, snaps) -> dict:
 
 def git_push(out: Path):
     repo = out.parent
-    kw = {"cwd": str(repo), "capture_output": True, "text": True, "timeout": 120}
+    kw = {"cwd": str(repo), "capture_output": True, "text": True, "timeout": 180}
     if os.name == "nt":
         kw["creationflags"] = 0x08000000  # CREATE_NO_WINDOW
     if not shutil.which("git"):
@@ -1228,25 +1401,30 @@ def git_push(out: Path):
 def update_once(cfg, reader: DLFRReader, verbose=True):
     new = reader.poll()
     snaps, zs_new = zonesensor_ingest(cfg, reader)
+    zw_new = wanderers_ingest(cfg, reader)
     data = build_data(cfg, snaps)
     out = expand(cfg["output"])
     write_json_atomic(out, data, compact=True)
     if verbose:
         stamp = datetime.now().strftime("%H:%M:%S")
-        for e in (new + zs_new)[:8]:
+        for e in (new + zs_new + zw_new)[:8]:
             print(f"[{stamp}]   + {e['kind']:10} {'/'.join(e['factions']) or '?':22} {e.get('location') or '-':16} "
                   f"dead={e['dead']}  {e['text'][:60]}")
+        fights = sum(1 for c in data["conflicts"] if c.get("kind") == "fight" and c.get("source") == "ZoneWanderers")
         print(f"[{stamp}] data.json: {len(data['conflicts'])} placed / {len(data['unplaced'])} unplaced events, "
-              f"{len(data['groups'])} groups, {len(data['fronts'])} fronts"
-              + ("" if data["map"]["calibrated"] else " (map not calibrated yet)"))
+              f"{fights} wanderers fights, {len(data['groups'])} groups, {len(data['fronts'])} fronts"
+              + ("" if data["map"]["calibrated"] else " (map not calibrated yet)")
+              + (" (fight positions approximate)" if data["map"].get("wanderers_approximate") and fights else ""))
     return out
 
 
 def cmd_run(cfg, once=False, push_every=0.0):
     reader = DLFRReader(cfg)
     files = reader.files()
+    zw = expand(cfg.get("wanderers_events_file") or DEFAULTS["wanderers_events_file"])
     print(f"Setup '{cfg['setup']}': {len(files)} DLFR file(s) found; ZoneSensor file "
-          f"{'found' if expand(cfg['zonesensor_file']).exists() else 'not found yet'}; output {expand(cfg['output'])}")
+          f"{'found' if expand(cfg['zonesensor_file']).exists() else 'not found yet'}; "
+          f"Wanderers events {'found' if zw.exists() else 'not found yet'}; output {expand(cfg['output'])}")
     if not files:
         print("  No DLFR files yet - run 'python logger_to_json.py discover' after playing a few minutes with DLFR.")
     if push_every and push_every < 6:

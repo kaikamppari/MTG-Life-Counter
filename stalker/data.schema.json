@@ -21,7 +21,9 @@
         "labels": {
           "type": "object", "description": "place name -> [u, v]; drawn on the placeholder map",
           "additionalProperties": { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2 }
-        }
+        },
+        "wanderers_approximate": { "type": "boolean", "description": "true when fight dots use the approximate metres-to-pixel map (no calib-add yet)" },
+        "wanderers_note": { "type": ["string", "null"], "description": "how the approximate fight mapping was built; null when calibrated" }
       }
     },
     "conflicts": {
@@ -39,7 +41,10 @@
           "location": { "type": ["string", "null"] },
           "dead": { "type": "integer", "minimum": 0 },
           "text": { "type": "string" },
-          "source": { "type": ["string", "null"] }
+          "source": { "type": ["string", "null"] },
+          "zw_event": { "enum": ["battle", "losses"], "description": "Zone Wanderers event type when source is ZoneWanderers" },
+          "activity": { "type": "string", "description": "wanderers activity at the time of the fight, e.g. roam" },
+          "approximate": { "type": "boolean", "description": "true when u/v came from the approximate wanderers map" }
         }
       }
     },
