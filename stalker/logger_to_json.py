@@ -20,6 +20,8 @@ Writes data.json every 60 s (default). Never writes into the game or mod folders
 COMMANDS (PowerShell, run from the folder with this script):
   python logger_to_json.py                     # run: update data.json every 60 s (Ctrl+C stops)
   python logger_to_json.py run --push-every 10 # also git-push data.json to GitHub Pages every 10 min
+  python logger_to_json.py run --push-every 10 --serve 8787   # ...and serve the map + live view on home Wi-Fi
+  python logger_to_json.py serve               # only the Wi-Fi server (http://<PC-IP>:8787/)
   python logger_to_json.py once                # one update, then exit
   python logger_to_json.py discover            # Phase 0: report what DLFR/mods write (discovery_report.md)
   python logger_to_json.py discover --watch 600   # ...and watch the files for 10 min while you play
@@ -1790,8 +1792,10 @@ def update_once(cfg, reader: DLFRReader, verbose=True):
     return out
 
 
-def cmd_run(cfg, once=False, push_every=0.0):
+def cmd_run(cfg, once=False, push_every=0.0, serve=0, serve_dir=None):
     reader = DLFRReader(cfg)
+    if serve and not once:
+        start_live_server(cfg, serve, serve_dir)
     files = reader.files()
     zw = expand(cfg.get("wanderers_events_file") or DEFAULTS["wanderers_events_file"])
     zwlog = expand(cfg.get("wanderers_log_file") or DEFAULTS["wanderers_log_file"])
@@ -1816,6 +1820,593 @@ def cmd_run(cfg, once=False, push_every=0.0):
         if once:
             return
         time.sleep(float(cfg["interval_seconds"]))
+
+
+# =============================================================================
+# live view: tail the Zone Wanderers files and serve /live.json over home Wi-Fi
+# =============================================================================
+
+LIVE_ACTIVE_S = 180      # a fight counts as "active" this long after its last clash/loss line
+LIVE_WINDOW_S = 300      # ended fights stay in live.json this long (the page fades them out)
+LIVE_GROUP_MAX_AGE_S = 1800
+LIVE_CACHE_S = 2.0
+LIVE_SERVE_EXT = {".html", ".htm", ".json", ".jpg", ".jpeg", ".png", ".webp", ".gif", ".svg", ".ico",
+                  ".js", ".css", ".txt", ".webmanifest"}
+
+
+class _Tail:
+    """Incremental reader for an append-only log.
+
+    First open seeks to the last `backfill` bytes (no full reread of a big file).
+    Afterwards only new bytes are read. Truncation (size smaller than our offset)
+    or replacement (different file id) restarts from the top of the new file.
+    A missing file just returns nothing. Partial last lines are held back until
+    their newline arrives. UTF-8 and UTF-16 LE (BOM) are handled.
+    """
+
+    def __init__(self, path: Path, backfill=512 * 1024, max_read=8 * 1024 * 1024):
+        self.path = Path(path)
+        self.backfill = backfill
+        self.max_read = max_read
+        self.pos = None
+        self.ident = None
+        self.buf = b""
+        self.utf16 = False
+        self.mtime = None
+        self.size = 0
+        self.head = b""     # first bytes of the file (a rewrite changes them)
+        self.mark = b""     # the last bytes we consumed (an in-place rewrite changes them)
+
+    def _ident(self, st):
+        return (getattr(st, "st_ino", 0), getattr(st, "st_dev", 0))
+
+    def read_new(self):
+        """Return (lines, reset). reset=True when the file was (re)opened from scratch."""
+        try:
+            st = os.stat(self.path)
+        except OSError:
+            return [], False
+        self.mtime, self.size = st.st_mtime, st.st_size
+        ident = self._ident(st)
+        reset = False
+        skip_partial = False
+        rewritten = False
+        if self.pos is not None and ident == self.ident and st.st_size >= self.pos:
+            try:
+                with open(self.path, "rb") as f:
+                    head = f.read(len(self.head)) if self.head else b""
+                    mark = b""
+                    if self.mark:
+                        f.seek(max(0, self.pos - len(self.mark)))
+                        mark = f.read(len(self.mark))
+                rewritten = (self.head and head != self.head) or (self.mark and mark != self.mark)
+            except OSError:
+                return [], False
+        if self.pos is None or ident != self.ident or st.st_size < self.pos or rewritten:
+            first = self.pos is None
+            reset = True
+            self.ident = ident
+            self.buf = b""
+            try:
+                with open(self.path, "rb") as f:
+                    self.head = f.read(64)
+            except OSError:
+                return [], False
+            head = self.head[:4]
+            self.utf16 = head.startswith(b"\xff\xfe") or (len(head) >= 4 and head[1] == 0 and head[3] == 0)
+            start = max(0, st.st_size - self.backfill) if (first or st.st_size > self.backfill) else 0
+            if self.utf16:
+                start -= start % 2
+                start = max(start, 2 if head.startswith(b"\xff\xfe") else 0)
+            elif start == 0 and head.startswith(b"\xef\xbb\xbf"):
+                start = 3
+            skip_partial = start > 3
+            self.pos = start
+        if st.st_size == self.pos:
+            return [], reset
+        try:
+            with open(self.path, "rb") as f:
+                f.seek(self.pos)
+                data = f.read(min(st.st_size - self.pos, self.max_read))
+        except OSError:
+            return [], reset
+        self.pos += len(data)
+        self.mark = data[-32:]
+        data = self.buf + data
+        if self.utf16:
+            if len(data) % 2:
+                data, self.buf = data[:-1], data[-1:]
+            else:
+                self.buf = b""
+            text = data.decode("utf-16-le", errors="replace")
+            nl = text.rfind("\n")
+            if nl < 0:
+                self.buf = data + self.buf
+                return [], reset
+            rest = text[nl + 1:]
+            self.buf = rest.encode("utf-16-le") + self.buf
+            lines = text[:nl].split("\n")
+        else:
+            nl = data.rfind(b"\n")
+            if nl < 0:
+                self.buf = data
+                return [], reset
+            self.buf = data[nl + 1:]
+            lines = [l.decode("utf-8", errors="replace") for l in data[:nl].split(b"\n")]
+        if skip_partial and lines:
+            lines = lines[1:]
+        return [l.rstrip("\r") for l in lines], reset
+
+
+def _scan_last_header(path: Path, marker=b"ZoneWanderersAsi start", chunk=1024 * 1024, limit=64 * 1024 * 1024):
+    """Find the newest session header by reading backwards in chunks (one-time, on open)."""
+    try:
+        size = os.path.getsize(path)
+        with open(path, "rb") as f:
+            end = size
+            carry = b""
+            while end > 0 and size - end < limit:
+                start = max(0, end - chunk)
+                f.seek(start)
+                block = f.read(end - start) + carry
+                i = block.rfind(marker)
+                if i < 0:
+                    i16 = block.rfind(marker.decode().encode("utf-16-le"))
+                    if i16 >= 0:
+                        seg = block[max(0, i16 - 20):i16 + 120].decode("utf-16-le", errors="ignore")
+                        m = re.search(r"start (\d{2}\.\d{2}\.\d{4} \d{2}:\d{2}:\d{2})", seg)
+                        if m:
+                            return datetime.strptime(m.group(1), "%d.%m.%Y %H:%M:%S")
+                else:
+                    seg = block[i:i + 60].decode("utf-8", errors="ignore")
+                    m = re.search(r"start (\d{2}\.\d{2}\.\d{4} \d{2}:\d{2}:\d{2})", seg)
+                    if m:
+                        return datetime.strptime(m.group(1), "%d.%m.%Y %H:%M:%S")
+                carry = block[:200]
+                end = start
+    except OSError:
+        pass
+    return None
+
+
+def lan_ip() -> str:
+    import socket
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("192.168.255.255", 1))  # no packet is sent; picks the LAN interface
+        ip = s.getsockname()[0]
+        s.close()
+        return ip
+    except OSError:
+        return "127.0.0.1"
+
+
+class LiveTracker:
+    """Keeps a short rolling picture of current Zone Wanderers fights and group positions."""
+
+    def __init__(self, cfg, active_s=LIVE_ACTIVE_S, window_s=LIVE_WINDOW_S, serve_dir: Path | None = None):
+        import threading
+        from collections import deque
+        self.cfg = cfg
+        self.lex = make_lexicon(cfg)
+        self.active_s = float(active_s)
+        self.window_s = float(window_s)
+        self.cluster_m = float(cfg.get("battle_cluster_m") or DEFAULTS["battle_cluster_m"])
+        self.cluster_s = float(cfg.get("battle_cluster_s") or DEFAULTS["battle_cluster_s"])
+        self.ev_path = expand(cfg.get("wanderers_events_file") or DEFAULTS["wanderers_events_file"])
+        self.log_path = expand(cfg.get("wanderers_log_file") or DEFAULTS["wanderers_log_file"])
+        self.ev_tail = _Tail(self.ev_path, backfill=256 * 1024)
+        self.log_tail = _Tail(self.log_path, backfill=1024 * 1024)
+        self.m, _ = calibration(cfg)
+        self.ppm = pixels_per_meter(self.m) if self.m else 0.175
+        (self.map_w, self.map_h), _ = map_size(cfg)
+        self.pois = []
+        for cand in [serve_dir / "pois.json" if serve_dir else None, HERE / "pois.json"]:
+            if cand and cand.exists():
+                try:
+                    self.pois = [p for p in json.loads(cand.read_text(encoding="utf-8")).get("pois", [])
+                                 if p.get("u") is not None and p.get("name")]
+                    break
+                except (OSError, ValueError, AttributeError):
+                    pass
+        self.lock = threading.Lock()
+        self.cache_t = 0.0
+        self.cache = None
+        keep = int(self.window_s + self.cluster_s * 3 + 600)
+        self.keep_s = keep
+        self.clashes = deque(maxlen=5000)
+        self.losses = deque(maxlen=10000)
+        self.setoff = {}      # gid -> (t, fx, fy, tx, ty, faction, n)
+        self.arrived = {}     # gid -> (t, x, y)
+        self.ev_rows = deque(maxlen=4000)   # recent Events.txt rows (file order)
+        self.ev_group = {}    # gid -> latest row
+        self.prev_eid = None
+        self.session_start = None   # epoch of the newest Asi header
+
+    # ---- time helpers --------------------------------------------------
+    def _line_time(self, hms: str, now: float) -> float | None:
+        try:
+            h, mi, s = map(int, hms.split(":"))
+        except ValueError:
+            return None
+        today = datetime.fromtimestamp(now)
+        dt = today.replace(hour=h, minute=mi, second=s, microsecond=0)
+        t = dt.timestamp()
+        if t > now + 300:
+            t -= 86400
+        return t
+
+    # ---- ingest --------------------------------------------------------
+    def _ingest_log(self, now):
+        lines, reset = self.log_tail.read_new()
+        if reset:
+            self.clashes.clear()
+            self.losses.clear()
+            self.setoff.clear()
+            self.arrived.clear()
+            hdr = _scan_last_header(self.log_path)
+            self.session_start = hdr.timestamp() if hdr else None
+        for ln in lines:
+            mh = ZW_HEADER_RE.match(ln)
+            if mh:
+                try:
+                    self.session_start = datetime.strptime(mh.group(1), "%d.%m.%Y %H:%M:%S").timestamp()
+                except ValueError:
+                    pass
+                continue
+            if len(ln) < 10 or ln[2] != ":":
+                continue
+            t = self._line_time(ln[:8], now)
+            if t is None:
+                continue
+            if self.session_start and t < self.session_start - 60:
+                continue  # line from an older session (or a misdated one) - not live
+            m = ZW_CLASH_RE.match(ln)
+            if m:
+                self.clashes.append({"t": t, "dt": datetime.fromtimestamp(t), "a": m["a"], "af": m["af"],
+                                     "an": int(m["an"]), "b": m["b"], "bf": m["bf"], "bn": int(m["bn"])})
+                continue
+            m = ZW_LOST_RE.match(ln)
+            if m:
+                L = {"t": t, "id": m["id"], "faction": m["f"], "lost": int(m["lost"]), "of": int(m["of"]),
+                     "why": m["why"]}
+                self.losses.append(L)
+                if L["lost"] >= L["of"]:
+                    self.setoff.pop(m["id"], None)
+                    self.arrived.pop(m["id"], None)
+                continue
+            m = ZW_SETOFF_RE.match(ln)
+            if m:
+                self.setoff[m["id"]] = (t, float(m["fx"]), float(m["fy"]), float(m["tx"]), float(m["ty"]),
+                                        m["f"], int(m["n"]))
+                self.arrived.pop(m["id"], None)
+                continue
+            m = ZW_ARRIV_RE.match(ln)
+            if m:
+                self.arrived[m["id"]] = (t, float(m["x"]), float(m["y"]))
+        cut = now - self.keep_s
+        while self.clashes and self.clashes[0]["t"] < cut:
+            self.clashes.popleft()
+        while self.losses and self.losses[0]["t"] < cut:
+            self.losses.popleft()
+
+    def _ingest_events(self, now):
+        lines, reset = self.ev_tail.read_new()
+        first_fill = reset
+        if reset:
+            self.ev_rows.clear()
+            self.ev_group.clear()
+            self.prev_eid = None
+        for ln in lines:
+            s = ln.strip()
+            if not s or s.startswith("#"):
+                continue
+            p = s.split("|")
+            if len(p) < 7:
+                continue
+            try:
+                eid = int(p[0])
+                x = float(p[4])
+                y = float(p[5])
+            except ValueError:
+                continue
+            if self.prev_eid is not None and eid < self.prev_eid:
+                # new game session: positions from the old one no longer apply
+                self.ev_rows.clear()
+                self.ev_group.clear()
+            self.prev_eid = eid
+            row = {"eid": eid, "kind": p[1].strip(), "gid": p[2].strip(), "faction": p[3].strip(),
+                   "x": x, "y": y, "act": p[6].strip(), "seen": None if first_fill else now}
+            self.ev_rows.append(row)
+            self.ev_group[row["gid"]] = row
+
+    # ---- positions -----------------------------------------------------
+    def _group_pos(self, gid, at):
+        """Best estimate of a group's position at time `at` (epoch), metres."""
+        so = self.setoff.get(gid)
+        ar = self.arrived.get(gid)
+        if ar and (not so or ar[0] >= so[0]) and ar[0] <= at + 5:
+            return ar[1], ar[2]
+        if so and so[0] <= at + 5:
+            t0, fx, fy, tx, ty = so[:5]
+            dist = math.hypot(tx - fx, ty - fy)
+            if dist <= 0:
+                return fx, fy
+            travel = min(dist, ZW_SPEED_MPS * max(0.0, at - t0))
+            return fx + (tx - fx) * travel / dist, fy + (ty - fy) * travel / dist
+        r = self.ev_group.get(gid)
+        if r:
+            return r["x"], r["y"]
+        return None
+
+    def _event_pos(self, c):
+        """Events.txt battle/losses row for this clash's groups (newest first, time-plausible)."""
+        ids = {c["a"], c["b"]}
+        for r in reversed(self.ev_rows):
+            if r["kind"] not in WANDERERS_FIGHT_KINDS or r["gid"] not in ids:
+                continue
+            if r["seen"] is not None and abs(r["seen"] - c["t"]) > 150:
+                continue
+            return r["x"], r["y"]
+        return None
+
+    def _uv(self, x, y):
+        u, v = wanderers_to_pixel(self.cfg, x, y, self.m)
+        return round(u, 1), round(v, 1)
+
+    def _poi(self, u, v):
+        best, bd = None, float("inf")
+        for p in self.pois:
+            d = math.hypot(u - float(p["u"]), v - float(p["v"]))
+            if d < bd:
+                best, bd = p, d
+        if not best:
+            return None
+        return {"name": best["name"], "dist_m": round(bd / self.ppm), "theater": best.get("theater")}
+
+    def _cluster(self, cs, pts):
+        """Live grouping: the same groups still trading fire (gaps up to active_s) stay one
+        fight; different groups merge only when close in space and time (battle_cluster_*)."""
+        n = len(cs)
+        parent = list(range(n))
+
+        def find(i):
+            while parent[i] != i:
+                parent[i] = parent[parent[i]]
+                i = parent[i]
+            return i
+
+        for i in range(n):
+            for j in range(i + 1, n):
+                gap = abs(cs[j]["t"] - cs[i]["t"])
+                same = bool({cs[i]["a"], cs[i]["b"]} & {cs[j]["a"], cs[j]["b"]})
+                near = (pts[i] and pts[j] and gap <= self.cluster_s and
+                        math.hypot(pts[i][0] - pts[j][0], pts[i][1] - pts[j][1]) <= self.cluster_m)
+                if (same and gap <= self.active_s) or near:
+                    ri, rj = find(i), find(j)
+                    if ri != rj:
+                        parent[rj] = ri
+        out = defaultdict(list)
+        for i in range(n):
+            out[find(i)].append(i)
+        return list(out.values())
+
+    # ---- build ---------------------------------------------------------
+    def build(self, now=None):
+        now = time.time() if now is None else now
+        self._ingest_log(now)
+        self._ingest_events(now)
+        horizon = now - (self.window_s + self.cluster_s * 2)
+        recent = [c for c in self.clashes if c["t"] >= horizon]
+        pts = []
+        for c in recent:
+            p = self._event_pos(c)
+            src = "events"
+            if not p:
+                g = [q for q in (self._group_pos(c["a"], c["t"]), self._group_pos(c["b"], c["t"])) if q]
+                p = (sum(q[0] for q in g) / len(g), sum(q[1] for q in g) / len(g)) if g else None
+                src = "group_position" if p else None
+            c["xy"], c["pos_source"] = p, src
+            pts.append(p)
+        fights = []
+        for members in self._cluster(recent, pts):
+            cs = [recent[i] for i in members]
+            start = min(c["t"] for c in cs)
+            last = max(c["t"] for c in cs)
+            gids = {}
+            for c in cs:
+                for gid, fac, n in ((c["a"], c["af"], c["an"]), (c["b"], c["bf"], c["bn"])):
+                    rec = gids.setdefault(gid, {"faction": fac, "fielded": n, "lost": 0})
+                    rec["fielded"] = max(rec["fielded"], n)
+            for L in self.losses:
+                if L["why"] != "battle" or L["id"] not in gids:
+                    continue
+                if start - 5 <= L["t"] <= last + self.cluster_s:
+                    rec = gids[L["id"]]
+                    rec["lost"] += L["lost"]
+                    rec["fielded"] = max(rec["fielded"], L["of"])
+                    last = max(last, L["t"])
+            age = now - last
+            if age > self.window_s:
+                continue
+            xy = [c["xy"] for c in cs if c["xy"]]
+            by_fac = {}
+            for g in gids.values():
+                name = _zw_canon(self.lex, g["faction"])
+                b = by_fac.setdefault(name, {"faction": name, "fielded": 0, "lost": 0, "groups": 0})
+                b["fielded"] += g["fielded"]
+                b["lost"] += min(g["lost"], g["fielded"])
+                b["groups"] += 1
+            sides = sorted(by_fac.values(), key=lambda s: -s["fielded"])
+            first = min(cs, key=lambda c: c["t"])
+            f = {
+                "id": f"live:{int(first['t'])}:{'-'.join(sorted((first['a'], first['b'])))}",
+                "start": round(start, 1), "last": round(last, 1),
+                "age_s": round(age, 1), "elapsed_s": round(now - start, 1),
+                "active": age <= self.active_s,
+                "sides": sides,
+                "fielded": sum(s["fielded"] for s in sides),
+                "lost": sum(s["lost"] for s in sides),
+                "clashes": len(cs),
+                "text": " vs ".join(f"{s['faction']} {s['fielded']}" for s in sides),
+            }
+            if xy:
+                x = sum(p[0] for p in xy) / len(xy)
+                y = sum(p[1] for p in xy) / len(xy)
+                u, v = self._uv(x, y)
+                f.update(x=round(x, 1), y=round(y, 1), u=u, v=v,
+                         pos_source="events" if any(c["pos_source"] == "events" for c in cs) else "group_position")
+                poi = self._poi(u, v)
+                if poi:
+                    f["near"] = poi
+            fights.append(f)
+        fights.sort(key=lambda f: (not f["active"], -f["last"]))
+
+        groups = []
+        for gid in set(self.setoff) | set(self.arrived) | set(self.ev_group):
+            so, ar, er = self.setoff.get(gid), self.arrived.get(gid), self.ev_group.get(gid)
+            t_known = max([q for q in (so[0] if so else None, ar[0] if ar else None,
+                                       er["seen"] if er else None) if q is not None], default=None)
+            if t_known is None or now - t_known > LIVE_GROUP_MAX_AGE_S:
+                continue
+            p = self._group_pos(gid, now)
+            if not p:
+                continue
+            u, v = self._uv(*p)
+            fac = (so[5] if so else None) or (er["faction"] if er else None) or "Unknown"
+            moving = bool(so and (not ar or so[0] > ar[0]) and
+                          ZW_SPEED_MPS * (now - so[0]) < math.hypot(so[3] - so[1], so[4] - so[2]))
+            groups.append({"id": gid, "faction": _zw_canon(self.lex, fac), "n": so[6] if so else None,
+                           "u": u, "v": v, "moving": moving, "age_s": round(now - t_known)})
+        groups.sort(key=lambda g: g["age_s"])
+        log_age = (now - self.log_tail.mtime) if self.log_tail.mtime else None
+        ev_age = (now - self.ev_tail.mtime) if self.ev_tail.mtime else None
+        ages = [a for a in (log_age, ev_age) if a is not None]
+        return {
+            "schema": "zoneheat-live/1",
+            "now": round(now, 1),
+            "setup": self.cfg.get("setup"),
+            "active_s": self.active_s,
+            "window_s": self.window_s,
+            "files": {"log_found": self.log_tail.mtime is not None, "events_found": self.ev_tail.mtime is not None,
+                      "log_age_s": None if log_age is None else round(log_age),
+                      "events_age_s": None if ev_age is None else round(ev_age)},
+            "game_active": bool(ages) and min(ages) < 600,
+            "map": {"width": self.map_w, "height": self.map_h, "calibrated": bool(self.m)},
+            "fights": fights,
+            "groups": groups[:400],
+        }
+
+    def snapshot_bytes(self) -> bytes:
+        with self.lock:
+            now = time.time()
+            if self.cache is None or now - self.cache_t >= LIVE_CACHE_S:
+                try:
+                    data = self.build(now)
+                except Exception as e:  # never take the server down over a parse problem
+                    data = {"schema": "zoneheat-live/1", "now": round(now, 1), "error": repr(e)[:300],
+                            "fights": [], "groups": [], "game_active": False}
+                self.cache = json.dumps(data, separators=(",", ":")).encode("utf-8")
+                self.cache_t = now
+            return self.cache
+
+
+def make_live_server(cfg, port: int, serve_dir: Path, bind="0.0.0.0"):
+    from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
+    from urllib.parse import urlsplit, unquote
+
+    tracker = LiveTracker(cfg, serve_dir=serve_dir)
+    root = Path(serve_dir).resolve()
+
+    class Handler(SimpleHTTPRequestHandler):
+        server_version = "ZoneHeat/1"
+
+        def __init__(self, *a, **kw):
+            super().__init__(*a, directory=str(root), **kw)
+
+        def log_message(self, fmt, *args):
+            pass  # quiet: the phone polls every 3 s
+
+        def end_headers(self):
+            p = urlsplit(self.path).path
+            if p.endswith(".json") or p.endswith(".html") or p == "/":
+                self.send_header("Cache-Control", "no-store")
+            super().end_headers()
+
+        def _send(self, code, body: bytes, ctype):
+            self.send_response(code)
+            self.send_header("Content-Type", ctype)
+            self.send_header("Content-Length", str(len(body)))
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.end_headers()
+            if self.command != "HEAD":
+                self.wfile.write(body)
+
+        def _allowed(self):
+            p = unquote(urlsplit(self.path).path)
+            if p in ("", "/"):
+                return True
+            parts = [x for x in p.split("/") if x]
+            if any(x.startswith(".") or x.lower() in ("zoneheat_state", "discovery") for x in parts):
+                return False
+            name = parts[-1].lower() if parts else ""
+            if name in ("logger_config.json", "calib_points.json", "locations.json"):
+                return False
+            return Path(name).suffix in LIVE_SERVE_EXT
+
+        def do_GET(self):
+            p = urlsplit(self.path).path
+            if p == "/live.json":
+                return self._send(200, tracker.snapshot_bytes(), "application/json; charset=utf-8")
+            if p == "/ping":
+                return self._send(200, b"ok", "text/plain")
+            if not self._allowed():
+                return self._send(404, b"not found", "text/plain")
+            return super().do_GET()
+
+        def do_HEAD(self):
+            p = urlsplit(self.path).path
+            if p == "/live.json":
+                return self._send(200, b"", "application/json")
+            if not self._allowed():
+                return self._send(404, b"", "text/plain")
+            return super().do_HEAD()
+
+        def list_directory(self, path):
+            self._send(404, b"not found", "text/plain")
+            return None
+
+    srv = ThreadingHTTPServer((bind, int(port)), Handler)
+    srv.daemon_threads = True
+    return srv, tracker
+
+
+def start_live_server(cfg, port: int, serve_dir: Path | None = None):
+    import threading
+    serve_dir = Path(serve_dir) if serve_dir else expand(cfg["output"]).parent
+    try:
+        srv, tracker = make_live_server(cfg, port, serve_dir)
+    except OSError as e:
+        print(f"[live] could not start the server on port {port}: {e} (another copy running?)")
+        return None
+    th = threading.Thread(target=srv.serve_forever, name="zoneheat-live", daemon=True)
+    th.start()
+    ip = lan_ip()
+    print(f"[live] serving {serve_dir} on port {port}")
+    print(f"[live] on your phone (same Wi-Fi):  http://{ip}:{port}/")
+    print(f"[live] live feed:                   http://{ip}:{port}/live.json")
+    if not tracker.log_tail.path.exists():
+        print(f"[live] waiting for {tracker.log_tail.path} (starts when the game runs Zone Wanderers)")
+    return srv
+
+
+def cmd_serve(cfg, port: int, serve_dir=None):
+    srv = start_live_server(cfg, port, serve_dir)
+    if not srv:
+        return
+    print("[live] Ctrl+C stops")
+    while True:
+        time.sleep(3600)
 
 
 # =============================================================================
@@ -1964,9 +2555,17 @@ def main():
     ap = argparse.ArgumentParser(description="Zone heat map logger -> data.json",
                                  formatter_class=argparse.RawDescriptionHelpFormatter, epilog=__doc__)
     ap.add_argument("--config", help="settings file (default logger_config.json next to this script)")
+    ap.add_argument("--logs-dir", help="folder with ZoneWanderers_Events.txt / ZoneWanderersAsi.log "
+                                       "(default %%LOCALAPPDATA%%\\Stalker2\\Saved)")
     sub = ap.add_subparsers(dest="cmd")
     r = sub.add_parser("run", help="update data.json every interval_seconds (default)")
     r.add_argument("--push-every", type=float, default=0, help="git commit+push data.json every N minutes (>= 6)")
+    r.add_argument("--serve", type=int, nargs="?", const=8787, default=0, metavar="PORT",
+                   help="also serve the map + /live.json on your home Wi-Fi (default port 8787)")
+    r.add_argument("--serve-dir", help="folder to serve (default: the folder data.json is written to)")
+    sv = sub.add_parser("serve", help="only serve the map + /live.json (no data.json updates)")
+    sv.add_argument("--port", type=int, default=8787)
+    sv.add_argument("--serve-dir")
     sub.add_parser("once", help="one update, then exit")
     d = sub.add_parser("discover", help="Phase 0 report on what DLFR/mods write")
     d.add_argument("--watch", type=int, default=0)
@@ -1983,10 +2582,21 @@ def main():
     pl.add_argument("u", type=float)
     pl.add_argument("v", type=float)
     args = ap.parse_args()
+    try:
+        sys.stdout.reconfigure(line_buffering=True)
+    except (AttributeError, ValueError):
+        pass
     cfg = load_config(args.config)
+    if args.logs_dir:
+        ld = Path(args.logs_dir)
+        cfg["wanderers_events_file"] = str(ld / "ZoneWanderers_Events.txt")
+        cfg["wanderers_log_file"] = str(ld / "ZoneWanderersAsi.log")
     try:
         if args.cmd in (None, "run"):
-            cmd_run(cfg, push_every=getattr(args, "push_every", 0))
+            cmd_run(cfg, push_every=getattr(args, "push_every", 0), serve=getattr(args, "serve", 0),
+                    serve_dir=getattr(args, "serve_dir", None))
+        elif args.cmd == "serve":
+            cmd_serve(cfg, args.port, args.serve_dir)
         elif args.cmd == "once":
             cmd_run(cfg, once=True)
         elif args.cmd == "discover":

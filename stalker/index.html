@@ -216,6 +216,59 @@ h4 { font: 700 11px/1 var(--mono); }
 #legend .lg-title { background: none; border: 0; padding: 4px 2px; cursor: pointer; display: block; }
 #legend.collapsed { padding: 4px 8px; }
 #legend.collapsed > :not(.lg-title) { display: none !important; }
+/* ---- Live mode ---- */
+#filters .live-btn { display: inline-flex; align-items: center; gap: 6px; color: #ffb9ab; border-color: #6b2a20; }
+#filters .live-btn i { width: 7px; height: 7px; border-radius: 50%; background: #e2553f; flex: 0 0 7px; }
+#filters .live-btn.on { background: #c8352a; border-color: #ff7a5c; color: #fff; }
+#filters .live-btn.on i { background: #fff; animation: lvblink 1.2s ease-in-out infinite; }
+#filters .live-btn.on.off-air { background: #4a2a22; border-color: #8a4a3a; color: #ffcfc4; }
+#filters .live-btn.on.off-air i { background: #ffcfc4; animation: none; opacity: .6; }
+@keyframes lvblink { 50% { opacity: .25; } }
+#live-panel { position: fixed; left: 10px; right: 10px; top: calc(98px + var(--safe-t)); z-index: 805; max-width: 440px;
+  background: var(--panel); border: 1px solid var(--line); border-top: 2px solid #e2553f; border-radius: 10px;
+  padding: 6px 10px 7px; box-shadow: 0 8px 24px rgba(0,0,0,.45); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+#live-panel[hidden] { display: none; }
+.lp-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; appearance: none; width: 100%;
+  background: none; border: 0; padding: 2px 0; color: var(--text); text-align: left; }
+.lp-title { font: 700 11px/1.2 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: #ff8a70; white-space: nowrap; }
+.lp-title.off { color: var(--muted); }
+.lp-upd { font: 600 10px/1.2 var(--mono); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lp-chev { color: var(--muted); font-size: 11px; margin-left: 4px; }
+#live-panel.min .lp-body { display: none; }
+.lp-body { margin-top: 4px; display: flex; flex-direction: column; gap: 3px; }
+.lp-row { appearance: none; display: flex; align-items: center; gap: 7px; width: 100%; text-align: left; min-height: 30px;
+  background: rgba(0,0,0,.3); border: 1px solid var(--line); border-radius: 6px; padding: 5px 8px; color: var(--text);
+  font: 600 12.5px/1.2 var(--display); }
+.lp-row .dot { width: 9px; height: 9px; border-radius: 50%; flex: 0 0 9px; background: #e2553f; box-shadow: 0 0 0 0 rgba(226,85,63,.7);
+  animation: lvdot 1.6s ease-out infinite; }
+.lp-row.ended { opacity: .55; }
+.lp-row.ended .dot { background: var(--muted); animation: none; }
+.lp-row.new { border-color: #e2553f; background: rgba(200,53,42,.18); }
+.lp-txt { min-width: 0; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lp-txt .m { color: var(--muted); font-weight: 600; }
+.lp-t { font: 600 11px/1 var(--mono); color: #ffb9ab; white-space: nowrap; }
+.lp-row.ended .lp-t { color: var(--muted); }
+.lp-note { font: 600 11.5px/1.35 var(--display); color: var(--muted); padding: 2px 0; }
+.lp-note b { color: var(--text); font-family: var(--mono); font-weight: 600; user-select: all; -webkit-user-select: all; }
+.lp-more { font: 600 10px/1.3 var(--mono); color: var(--muted); padding: 1px 2px; }
+@keyframes lvdot { 0% { box-shadow: 0 0 0 0 rgba(226,85,63,.7); } 100% { box-shadow: 0 0 0 7px rgba(226,85,63,0); } }
+.leaflet-live-pane { z-index: 660; }
+.live-ico { transition: opacity 2.5s linear; }
+.live-mark { position: relative; width: 100%; height: 100%; }
+.live-mark svg { position: relative; display: block; width: 100%; height: 100%; filter: drop-shadow(0 0 3px rgba(0,0,0,.95)); }
+.live-mark .pz { position: absolute; inset: 0; border-radius: 50%; border: 2px solid #ff5a3c; animation: lvpulse 1.8s ease-out infinite; pointer-events: none; }
+.live-mark .pz.d2 { animation-delay: .9s; }
+.live-mark .n { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); font: 700 11px/1 var(--mono); color: #fff;
+  text-shadow: 0 0 3px #000, 0 0 2px #000; pointer-events: none; }
+.live-mark.ended .pz { display: none; }
+.live-mark.ended svg { filter: grayscale(.55) drop-shadow(0 0 2px rgba(0,0,0,.9)); }
+@keyframes lvpulse { 0% { transform: scale(.85); opacity: .95; } 100% { transform: scale(2.1); opacity: 0; } }
+body.region-view #filters { max-width: calc(100% - 150px); }
+body.live-mode .theater-mark, body.live-mode .fight-mark { opacity: .32 !important; }
+body.live-mode .theater-name { opacity: .45 !important; }
+.fight-pop .live-tag { display: inline-block; font: 700 10px/1 var(--mono); letter-spacing: .12em; color: #fff; background: #c8352a;
+  border-radius: 3px; padding: 3px 5px; margin-bottom: 5px; }
+.fight-pop .live-tag.ended { background: #4a4a40; }
 </style>
 </head>
 <body>
@@ -233,7 +286,9 @@ h4 { font: 700 11px/1 var(--mono); }
   <button type="button" data-tf="1h">1 hour</button>
   <button type="button" data-tf="today">Today</button>
   <button type="button" data-tf="all">All</button>
+  <button type="button" id="btn-live" class="live-btn" aria-pressed="false" title="Live firefights from your PC"><i></i>Live</button>
 </div>
+<div id="live-panel" hidden aria-live="polite"></div>
 <button type="button" id="btn-back" hidden>← Theaters</button>
 <aside id="region-card" hidden></aside>
 <div id="banner" hidden></div>
@@ -731,7 +786,7 @@ function inFocusedTheater(u, v) {
 }
 function regionFitOptions(animate) {
   return {
-    paddingTopLeft: [16, 108],
+    paddingTopLeft: [16, (typeof LV !== "undefined" && LV.on) ? Math.max(108, liveTopInset()) : 108],
     paddingBottomRight: [16, 260],
     maxZoom: 2.2,
     animate: animate !== false
@@ -1247,6 +1302,7 @@ function render() {
   }
 
   renderLists(since);
+  if (typeof LV !== "undefined" && LV.on) renderLive();
 }
 
 function renderLists(since) {
@@ -1336,7 +1392,7 @@ function syncTimeFilters() {
   else if (h === 0.5) id = "30m";
   else if (h === 1) id = "1h";
   else if (h != null) id = "";
-  el.querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset.tf === id));
+  el.querySelectorAll("button[data-tf]").forEach(b => b.classList.toggle("on", b.dataset.tf === id));
 }
 function applyTimeFilter(id) {
   if (id === "today") { S.winMode = "today"; }
@@ -1374,7 +1430,7 @@ document.querySelectorAll("[data-layer]").forEach(cb => {
 const win = document.getElementById("window"); win.max = WINDOW_STEPS_H.length - 1;
 win.value = Math.min(S.windowIdx, WINDOW_STEPS_H.length - 1); S.windowIdx = +win.value; setWindowLabel();
 win.oninput = () => { S.winMode = "hours"; S.windowIdx = +win.value; store.set("winMode", S.winMode); setWindowLabel(); store.set("win", S.windowIdx); render(); };
-document.querySelectorAll("#filters button").forEach(b => b.onclick = () => applyTimeFilter(b.dataset.tf));
+document.querySelectorAll("#filters button[data-tf]").forEach(b => b.onclick = () => applyTimeFilter(b.dataset.tf));
 document.getElementById("chips-all").onclick = () => { S.hidden.clear(); store.set("hidden", []); buildChips(); render(); };
 const auto = document.getElementById("autorefresh"); auto.checked = S.auto;
 auto.onchange = () => { S.auto = auto.checked; store.set("auto", S.auto); };
@@ -1437,6 +1493,290 @@ document.querySelectorAll("[data-copy]").forEach(b => b.onclick = async () => {
 
 const backBtn = document.getElementById("btn-back");
 if (backBtn) backBtn.onclick = () => closeTheaters();
+
+/* =====================================================================
+   Live mode: poll /live.json from the PC (logger_to_json.py --serve)
+   ===================================================================== */
+const LIVE_URL = "live.json";
+const LIVE_POLL_MS = 3000;
+const LIVE_FADE_S = 120;          // ended fights fade out over 2 min
+const ON_PAGES = /github\.io$/i.test(location.hostname) || location.protocol === "https:" || location.protocol === "file:";
+map.createPane("livePane");
+map.getPane("livePane").style.zIndex = 660;
+layer.liveGroups = L.layerGroup().addTo(map);
+layer.live = L.layerGroup().addTo(map);
+const LV = {
+  on: false, connected: false, everOk: false, data: null, fetchedAt: 0, lastOk: 0, fails: 0, timer: null, tick: null,
+  markers: new Map(),   // id -> { marker, key, fight, goneAt }
+  firstSeen: new Map(), // id -> local time first seen (for the "new" flash)
+  min: store.get("liveMin", false), inflight: false
+};
+const lvNow = () => Date.now() / 1000;
+function lvServerNow() { return LV.data ? LV.data.now + (lvNow() - LV.fetchedAt) : lvNow(); }
+function fmtDur(s) {
+  s = Math.max(0, Math.round(s));
+  if (s < 60) return `${s}s`;
+  if (s < 600) return `${Math.floor(s / 60)}m ${String(s % 60).padStart(2, "0")}s`;
+  if (s < 5400) return `${Math.round(s / 60)}m`;
+  return `${(s / 3600).toFixed(1)}h`;
+}
+function lvNear(f) {
+  const n = f.near; if (!n || !n.name) return "";
+  if (n.dist_m < 150) return `at ${n.name}`;
+  if (n.dist_m <= 1200) return `near ${n.name}`;
+  return `${(n.dist_m / 1000).toFixed(1)} km from ${n.name}`;
+}
+// fade state for one fight: 1 = live, falls to 0 over LIVE_FADE_S after it ends / leaves the feed
+function lvState(rec) {
+  const f = rec.fight;
+  const dt = lvNow() - (rec.at || LV.fetchedAt);
+  const age = (f.age_s || 0) + dt;
+  const activeS = (LV.data && LV.data.active_s) || 180;
+  let endedFor = age - activeS;
+  if (rec.goneAt) endedFor = Math.max(endedFor, lvNow() - rec.goneAt);
+  const active = endedFor <= 0;
+  const op = active ? 1 : Math.max(0, 1 - endedFor / LIVE_FADE_S);
+  return { active, op, age, elapsed: (f.elapsed_s || 0) + dt };
+}
+function lvSize(f, maxF) {
+  const n = Math.max(1, f.fielded || 1);
+  const k = Math.sqrt(Math.min(1, n / Math.max(12, maxF || 12)));
+  return Math.round(24 + 14 * k);
+}
+function lvIconHtml(f, size, ended) {
+  const sides = (f.sides && f.sides.length) ? f.sides : [{ faction: "Unknown", fielded: 1 }];
+  const counts = sides.map(s => Math.max(1, Number(s.fielded) || 1));
+  const sum = counts.reduce((a, b) => a + b, 0);
+  const r = 11.5, cx = 16, cy = 16;
+  let acc = 0;
+  const parts = [`<circle cx="16" cy="16" r="15" fill="#0b0c0a" fill-opacity=".72"/>`];
+  if (sides.some(s => OUTLINED_FACTIONS.has(factionKey(s.faction))))
+    parts.push(`<circle cx="16" cy="16" r="15.2" fill="none" stroke="${OUTLINE_COLOR}" stroke-width="1.4"/>`);
+  sides.forEach((s, i) => {
+    const frac = counts[i] / sum, col = facColor(s.faction);
+    if (frac >= 0.999) { parts.push(`<circle cx="16" cy="16" r="${r}" fill="none" stroke="${col}" stroke-width="6.5"/>`); return; }
+    const a0 = acc * 2 * Math.PI - Math.PI / 2, a1 = (acc + frac) * 2 * Math.PI - Math.PI / 2; acc += frac;
+    parts.push(`<path d="M ${(cx + r * Math.cos(a0)).toFixed(2)} ${(cy + r * Math.sin(a0)).toFixed(2)} A ${r} ${r} 0 ${frac > 0.5 ? 1 : 0} 1 ${(cx + r * Math.cos(a1)).toFixed(2)} ${(cy + r * Math.sin(a1)).toFixed(2)}" fill="none" stroke="${col}" stroke-width="6.5"/>`);
+  });
+  return `<div class="live-mark${ended ? " ended" : ""}" style="width:${size}px;height:${size}px"><span class="pz"></span><span class="pz d2"></span>` +
+    `<svg viewBox="0 0 32 32" aria-hidden="true">${parts.join("")}</svg><span class="n">${f.fielded || ""}</span></div>`;
+}
+function lvTextColor(f) {
+  // dark crimson Bandits get a lighter tint so the name stays readable on the dark panel
+  return OUTLINED_FACTIONS.has(factionKey(f)) ? "#E0606E" : facColor(f);
+}
+function liveTopInset() {
+  const lp = document.getElementById("live-panel");
+  return lp && !lp.hidden ? Math.round(lp.getBoundingClientRect().bottom + 8) : 0;
+}
+function lvSidesHtml(f) {
+  return (f.sides || []).map(s => `<span style="color:${lvTextColor(s.faction)}">${esc(s.faction)}</span> ${s.fielded}`).join(" <span class='m'>vs</span> ");
+}
+function lvPopup(f, st) {
+  const sides = (f.sides || []).map(s => `<span style="color:${lvTextColor(s.faction)}">${esc(s.faction)} ${s.fielded}${s.lost ? ` (lost ${s.lost})` : ""}</span>`).join(" vs ");
+  const bits = [];
+  const near = lvNear(f); if (near) bits.push(esc(near));
+  if (f.clashes > 1) bits.push(`${f.clashes} clashes`);
+  if (f.pos_source === "group_position") bits.push("position estimated from group routes");
+  const when = st.active ? `started ${fmtDur(st.elapsed)} ago · last shots ${fmtDur(st.age)} ago` : `ended · last shots ${fmtDur(st.age)} ago`;
+  return `<div class="fight-pop"><span class="live-tag${st.active ? "" : " ended"}">${st.active ? "● LIVE" : "ENDED"}</span>` +
+    `<div class="sides">${sides}</div><div class="when">${when}</div>` + (bits.length ? `<div class="meta">${bits.join(" · ")}</div>` : "") + `</div>`;
+}
+function lvSpread(items) {
+  // keep live markers from covering each other (screen space, greedy, biggest first)
+  const placed = [];
+  items.sort((a, b) => b.size - a.size);
+  for (const it of items) {
+    const p0 = map.latLngToContainerPoint(ll(it.f.u, it.f.v));
+    let p = p0;
+    for (let k = 0; k < 60; k++) {
+      if (k > 0) { const rad = 4 + k * 3, ang = k * 2.399963229728653; p = L.point(p0.x + rad * Math.cos(ang), p0.y + rad * Math.sin(ang)); }
+      if (placed.every(q => Math.hypot(p.x - q.p.x, p.y - q.p.y) >= (it.size + q.size) / 2 + 3)) break;
+    }
+    it.latlng = map.containerPointToLatLng(p);
+    placed.push({ p, size: it.size });
+  }
+  return items;
+}
+function renderLive() {
+  document.body.classList.toggle("live-mode", LV.on);
+  if (!LV.on) { layer.live.clearLayers(); layer.liveGroups.clearLayers(); LV.markers.clear(); return; }
+  positionLivePanel();
+  // markers
+  const items = [];
+  const maxF = Math.max(12, ...[...LV.markers.values()].map(r => r.fight.fielded || 0));
+  for (const [id, rec] of LV.markers) {
+    const f = rec.fight;
+    const st = lvState(rec);
+    rec.st = st;
+    if (st.op <= 0.02) { if (rec.marker) layer.live.removeLayer(rec.marker); LV.markers.delete(id); continue; }
+    if (f.u == null || f.v == null || !visibleFac((f.sides || []).map(s => s.faction)) || !inFocusedTheater(f.u, f.v)) {
+      if (rec.marker) { layer.live.removeLayer(rec.marker); rec.marker = null; rec.key = null; }
+      continue;
+    }
+    items.push({ id, rec, f, st, size: lvSize(f, maxF) });
+  }
+  if (!map._loaded) return;
+  lvSpread(items);
+  for (const it of items) {
+    const { rec, f, st, size } = it;
+    const key = `${size}|${st.active ? 1 : 0}|${f.fielded}|${(f.sides || []).map(s => s.faction + s.fielded).join(",")}`;
+    if (!rec.marker) {
+      rec.marker = L.marker(it.latlng, { pane: "livePane", keyboard: true, zIndexOffset: 3000 });
+      rec.marker.on("click", () => { rec.marker.setPopupContent(lvPopup(rec.fight, lvState(rec))); });
+      rec.marker.bindPopup("", { autoPanPaddingTopLeft: L.point(10, 160) });
+      layer.live.addLayer(rec.marker);
+    } else rec.marker.setLatLng(it.latlng);
+    if (rec.key !== key) {
+      rec.marker.setIcon(L.divIcon({ className: "live-ico", iconSize: [size, size], iconAnchor: [size / 2, size / 2], html: lvIconHtml(f, size, !st.active) }));
+      rec.key = key;
+    }
+    rec.marker.setOpacity(st.op);
+    if (rec.marker.isPopupOpen()) rec.marker.setPopupContent(lvPopup(f, st));
+  }
+  // roaming groups: tiny faint dots, only in live mode
+  layer.liveGroups.clearLayers();
+  if (S.layers.groups && LV.data && LV.connected) {
+    for (const g of (LV.data.groups || [])) {
+      if (g.u == null || facHidden(g.faction) || !inFocusedTheater(g.u, g.v)) continue;
+      layer.liveGroups.addLayer(L.circleMarker(ll(g.u, g.v), { radius: 2.6, weight: 0, fillColor: facColor(g.faction),
+        fillOpacity: g.age_s > 900 ? 0.3 : 0.6, interactive: false }));
+    }
+  }
+  renderLivePanel(items);
+}
+function positionLivePanel() {
+  const fl = document.getElementById("filters"), lp = document.getElementById("live-panel");
+  if (!fl || !lp) return;
+  lp.style.top = Math.round(fl.getBoundingClientRect().bottom + 6) + "px";
+}
+function renderLivePanel() {
+  const lp = document.getElementById("live-panel");
+  const btn = document.getElementById("btn-live");
+  lp.hidden = !LV.on;
+  btn.classList.toggle("on", LV.on);
+  btn.setAttribute("aria-pressed", String(LV.on));
+  if (!LV.on) return;
+  // region view is busy (region card below): show just the header unless opened
+  const compact = S.focusedTheater ? !LV.regionOpen : !!LV.min;
+  lp.classList.toggle("min", compact);
+  const d = LV.data;
+  const staleS = LV.lastOk ? lvNow() - LV.lastOk : Infinity;
+  const connected = LV.connected && staleS < 15;
+  btn.classList.toggle("off-air", !connected);
+  let title, upd, body = "";
+  const allRecs = [...LV.markers.entries()].map(([id, r]) => ({ id, r, st: r.st || lvState(r) })).filter(x => x.st.op > 0.02);
+  const inRegion = (x) => x.r.fight.u != null && inFocusedTheater(x.r.fight.u, x.r.fight.v);
+  const recs = S.focusedTheater ? allRecs.filter(inRegion) : allRecs;
+  const elsewhere = S.focusedTheater ? allRecs.filter(x => !inRegion(x) && x.st.active).length : 0;
+  const act = recs.filter(x => x.st.active).sort((a, b) => a.st.age - b.st.age);
+  const ended = recs.filter(x => !x.st.active).sort((a, b) => a.st.age - b.st.age);
+  if (!connected) {
+    title = `<span class="lp-title off">Live · not connected</span>`;
+    upd = LV.everOk ? `lost ${fmtDur(staleS)} ago` : "";
+    const here = (!ON_PAGES && location.port === "8787") ? location.host : "&lt;PC-IP&gt;:8787";
+    body = `<div class="lp-note">${LV.everOk ? "Can't reach the PC right now - retrying every 3 s." : "Live view needs the page from your PC."} ` +
+      `Open <b>http://${here}</b> on home Wi-Fi (run <b>start_live.ps1</b> on the PC; it prints the address).</div>`;
+  } else {
+    title = `<span class="lp-title">● Live${act.length ? ` · ${act.length} firefight${act.length > 1 ? "s" : ""}${S.focusedTheater ? " here" : ""}` : ""}</span>`;
+    upd = `updated ${fmtDur(lvNow() - LV.lastOk)} ago`;
+    const rows = act.concat(ended).slice(0, S.focusedTheater ? 2 : 3);
+    for (const x of rows) {
+      const f = x.r.fight;
+      const isNew = x.st.active && lvNow() - (LV.firstSeen.get(x.id) || 0) < 8;
+      const near = lvNear(f);
+      body += `<button type="button" class="lp-row${x.st.active ? "" : " ended"}${isNew ? " new" : ""}" data-id="${esc(x.id)}">` +
+        `<span class="dot"></span><span class="lp-txt">${lvSidesHtml(f)}${near ? ` <span class="m">· ${esc(near)}</span>` : ""}</span>` +
+        `<span class="lp-t">${x.st.active ? fmtDur(x.st.elapsed) : "ended"}</span></button>`;
+    }
+    const more = act.length + ended.length - rows.length;
+    if (more > 0) body += `<div class="lp-more">+${more} more on the map</div>`;
+    if (elsewhere) body += `<div class="lp-more">${elsewhere} more elsewhere in the Zone · ← Theaters</div>`;
+    if (!rows.length && S.focusedTheater) {
+      body = `<div class="lp-note">Quiet in this region right now.</div>` + (elsewhere ? `<div class="lp-more">${elsewhere} firefight${elsewhere > 1 ? "s" : ""} elsewhere in the Zone · ← Theaters</div>` : "");
+    } else if (!rows.length) {
+      const nG = (d.groups || []).length;
+      body = d.game_active
+        ? `<div class="lp-note">No firefights right now.${nG ? ` ${nG} group${nG > 1 ? "s" : ""} on the move (faint dots).` : ""}</div>`
+        : `<div class="lp-note">No new Zone Wanderers events${d.files && d.files.log_age_s != null ? ` for ${fmtDur(d.files.log_age_s)}` : ""} - is the game running?</div>`;
+    }
+  }
+  lp.innerHTML = `<button type="button" class="lp-head" id="lp-head" aria-expanded="${!compact}">${title}<span class="lp-upd">${upd}<span class="lp-chev">${compact ? "▸" : "▾"}</span></span></button><div class="lp-body">${body}</div>`;
+  lp.querySelector("#lp-head").onclick = () => {
+    if (S.focusedTheater) LV.regionOpen = !LV.regionOpen;
+    else { LV.min = !LV.min; store.set("liveMin", LV.min); }
+    renderLivePanel();
+  };
+  lp.querySelectorAll(".lp-row").forEach(b => b.onclick = () => lvFocus(b.dataset.id));
+}
+function lvFocus(id) {
+  const rec = LV.markers.get(id); if (!rec) return;
+  const f = rec.fight; if (f.u == null) return;
+  if (S.focusedTheater && !inFocusedTheater(f.u, f.v)) closeTheaters();
+  const z = Math.max(map.getZoom(), (S.fitZoom != null ? S.fitZoom : 0) + 1.5);
+  map.flyTo(ll(f.u, f.v), Math.min(z, map.getMaxZoom()), { duration: 0.6 });
+  map.once("moveend", () => { renderLive(); if (rec.marker) { rec.marker.setPopupContent(lvPopup(rec.fight, lvState(rec))); rec.marker.openPopup(); } });
+}
+function lvApply(d) {
+  const seen = new Set();
+  for (const f of (d.fights || [])) {
+    if (!f.id) continue;
+    seen.add(f.id);
+    const rec = LV.markers.get(f.id) || {};
+    rec.fight = f; rec.goneAt = null; rec.at = lvNow();
+    if (!LV.firstSeen.has(f.id)) LV.firstSeen.set(f.id, LV.everOk ? lvNow() : 0);
+    LV.markers.set(f.id, rec);
+  }
+  for (const [id, rec] of LV.markers) if (!seen.has(id) && !rec.goneAt) rec.goneAt = lvNow();
+}
+async function lvPoll() {
+  if (!LV.on || LV.inflight || document.visibilityState !== "visible") { renderLive(); return; }
+  LV.inflight = true;
+  const ctl = typeof AbortController !== "undefined" ? new AbortController() : null;
+  const to = ctl ? setTimeout(() => ctl.abort(), 2800) : null;
+  try {
+    const r = await fetch(LIVE_URL + "?_=" + Date.now(), { cache: "no-store", signal: ctl ? ctl.signal : undefined });
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    const d = await r.json();
+    if (!d || d.schema !== "zoneheat-live/1") throw new Error("not a live feed");
+    LV.data = d; LV.fetchedAt = lvNow(); LV.lastOk = LV.fetchedAt; LV.connected = true; LV.fails = 0;
+    lvApply(d);
+    LV.everOk = true;
+  } catch (e) {
+    LV.fails++;
+    if (!LV.everOk || LV.fails >= 3) LV.connected = false;
+  } finally {
+    if (to) clearTimeout(to);
+    LV.inflight = false;
+  }
+  renderLive();
+}
+function setLive(on, persist) {
+  LV.on = !!on;
+  if (persist) store.set("live", LV.on);
+  clearInterval(LV.timer); clearInterval(LV.tick);
+  if (LV.on) {
+    LV.timer = setInterval(lvPoll, LIVE_POLL_MS);
+    LV.tick = setInterval(() => { if (document.visibilityState === "visible") renderLive(); }, 1000);
+    lvPoll();
+  }
+  renderLive();
+  renderLivePanel();
+}
+document.getElementById("btn-live").onclick = () => setLive(!LV.on, true);
+document.addEventListener("visibilitychange", () => { if (LV.on && document.visibilityState === "visible") lvPoll(); });
+map.on("zoomend", () => { if (LV.on) renderLive(); });
+window.addEventListener("resize", () => { if (LV.on) positionLivePanel(); });
+(async () => {
+  // Served from the PC? Turn Live on by itself unless it was switched off here before.
+  const pref = store.get("live", null);
+  if (pref === true) return setLive(true, false);
+  if (pref === false || ON_PAGES) return;
+  try {
+    const r = await fetch(LIVE_URL + "?_=" + Date.now(), { cache: "no-store" });
+    if (r.ok && (await r.json()).schema === "zoneheat-live/1") setLive(true, false);
+  } catch (e) { /* not on the PC */ }
+})();
 
 // refresh loop
 setInterval(() => { if (S.auto && !S.manualSample && document.visibilityState === "visible") loadData(false); else updateStatus(); }, REFRESH_MS);
