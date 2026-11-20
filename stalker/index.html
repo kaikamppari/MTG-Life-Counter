@@ -544,7 +544,122 @@ body.live-mode #legend .lg-live { display: block; }
   font: 700 12px/1.2 var(--mono); letter-spacing: .12em; text-transform: uppercase;
   color: var(--accent); margin: 0 0 4px;
 }
+/* ---- Route runner: Draw route (Kai draws the line; never arms the runner) ---- */
+#btn-draw { font-size: 19px; line-height: 1; }
+#draw-bar {
+  position: fixed; z-index: 830; box-sizing: border-box;
+  background: var(--panel); color: var(--text);
+  border: 1px solid var(--line); border-top: 2px solid var(--accent);
+  border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,.45);
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  padding: 10px 12px 12px;
+  left: 10px; right: 66px;
+  bottom: calc((126px + var(--safe-b)) * var(--z, 1) + 8px);
+  width: auto; max-width: 440px; margin: 0;
+}
+#draw-bar[hidden] { display: none; }
+#draw-bar h2 { font: 700 16px/1.25 Rajdhani, sans-serif; margin: 0 0 2px; letter-spacing: .04em; }
+#draw-bar .db-line { font: 600 13px/1.35 var(--mono); color: var(--muted); margin: 0 0 8px; min-height: 1em; }
+#draw-bar .db-row { display: flex; gap: 6px; margin-top: 6px; }
+#draw-bar button {
+  flex: 1; min-height: 44px; border-radius: 8px; border: 1px solid var(--line);
+  font: 700 14px/1 Rajdhani, sans-serif; letter-spacing: .05em; text-transform: uppercase;
+  background: #2a2c24; color: var(--text); cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+#draw-bar button:disabled { opacity: .45; cursor: default; }
+#draw-bar button.on { background: #3a4a2a; border-color: var(--accent); }
+#draw-bar #db-send { background: var(--accent); color: #1a1406; border-color: var(--accent); flex: 1.6; }
+body.drawing #map, body.drawing .leaflet-container { cursor: crosshair; }
+/* while drawing, map layers (regions, fights, pins) don't take taps: they'd open theaters/popups */
+body.draw-mode #map .leaflet-interactive,
+body.draw-mode #map .leaflet-overlay-pane canvas, body.draw-mode #map .leaflet-overlay-pane svg,
+body.draw-mode #map .leaflet-marker-pane *, body.draw-mode #map .leaflet-popup-pane * { pointer-events: none !important; }
+.draw-vtx { width: 12px; height: 12px; margin: -6px 0 0 -6px; border-radius: 50%; background: #e8bf7a;
+  border: 2px solid #1a1406; box-sizing: border-box; }
+.draw-vtx.end { width: 18px; height: 18px; margin: -9px 0 0 -9px; background: #ff7a5c; }
+.sugg-label { background: rgba(10,20,24,.85); color: #7AD7FF; border: 1px solid #7AD7FF; border-radius: 6px;
+  font: 700 11px/1.2 Rajdhani, sans-serif; letter-spacing: .06em; text-transform: uppercase; padding: 2px 6px; box-shadow: none; }
+.sugg-label::before { display: none; }
+.runner-pos { width: 16px; height: 16px; margin: -8px 0 0 -8px; border-radius: 50%;
+  border: 3px solid #00d2c8; box-sizing: border-box; box-shadow: 0 0 0 2px rgba(0,0,0,.6); }
 #route-line-legend { pointer-events: none; }
+/* ===================== Responsive pass (2026-11-20) =====================
+   Map gets the screen: chrome is compact on short windows, the sheet peeks less,
+   the live feed is a pill on small screens and a docked column (map fitted beside it) on big ones. */
+:root { --peek: 112px; --safe-l: env(safe-area-inset-left, 0px); --safe-r: env(safe-area-inset-right, 0px); }
+html.short, html.slimsheet { --peek: 60px; }
+#sheet.collapsed { transform: translateY(calc(100% - var(--peek) - var(--safe-b))); }
+html.slimsheet #sheet-handle { padding: 6px 0 3px; }
+html.slimsheet #quick { padding: 0 0 6px; }
+html.slimsheet #quick input[type=range] { height: 22px; }
+html.slimsheet #sheet.collapsed #tabs, html.slimsheet #sheet.collapsed .tab { visibility: hidden; }
+html.short #tabs button { padding: 6px 4px; font-size: 13px; }
+#topbar { left: calc(10px + var(--safe-l)); right: calc(10px + var(--safe-r)); }
+#filters { left: calc(10px + var(--safe-l)); }
+#fabs { right: calc(10px + var(--safe-r)); bottom: calc(var(--peek) + 14px + var(--safe-b)); }
+#legend { left: calc(10px + var(--safe-l)); bottom: calc(var(--peek) + 14px + var(--safe-b)); }
+#region-card { bottom: calc(var(--peek) + 8px + var(--safe-b)); }
+body.region-view #fabs { bottom: calc(var(--peek) + 16px + var(--safe-b) + var(--region-card-h, 180px)); }
+@media (min-width: 700px) { body.region-view #fabs { bottom: calc(var(--peek) + 14px + var(--safe-b)); } }
+#draw-bar, #route-confirm, #route-status { bottom: calc((var(--peek) + 14px + var(--safe-b)) * var(--z, 1) + 8px); }
+/* time chips on the brand row (layoutChrome) */
+#filters.inline { flex-wrap: nowrap; max-width: none; }
+/* short windows (laptop half-screen, landscape phone): slimmer header, chips, buttons */
+html.short .brand { padding: 5px 9px 4px; }
+html.short .brand-name { font-size: 13px; }
+html.short .brand-sub { margin-top: 3px; font-size: 10px; }
+html.short .pill { padding: 6px 9px; font-size: 11px; }
+html.short #filters { top: calc(50px + var(--safe-t)); }
+html.short #btn-back { top: calc(50px + var(--safe-t)); min-height: 30px; padding: 6px 10px; }
+html.short #filters button { min-height: 28px; padding: 5px 8px; }
+html.short #fabs { gap: 7px; }
+html.short .fab { width: 40px; height: 40px; font-size: 18px; }
+html.vshort .fab { width: 36px; height: 36px; font-size: 16px; }
+html.vshort #fabs { gap: 5px; }
+html.vshort .brand-sub { display: none; }
+html.vshort #filters, html.vshort #btn-back { top: calc(36px + var(--safe-t)); }
+@media (min-width: 700px) { html.short #region-card { top: 92px; } }
+/* live feed: collapsed = a small pill under the chips, not a full-width bar */
+#live-panel.min { right: auto; width: auto; max-width: calc(100vw - 20px - var(--safe-l) - var(--safe-r)); padding: 4px 10px; }
+#live-panel.min .lp-head { gap: 8px; }
+@media (max-width: 699px) { #live-panel.min .lp-title { font-size: 13px; } }
+/* desktop/tablet: a docked column that scales with the window instead of a fixed 540px slab */
+@media (min-width: 700px) {
+  #live-panel { max-width: clamp(290px, 31vw, 540px); }
+  #live-panel .lp-title { font-size: clamp(12px, min(.95vw, 1.8vh), 18px); }
+  #live-panel .lp-upd { font-size: clamp(10px, .7vw, 13px); }
+  #live-panel .lp-h { font-size: clamp(10px, .75vw, 14px); margin: 3px 0 4px; }
+  #live-panel .lp-row { font-size: clamp(13px, min(1.2vw, 2.25vh), 24px); min-height: 0; gap: clamp(6px, .5vw, 10px);
+    padding: clamp(4px, .45vw, 8px) clamp(7px, .65vw, 12px); }
+  #live-panel .lp-row.msg { font-size: clamp(13px, min(1.15vw, 2.15vh), 23px); min-height: 0; padding: clamp(4px, .45vw, 8px) clamp(7px, .65vw, 12px); }
+  #live-panel .lp-row.msg.sub { font-size: clamp(12px, min(1vw, 1.9vh), 20px); min-height: 0; padding: clamp(3px, .35vw, 6px) clamp(7px, .65vw, 12px); }
+  #live-panel .lp-t { font-size: clamp(11px, min(.9vw, 1.7vh), 18px); }
+  #live-panel .mi { width: clamp(18px, 1.6vw, 32px); height: clamp(18px, 1.6vw, 32px); flex-basis: clamp(18px, 1.6vw, 32px); }
+  #live-panel .lp-row .dot { width: clamp(10px, .9vw, 18px); height: clamp(10px, .9vw, 18px); flex-basis: clamp(10px, .9vw, 18px); }
+  #live-panel .rglyph, #live-panel .rglyph svg { width: clamp(15px, 1.3vw, 26px); height: clamp(15px, 1.3vw, 26px); }
+  #live-panel .rglyph { flex-basis: clamp(15px, 1.3vw, 26px); }
+  #live-panel .rbadge { font-size: clamp(10px, .72vw, 14px); padding: 2px 6px; }
+  #live-panel .lp-note { font-size: clamp(12px, 1vw, 18px); }
+  #live-panel .lp-moreradio { font-size: clamp(11px, .75vw, 14px); min-height: 0; padding: clamp(5px, .5vw, 10px); }
+  #live-panel:not(.min) .lp-fights { max-height: min(34vh, 360px); }
+}
+/* popups: compact, scroll inside, never most of the map */
+.leaflet-popup-content { margin: 8px 10px; max-height: min(50vh, 420px); overflow-y: auto; overscroll-behavior: contain; }
+html.short .leaflet-popup-content { max-height: 42vh; font-size: 13px; }
+html.short .fight-pop .sides { font-size: 13.5px; }
+html.short .fight-pop .meta, html.short .fight-pop .when { font-size: 11px; }
+@media (max-width: 480px) {
+  .leaflet-popup-content { max-width: 72vw; font-size: 13px; }
+  .fight-pop .sides { font-size: 14px; }
+}
+/* alert toast: narrower and thinner on short / small screens */
+html.short #lv-alert { width: min(340px, calc(100vw / var(--z, 1) - 20px)); padding: 6px 9px; gap: 7px; }
+html.short #lv-alert .al-l { font-size: 13px; }
+html.short #lv-alert .al-m { font-size: 11px; }
+@media (max-width: 480px) { #lv-alert { padding: 7px 9px; } #lv-alert .al-l { font-size: 13px; } }
+/* map labels follow the marker scale (--ui) with a floor/ceiling */
+.poi-label { font-size: clamp(8px, calc(9px * var(--ui, 1)), 16px); }
+/* ===================== end responsive pass ===================== */
 </style>
 </head>
 <body>
@@ -660,6 +775,23 @@ body.live-mode #legend .lg-live { display: block; }
   <p class="rs-line" id="rs-line"></p>
   <div class="rs-actions">
     <button type="button" id="rs-stop">Stop</button>
+  </div>
+</div>
+
+<div id="draw-bar" hidden role="dialog" aria-labelledby="db-title">
+  <h2 id="db-title">Draw route</h2>
+  <p class="db-line" id="db-line">Tap points along the road, or press and drag. The last point is the goal.</p>
+  <div class="db-row">
+    <button type="button" id="db-undo">Undo</button>
+    <button type="button" id="db-clear">Clear</button>
+    <button type="button" id="db-pan" aria-pressed="false">Move map</button>
+  </div>
+  <div class="db-row">
+    <button type="button" id="db-sugg" disabled title="Load the suggested route as your line">Use suggested</button>
+  </div>
+  <div class="db-row">
+    <button type="button" id="db-cancel">Cancel</button>
+    <button type="button" id="db-send" disabled>Send route</button>
   </div>
 </div>
 
@@ -1036,8 +1168,8 @@ function setBase(url, w, h) {
   const bounds = L.latLngBounds([-h, 0], [0, w]);
   layer.base = L.imageOverlay(url, bounds, { interactive: false }).addTo(map);
   layer.base.bringToBack();
-  map.setMaxBounds(bounds.pad(0.5));
-  if (!S.didFit) { map.fitBounds(bounds); S.didFit = true; S.fitZoom = map.getZoom(); }
+  map.setMaxBounds(bounds.pad(1.5));
+  if (!S.didFit) { S.didFit = true; fitOverview(false); }
   map.setMinZoom(map.getBoundsZoom(bounds) - 1);
 }
 
@@ -1258,6 +1390,53 @@ function visRect(sel) {
   const r = e.getBoundingClientRect();
   return r.width && r.height ? r : null;
 }
+function overviewFitOptions(animate) {
+  // Whole-map fit: pad from the chrome that is actually on screen so the map sits beside
+  // a docked live panel instead of under it. Phones: the live panel is an overlay (collapsed by default).
+  const W = window.innerWidth, H = window.innerHeight, wide = W >= 700;
+  let top = 8, left = 8, right = 8, bottom = 8;
+  for (const sel of ["#topbar .brand", "#status", "#filters"]) { const r = visRect(sel); if (r) top = Math.max(top, r.bottom + 6); }
+  const sheet = visRect("#sheet");
+  if (sheet) {   // fit to the COLLAPSED sheet: opening the drawer must not shrink the map
+    const sh = document.getElementById("sheet");
+    if (sh.classList.contains("collapsed")) S._peekTop = H - sheet.top;
+    bottom = Math.max(bottom, (S._peekTop != null ? S._peekTop : 112 * ZOOM) + 6);
+  }
+  const lp = visRect("#live-panel");
+  if (wide && lp && lp.height > 80 && lp.width < W * 0.6) left = Math.max(left, lp.right + 8);
+  else if (lp && lp.width < W * 0.6 && lp.height <= 80) top = Math.max(top, lp.bottom + 4);
+  const fabs = visRect("#fabs");
+  if (wide && fabs && !(fabs.width > 120 && fabs.height < 90)) right = Math.max(right, W - fabs.left + 6);
+  // never squeeze below a usable map
+  if (W - left - right < 220) { left = Math.max(8, W - right - 220); }
+  if (H - top - bottom < 160) { top = Math.max(8, H - bottom - 160); }
+  return { paddingTopLeft: [Math.round(left), Math.round(top)], paddingBottomRight: [Math.round(right), Math.round(bottom)],
+    animate: !!animate };
+}
+let _ovFitting = false, _ovKey = "";
+function fitOverview(animate) {
+  if (!S.imgW || typeof map === "undefined") return;
+  const o = overviewFitOptions(animate);
+  _ovKey = window.innerWidth + "x" + window.innerHeight + "|" + o.paddingTopLeft + "|" + o.paddingBottomRight;
+  _ovFitting = true; S.ovFit = true;
+  // fractional fit (no 0.25 snap) so the map really fills the free area; gestures snap again afterwards
+  const snap = map.options.zoomSnap; map.options.zoomSnap = 0;
+  try { map.fitBounds(L.latLngBounds([-S.imgH, 0], [0, S.imgW]), o); } finally { map.options.zoomSnap = snap; }
+  S.fitZoom = map.getZoom();
+  setTimeout(() => { _ovFitting = false; }, animate ? 600 : 50);
+}
+let _ovT = null;
+function refitOverviewSoon() {
+  // chrome changed (panel docked/collapsed, sheet, resize): refit if the user hasn't moved the map
+  if (S.focusedTheater || !S.ovFit || !S.imgW) return;
+  clearTimeout(_ovT);
+  _ovT = setTimeout(() => {
+    if (S.focusedTheater || !S.ovFit) return;
+    const o = overviewFitOptions(false);
+    const k = window.innerWidth + "x" + window.innerHeight + "|" + o.paddingTopLeft + "|" + o.paddingBottomRight;
+    if (k !== _ovKey) fitOverview(false);
+  }, 120);
+}
 function regionFitOptions(animate) {
   // padding (viewport px) from the panels actually on screen, so the region is fitted into the free part of the map
   if (typeof positionLivePanel === "function" && typeof LV !== "undefined" && LV.on) positionLivePanel();
@@ -1446,7 +1625,7 @@ function closeTheaters() {
   if (card) card.hidden = true;
   document.body.classList.remove("region-view"); setTimeout(fitCardToSheet, 0);
   document.body.style.removeProperty("--region-card-h");
-  if (S.imgW) map.fitBounds(L.latLngBounds([-S.imgH, 0], [0, S.imgW]));
+  if (S.imgW) fitOverview(false);
   render();
 }
 function regionStats(d, theater, since, now) {
@@ -1620,12 +1799,22 @@ function theaterWeight(rec) {
 let UI = 1, ZOOM = 1;
 function computeUI() {
   // phones stay at 1; big screens scale markers and names up so they don't shrink to specks
-  const v = Math.min(window.innerWidth, window.innerHeight * 1.15) / 420;
-  UI = Math.max(1, Math.min(2.4, v));
+  // Responsive pass: markers follow the size the whole map is drawn at (min of width and
+  // height * map aspect), so a small map gets small pins instead of a pile of big ones.
+  const W0 = window.innerWidth, H0 = window.innerHeight;
+  const v = Math.min(W0, H0 * 1.14) / 600;
+  const touch = window.matchMedia && window.matchMedia("(pointer: coarse)").matches;
+  UI = Math.max(touch ? 0.95 : 0.85, Math.min(2.2, v));
   document.documentElement.style.setProperty("--ui", UI.toFixed(3));
   // the CSS zoom of the top bar / sheet / buttons: full size on big screens, gentler on mid-size windows
   const W = window.innerWidth;
-  ZOOM = W >= 1280 ? Math.min(UI, 1.7) : W >= 900 ? Math.min(UI, 1.4) : W >= 700 ? Math.min(UI, 1.2) : 1;
+  // chrome zoom follows BOTH width and height: a 1024x525 window stays at 1x (was 1.4x and ate the map)
+  const zv = Math.min(W / 1280, window.innerHeight / 720);
+  ZOOM = W >= 700 ? Math.max(1, Math.min(1.5, zv)) : 1;
+  // the bottom drawer only peeks its handle + time slider, except on tall phones (thumb reach)
+  document.documentElement.classList.toggle("slimsheet", W >= 700 || window.innerHeight < 640);
+  document.documentElement.classList.toggle("short", window.innerHeight < 640);
+  document.documentElement.classList.toggle("vshort", window.innerHeight < 480);
   document.documentElement.style.setProperty("--z", ZOOM.toFixed(3));
 }
 computeUI();
@@ -2170,7 +2359,7 @@ document.getElementById("btn-fit").onclick = () => {
     const t = THEATERS.find(x => x.id === S.focusedTheater);
     if (t) map.fitBounds(theaterBounds(t), regionFitOptions(true));
   } else if (S.imgW) {
-    map.fitBounds(L.latLngBounds([-S.imgH, 0], [0, S.imgW]));
+    fitOverview(true);
   }
 };
 document.getElementById("btn-player").onclick = () => {
@@ -2236,7 +2425,7 @@ const LV = {
   on: false, connected: false, everOk: false, data: null, fetchedAt: 0, lastOk: 0, fails: 0, timer: null, tick: null,
   markers: new Map(),   // id -> { marker, key, fight, goneAt }
   firstSeen: new Map(), // id -> local time first seen (for the "new" flash)
-  min: store.get("liveMin", false), inflight: false,
+  min: false, inflight: false,
   msgs: [], msgById: new Map(), msgMarkers: new Map(), radioMore: false,
   alertSeen: new Set(), alertInit: false, alertTimer: null
 };
@@ -2248,7 +2437,20 @@ function fmtShort(s) {   // '30s', '4m', '2h'
   if (s < 3600) return `${Math.floor(s / 60)}m`;
   return `${Math.floor(s / 3600)}h`;
 }
-function lpNarrow() { return window.innerWidth >= 700; }   // desk panel is narrow; phones keep the full-width layout
+function lpNarrow() { return window.innerWidth >= 700; }
+// Small = phone width or a short window: the feed starts as a one-line pill ("● LIVE · 2 fights") and
+// the map keeps the screen. Big screens start expanded and dock the feed beside the map.
+function lpSizeClass() {
+  const W = window.innerWidth, H = window.innerHeight;
+  return (W < 700 || H < 640 || (W < 1000 && H > W)) ? "small" : "big";   // phones, short windows, portrait tablets
+}
+function lpMinPref() {
+  const p = store.get("liveMin2", null) || {};
+  const c = lpSizeClass();
+  return typeof p[c] === "boolean" ? p[c] : c === "small";
+}
+function lpMinSave(v) { const p = store.get("liveMin2", null) || {}; p[lpSizeClass()] = v; store.set("liveMin2", p); }
+LV.min = lpMinPref(); LV._minClass = lpSizeClass();   // desk panel is narrow; phones keep the full-width layout
 function lpTxtHtml(mainHtml, where) {
   // Message / fight text plus an optional place suffix on its own line, so wraps never sit under the time.
   const w = (where && String(where).trim()) ? `<span class="lp-where">${esc(String(where).trim())}</span>` : "";
@@ -2999,8 +3201,31 @@ function renderLive() {
   renderLivePanel(items);
 }
 
+function layoutChrome() {
+  // Wide-but-short windows: put the time chips on the brand's row (saves ~40-60px of map height).
+  const fl = document.getElementById("filters"), br = document.querySelector("#topbar .brand"), st = document.getElementById("status");
+  if (!fl || !br) return;
+  fl.style.top = ""; fl.style.left = ""; fl.classList.remove("inline");
+  if (window.innerWidth < 700) return;
+  const z = parseFloat(getComputedStyle(fl).zoom) || 1;
+  const b = br.getBoundingClientRect(), f = fl.getBoundingClientRect();
+  const s = st && !st.hidden ? st.getBoundingClientRect() : null;
+  const limit = (s && s.width ? s.left : window.innerWidth) - 8;
+  if (b.right + 8 + f.width <= limit) {
+    fl.classList.add("inline");
+    fl.style.left = Math.round((b.right + 8) / z) + "px";
+    fl.style.top = Math.round((b.top + Math.max(0, (b.height - f.height) / 2)) / z) + "px";
+  }
+}
+if (window.ResizeObserver) {
+  const ro = new ResizeObserver(() => { layoutChrome(); if (typeof LV !== "undefined" && LV.on) positionLivePanel(); else refitOverviewSoon(); });
+  ["status", "topbar"].forEach(id => { const e = document.getElementById(id); if (e) ro.observe(e); });
+  const sh = document.getElementById("sheet"); if (sh) ro.observe(sh);
+}
+setTimeout(layoutChrome, 0);
+document.fonts && document.fonts.ready && document.fonts.ready.then(() => { layoutChrome(); refitOverviewSoon(); });
 function routeCardEls() {
-  return ["route-confirm", "route-status"]
+  return ["route-confirm", "route-status", "draw-bar"]
     .map(id => document.getElementById(id))
     .filter(el => el && !el.hidden);
 }
@@ -3066,6 +3291,7 @@ function positionLivePanel() {
     lp.style.height = ""; lp.style.maxHeight = ""; lp.style.left = ""; lp.style.maxWidth = "";
     if (leg) leg.style.left = "";
     if (rc) { rc.style.left = ""; rc.style.maxWidth = ""; }
+    if (typeof refitOverviewSoon === "function") refitOverviewSoon();
     return;
   }
   const cardOn = rc && !rc.hidden && wide;
@@ -3131,13 +3357,13 @@ function positionLivePanel() {
       if (left < 8) left = 8;
       leg.style.left = Math.round(left / lz) + "px";
     }
-    for (const sel of ["#fabs", "#sheet", "#route-confirm", "#route-status"]) {
+    for (const sel of ["#fabs", "#sheet", "#route-confirm", "#route-status", "#draw-bar"]) {
       const r = visRect(sel);
       if (r && r.left < lr.right + 4 && r.right > lr.left && r.top > top + 80) lim = Math.min(lim, r.top);
     }
   } else {
     if (leg) leg.style.left = "";
-    for (const sel of ["#legend", "#fabs", "#sheet", "#region-card", "#route-confirm", "#route-status"]) {
+    for (const sel of ["#legend", "#fabs", "#sheet", "#region-card", "#route-confirm", "#route-status", "#draw-bar"]) {
       const r = visRect(sel);
       if (r && r.left < lr.right && r.right > lr.left && r.top > top + 80) lim = Math.min(lim, r.top);
     }
@@ -3173,6 +3399,16 @@ function positionLivePanel() {
   }
   // Panel width/height may have changed; dock the Go-here card again so it stays off the 540px column.
   if (typeof positionRouteCard === "function") positionRouteCard();
+  // collapsed pill on a wide screen: sit it on the brand row after the inline time chips when it fits
+  if (!expanded && wide && fl.classList.contains("inline")) {
+    const f = fl.getBoundingClientRect(), st = visRect("#status"), pw = lp.getBoundingClientRect();
+    const lim = (st ? st.left : window.innerWidth) - 8;
+    if (f.right + 8 + pw.width <= lim) {
+      lp.style.left = Math.round((f.right + 8) / z) + "px";
+      lp.style.top = Math.round((f.top + (f.height - pw.height) / 2) / z) + "px";
+    }
+  }
+  if (typeof refitOverviewSoon === "function") refitOverviewSoon();
 }
 function lpSameShape(a, b) {
   if (a.childNodes.length !== b.childNodes.length) return false;
@@ -3205,7 +3441,7 @@ function renderLivePanel() {
   // and the region card shifts to its right, so both can be read at once.
   if (S.focusedTheater !== LV._lastTheater) {
     LV._lastTheater = S.focusedTheater;
-    if (S.focusedTheater && !LV._regionPinned) LV.regionOpen = lpNarrow() ? true : !!store.get("liveRegionOpen", false);
+    if (S.focusedTheater && !LV._regionPinned) LV.regionOpen = lpSizeClass() === "big" ? true : !!store.get("liveRegionOpen", false);
   }
   LV._regionPinned = false;
   const compact = S.focusedTheater ? !LV.regionOpen : !!LV.min;
@@ -3285,8 +3521,8 @@ function renderLivePanel() {
   lp.innerHTML = html;
   positionLivePanel();
   lp.querySelector("#lp-head").onclick = () => {
-    if (S.focusedTheater) { LV.regionOpen = !LV.regionOpen; if (lpNarrow()) store.set("liveRegionOpen", LV.regionOpen); }
-    else { LV.min = !LV.min; store.set("liveMin", LV.min); }
+    if (S.focusedTheater) { LV.regionOpen = !LV.regionOpen; if (lpSizeClass() === "small") store.set("liveRegionOpen", LV.regionOpen); }
+    else { LV.min = !LV.min; lpMinSave(LV.min); }
     renderLivePanel();
   };
   const sc = LV._msgScroll || 0;
@@ -3383,10 +3619,15 @@ document.getElementById("btn-live").onclick = () => setLive(!LV.on, true);
 })();
 document.addEventListener("visibilitychange", () => { if (LV.on && document.visibilityState === "visible") { LV.backoffUntil = 0; lvPoll(); } });
 map.on("zoomend", () => { if (LV.on) renderLive(); });
+map.on("dragstart", () => { S.ovFit = false; });
+map.on("zoomstart", () => { if (!_ovFitting) S.ovFit = false; });
+window.addEventListener("orientationchange", () => setTimeout(() => window.dispatchEvent(new Event("resize")), 250));
 let _rzT = null;
 let _rzBand = window.innerWidth >= 900 ? 2 : window.innerWidth >= 700 ? 1 : 0;
 window.addEventListener("resize", () => {
   if (typeof positionRouteCard === "function") positionRouteCard();
+  if (lpSizeClass() !== LV._minClass) { LV._minClass = lpSizeClass(); LV.min = lpMinPref(); if (LV.on) renderLivePanel(); }
+  if (typeof layoutChrome === "function") layoutChrome();
   if (LV.on) positionLivePanel();
   clearTimeout(_rzT);
   _rzT = setTimeout(() => {
@@ -3399,7 +3640,7 @@ window.addEventListener("resize", () => {
       render(); fitCardToSheet(); requestAnimationFrame(refitRegion);
       clearTimeout(window._rzT2); window._rzT2 = setTimeout(() => { fitCardToSheet(); if (S.focusedTheater) refitRegion(); }, 900);
     }   // card may have moved (bottom <-> left column)
-    else { if (crossed && S.imgW) map.fitBounds(L.latLngBounds([-S.imgH, 0], [0, S.imgW])); if (o !== UI || crossed) render(); }
+    else { if ((crossed || S.ovFit) && S.imgW && !S.focusedTheater) fitOverview(false); if (o !== UI || crossed) render(); }
     fitCardToSheet();
     if (LV.on) positionLivePanel();
     positionBanner();
@@ -3493,6 +3734,9 @@ async function routeProbe() {
     RT.goMode = false;
     const fab = document.getElementById("btn-route");
     if (fab) fab.remove();
+    const dfab = document.getElementById("btn-draw");
+    if (dfab) dfab.remove();
+    if (typeof drawExit === "function" && RT.drawMode) drawExit();
     return false;
   }
 }
@@ -3508,12 +3752,14 @@ function routeEnsureFab() {
   b.addEventListener("click", (ev) => {
     ev.preventDefault(); ev.stopPropagation();
     if (RT.offline || !RT.ready) { showBanner("Route runner offline"); return; }
+    if (RT.drawMode) drawExit();
     RT.goMode = !RT.goMode;
     b.classList.toggle("on", RT.goMode);
     if (RT.goMode) showBanner("Tap a spot on the map to go there.");
     else if (typeof hideBanner === "function") hideBanner();
   });
   fabs.appendChild(b);
+  if (typeof drawEnsureFab === "function") drawEnsureFab();
 }
 
 async function routeOpenConfirm(latlng) {
@@ -3550,6 +3796,10 @@ function routeDraw(plan, goal) {
   for (const p of pix) if (p && p.length >= 2) pts.push(ll(p[0], p[1]));
   if (pts.length >= 2) {
     layer.route.addLayer(L.polyline(pts, { color: "#e8bf7a", weight: 4, opacity: 0.95, dashArray: "10 6", interactive: false, className: "route-line" }));
+  }
+  for (const q of (plan && plan.steep) || []) {
+    if (q && q[0] != null && q[1] != null) layer.route.addLayer(L.circleMarker(ll(q[0], q[1]),
+      { radius: 6, color: "#ff3a4f", weight: 2, fillOpacity: 0.25, interactive: false }));
   }
   if (goal && goal.u != null && goal.v != null) {
     layer.route.addLayer(L.marker(ll(goal.u, goal.v), { icon: L.divIcon({ className: "pick-ico", html: '<div class="x"></div>', iconSize: [0, 0] }), interactive: false, keyboard: false }));
@@ -3599,6 +3849,7 @@ async function routePoll() {
     if (!r.ok) throw new Error("offline");
     const st = await r.json();
     if (st.plan && (st.plan.pixels || []).length) routeDraw(st.plan, st.goal);
+    if (typeof drawRunnerPos === "function") drawRunnerPos(st.runner_px);
     routeSetStatusCard(st);
     const raw = String(st.state || "idle").toLowerCase();
     const state = (st.stop_requested && raw !== "walking") ? "stopped" : raw;
@@ -3646,6 +3897,7 @@ async function routeStop() {
 }
 
 function routeConsumeClick(e) {
+  if (RT.drawMode) { if (e && e.originalEvent) L.DomEvent.stop(e); return true; }
   if (RT.swallowClick) { RT.swallowClick = false; if (e && e.originalEvent) L.DomEvent.stop(e); return true; }
   if (RT.goMode && !S.picking) {
     if (e && e.originalEvent) L.DomEvent.stop(e);
@@ -3662,10 +3914,10 @@ function routeConsumeClick(e) {
   function fromUi(ev) {
     const t = ev.originalEvent && ev.originalEvent.target;
     if (!t || !t.closest) return false;
-    return !!t.closest("#route-confirm, #route-status, #live-panel, #fabs, #sheet, #legend, #banner, #lv-alert, #pickpanel, #topbar, #filters, #btn-back, #region-card");
+    return !!t.closest("#draw-bar, #route-confirm, #route-status, #live-panel, #fabs, #sheet, #legend, #banner, #lv-alert, #pickpanel, #topbar, #filters, #btn-back, #region-card");
   }
   function onDown(ev) {
-    if (S.picking || fromUi(ev)) return;
+    if (S.picking || RT.drawMode || fromUi(ev)) return;
     start = ev.containerPoint;
     timer = setTimeout(() => {
       timer = null;
@@ -3685,6 +3937,7 @@ function routeConsumeClick(e) {
   map.on("touchend", clearHold);
   map.on("dragstart", clearHold);
   map.on("contextmenu", (ev) => {
+    if (RT.drawMode) { if (ev.originalEvent) ev.originalEvent.preventDefault(); return; }
     if (S.picking || fromUi(ev)) return;
     if (ev.originalEvent) ev.originalEvent.preventDefault();
     RT.swallowClick = true;
@@ -3696,6 +3949,333 @@ function routeConsumeClick(e) {
   document.getElementById("rc-cancel").addEventListener("click", () => routeCloseConfirm(true));
   document.getElementById("rc-go").addEventListener("click", () => routeConfirmGo());
   document.getElementById("rs-stop").addEventListener("click", () => routeStop());
+})();
+/* =====================================================================
+   Route runner: Draw route. Kai taps points (or presses and drags) along the
+   road; Send POSTs {path:[[u,v],...], name} to /api/route/goal. The last point
+   is the goal. Never sends armed; F12 in game still starts the walk.
+   ===================================================================== */
+// map.jpg (1500x1314) px -> UE cm, same calibration as route_api.py (map_4096 identity + 2663-inlier SIFT affine).
+const DRAW_A = [[2.6852416669615606, 2.7215561066982584e-05, 70.50689885041429],
+                [-1.431933762208025e-05, 2.6832150694737193, 457.8912822915556]];
+const DRAW_CM_PX = 812900 / 4096;
+const DRAW_MAX_PTS = 500, DRAW_MAX_BYTES = 3900;      // the logger caps POST bodies at 4096 bytes
+const DRAW_MOVE_PX = 7;                                // screen px between freehand samples
+const DR = { sugg: null, suggLenM: 0, suggT: null, suggKey: "", suggLayer: L.layerGroup().addTo(map), pts: [], layer: L.layerGroup().addTo(map), stroke: null, pointers: new Map(), pan: false, sending: false };
+RT.drawMode = false;
+
+function drawWorld(u, v) {
+  const a = DRAW_A;
+  const u4 = a[0][0] * u + a[0][1] * v + a[0][2], v4 = a[1][0] * u + a[1][1] * v + a[1][2];
+  return [(u4 + 0.5) * DRAW_CM_PX, (v4 + 0.5) * DRAW_CM_PX];
+}
+function drawTrueCalib() {
+  const m = (S.data && S.data.map) || {};
+  return (!m.width && !m.height) || (Number(m.width) === 1500 && Number(m.height) === 1314);
+}
+function drawLenM(pts) {
+  if (!pts || pts.length < 2) return 0;
+  let s = 0, pix = 0;
+  const useWorld = drawTrueCalib();
+  for (let i = 1; i < pts.length; i++) {
+    const u0 = +pts[i - 1][0], v0 = +pts[i - 1][1], u1 = +pts[i][0], v1 = +pts[i][1];
+    if (![u0, v0, u1, v1].every(Number.isFinite)) continue;
+    pix += Math.hypot(u1 - u0, v1 - v0);
+    if (useWorld) {
+      const a = drawWorld(u0, v0), b = drawWorld(u1, v1);
+      const d = Math.hypot(b[0] - a[0], b[1] - a[1]) / 100;
+      if (Number.isFinite(d)) s += d;
+    } else {
+      const d = Math.hypot(u1 - u0, v1 - v0) / (routePpm() || 0.175);
+      if (Number.isFinite(d)) s += d;
+    }
+  }
+  // Last resort if the preferred conversion came out ~0 but the vertices clearly span a path
+  // (this is what showed "8 points · 0 m" on 1440/1920 after Use suggested).
+  if (!(s >= 0.5) && pix >= 0.5) {
+    s = 0;
+    for (let i = 1; i < pts.length; i++) {
+      const a = drawWorld(+pts[i - 1][0], +pts[i - 1][1]), b = drawWorld(+pts[i][0], +pts[i][1]);
+      const d = Math.hypot(b[0] - a[0], b[1] - a[1]) / 100;
+      if (Number.isFinite(d)) s += d;
+    }
+    if (!(s >= 0.5)) s = pix / (routePpm() || 0.175);
+  }
+  return s;
+}
+
+function drawBarLen(pts) {
+  let len = drawLenM(pts);
+  if (!(len >= 0.5) && DR.suggLenM >= 0.5 && DR.sugg && pts && pts.length === DR.sugg.length)
+    len = DR.suggLenM;
+  return len;
+}
+function drawWriteBar(n, len) {
+  if (n == null) n = (DR.pts || []).length;
+  if (len == null) len = drawBarLen(DR.pts);
+  const line = document.getElementById("db-line");
+  if (!line) return len;
+  if (!n) line.textContent = "Tap points along the road, or press and drag. The last point is the goal.";
+  else line.textContent = `${n} point${n === 1 ? "" : "s"} · ${fmtRouteDist(len).replace(/^~/, "")}` +
+    (n >= 2 ? " · goal = last point" : " · add more");
+  return len;
+}
+// Douglas-Peucker in data px
+function drawSimplify(pts, tol) {
+  if (pts.length < 3) return pts.slice();
+  const keep = new Uint8Array(pts.length); keep[0] = keep[pts.length - 1] = 1;
+  const stack = [[0, pts.length - 1]];
+  while (stack.length) {
+    const [i, j] = stack.pop();
+    const [ax, ay] = pts[i], [bx, by] = pts[j];
+    const dx = bx - ax, dy = by - ay, L2 = dx * dx + dy * dy;
+    let best = -1, bi = -1;
+    for (let k = i + 1; k < j; k++) {
+      const [px, py] = pts[k];
+      let t = L2 ? ((px - ax) * dx + (py - ay) * dy) / L2 : 0; t = Math.max(0, Math.min(1, t));
+      const d = Math.hypot(px - ax - t * dx, py - ay - t * dy);
+      if (d > best) { best = d; bi = k; }
+    }
+    if (best > tol) { keep[bi] = 1; stack.push([i, bi], [bi, j]); }
+  }
+  return pts.filter((_, k) => keep[k]);
+}
+function drawBody(pts, name) {
+  return { path: pts.map(p => [Math.round(p[0] * 10) / 10, Math.round(p[1] * 10) / 10]), name };
+}
+// Fit the logger's 4 KB body cap: simplify harder until it fits (0.3 px ~ 1.6 m on map.jpg)
+function drawPayload(name) {
+  let pts = DR.pts.slice(), tol = 0.3;
+  let body = drawBody(drawSimplify(pts, 0.15), name);
+  while ((body.path.length > DRAW_MAX_PTS || JSON.stringify(body).length > DRAW_MAX_BYTES) && tol < 40) {
+    body = drawBody(drawSimplify(pts, tol), name); tol *= 1.5;
+  }
+  return body;
+}
+function drawRender() {
+  DR.layer.clearLayers();
+  const lls = DR.pts.map(p => ll(p[0], p[1]));
+  if (lls.length >= 2) {
+    DR.layer.addLayer(L.polyline(lls, { color: "#000", weight: 8, opacity: 0.45, interactive: false }));
+    DR.layer.addLayer(L.polyline(lls, { color: "#e8bf7a", weight: 4, opacity: 0.98, interactive: false, className: "draw-line" }));
+  }
+  // vertex dots: all tapped points, but thin out freehand runs
+  const step = Math.max(1, Math.ceil(lls.length / 60));
+  lls.forEach((p, i) => {
+    const end = i === lls.length - 1;
+    if (!end && i % step) return;
+    DR.layer.addLayer(L.marker(p, { icon: L.divIcon({ className: "", html: `<div class="draw-vtx${end ? " end" : ""}"></div>`, iconSize: [0, 0] }),
+      interactive: false, keyboard: false }));
+  });
+  const n = DR.pts.length, len = drawWriteBar();
+  document.getElementById("db-send").disabled = n < 2 || len < 2 || DR.sending;
+  document.getElementById("db-undo").disabled = !n;
+  document.getElementById("db-sugg").disabled = !(DR.sugg && DR.sugg.length >= 2) || DR.sending;
+  drawSuggestSoon();
+  document.getElementById("db-clear").disabled = !n;
+}
+/* Suggested route: the planner's path (route_api /api/route/suggest; road-aware later) from the first drawn point
+   (or the player, with one point) to the last point. Dashed cyan under Kai's line; Kai's line stays primary. */
+function drawSuggestSoon() {
+  if (!RT.drawMode) return;
+  const n = DR.pts.length;
+  const p = routePlayer();
+  let body = null;
+  if (n >= 2) body = { u: DR.pts[n - 1][0], v: DR.pts[n - 1][1], from_u: DR.pts[0][0], from_v: DR.pts[0][1] };
+  else if (n === 1 && p && p.u != null) body = { u: DR.pts[0][0], v: DR.pts[0][1], start_u: +p.u, start_v: +p.v };
+  const key = body ? JSON.stringify(body) : "";
+  if (key === DR.suggKey) return;
+  DR.suggKey = key;
+  if (DR.suggT) clearTimeout(DR.suggT);
+  if (!body) { DR.sugg = null; DR.suggLenM = 0; DR.suggLayer.clearLayers(); return; }
+  DR.suggT = setTimeout(async () => {
+    try {
+      const r = await routeFetch("/api/route/suggest", { method: "POST", body });
+      const j = r.ok ? await r.json() : null;
+      if (!RT.drawMode || DR.suggKey !== key) return;
+      DR.suggLayer.clearLayers(); DR.sugg = null; DR.suggLenM = 0;
+      const pix = (j && j.ok && j.plan && j.plan.pixels) || [];
+      if (pix.length >= 2) {
+        DR.sugg = pix.map(q => [+q[0], +q[1]]);
+        DR.suggLenM = drawLenM(DR.sugg);
+        const line = L.polyline(DR.sugg.map(q => ll(q[0], q[1])), { color: "#7AD7FF", weight: 3, opacity: 0.9,
+          dashArray: "4 7", interactive: false, className: "sugg-line" });
+        DR.suggLayer.addLayer(line);
+        const mid = DR.sugg[Math.floor(DR.sugg.length / 2)];
+        DR.suggLayer.addLayer(L.tooltip({ permanent: true, direction: "right", className: "sugg-label", interactive: false })
+          .setLatLng(ll(mid[0], mid[1])).setContent(`Suggested route${DR.suggLenM ? " · " + fmtRouteDist(DR.suggLenM).replace(/^~/, "") : ""}`));
+      }
+    } catch (e) { /* no suggestion; drawing still works */ }
+    document.getElementById("db-sugg").disabled = !(DR.sugg && DR.sugg.length >= 2) || DR.sending;
+  }, 500);
+}
+function drawUseSuggested() {
+  if (!DR.sugg || DR.sugg.length < 2) return;
+  DR.stroke = null;
+  if (DR.pointers && DR.pointers.clear) DR.pointers.clear();
+  DR.pts = DR.sugg.map(q => [+q[0], +q[1]]);
+  // Recompute length and freeze the suggest key so we don't refetch mid-render
+  // (the bar, the overlay label and the Send name all use drawBarLen on these points).
+  const n = DR.pts.length;
+  DR.suggLenM = drawLenM(DR.pts) || DR.suggLenM;
+  DR.suggKey = JSON.stringify({ u: DR.pts[n - 1][0], v: DR.pts[n - 1][1], from_u: DR.pts[0][0], from_v: DR.pts[0][1] });
+  if (DR.suggT) { clearTimeout(DR.suggT); DR.suggT = null; }
+  drawRender();
+  drawWriteBar();
+  requestAnimationFrame(() => drawWriteBar());
+}
+function drawSetPan(on) {
+  DR.pan = !!on;
+  const b = document.getElementById("db-pan");
+  b.classList.toggle("on", DR.pan); b.setAttribute("aria-pressed", String(DR.pan));
+  b.textContent = DR.pan ? "Draw" : "Move map";
+  if (DR.pan) map.dragging.enable(); else map.dragging.disable();
+  document.body.classList.toggle("drawing", RT.drawMode && !DR.pan);
+}
+function drawEnter() {
+  if (!RT.ready) { showBanner("Route runner offline"); return; }
+  if (RT.goMode) { RT.goMode = false; const b = document.getElementById("btn-route"); if (b) b.classList.remove("on"); }
+  if (typeof routeCloseConfirm === "function") routeCloseConfirm(false);
+  RT.drawMode = true; DR.pts = []; DR.stroke = null; DR.pointers.clear();
+  document.body.classList.add("draw-mode");
+  map.closePopup();
+  DR.wasDrag = map.dragging.enabled();
+  map.doubleClickZoom.disable();
+  drawSetPan(false);
+  document.getElementById("route-status").hidden = true;
+  document.getElementById("draw-bar").hidden = false;
+  const f = document.getElementById("btn-draw"); if (f) f.classList.add("on");
+  if (typeof hideBanner === "function") hideBanner();
+  drawRender();
+  if (typeof routeLayout === "function") routeLayout();
+}
+function drawExit() {
+  RT.drawMode = false; DR.stroke = null; DR.pointers.clear(); DR.pts = [];
+  DR.layer.clearLayers(); DR.suggLayer.clearLayers(); DR.sugg = null; DR.suggKey = "";
+  if (DR.suggT) { clearTimeout(DR.suggT); DR.suggT = null; }
+  if (DR.wasDrag !== false) map.dragging.enable();
+  map.doubleClickZoom.enable();
+  document.body.classList.remove("drawing", "draw-mode");
+  document.getElementById("draw-bar").hidden = true;
+  const f = document.getElementById("btn-draw"); if (f) f.classList.remove("on");
+  if (typeof routeLayout === "function") routeLayout();
+}
+function drawEnsureFab() {
+  if (document.getElementById("btn-draw") || !RT.ready) return;
+  const fabs = document.getElementById("fabs");
+  if (!fabs) return;
+  const b = document.createElement("button");
+  b.id = "btn-draw"; b.className = "fab"; b.type = "button";
+  b.setAttribute("aria-label", "Draw route"); b.title = "Draw route";
+  b.textContent = "✎";
+  b.addEventListener("click", (ev) => {
+    ev.preventDefault(); ev.stopPropagation();
+    if (RT.drawMode) drawExit(); else drawEnter();
+  });
+  const go = document.getElementById("btn-route");
+  if (go && go.nextSibling) fabs.insertBefore(b, go.nextSibling); else fabs.appendChild(b);
+}
+function drawAdd(latlng) {
+  const { u, v } = toData(latlng);
+  const W = (S.data && S.data.map && S.data.map.width) || Infinity, H = (S.data && S.data.map && S.data.map.height) || Infinity;
+  if (!(u >= 0 && v >= 0 && u <= W && v <= H)) return false;
+  const last = DR.pts[DR.pts.length - 1];
+  if (last && Math.hypot(u - last[0], v - last[1]) < 0.05) return false;
+  if (DR.pts.length >= 4000) return false;
+  DR.pts.push([u, v]);
+  return true;
+}
+(function drawGestures() {
+  const el = map.getContainer();
+  function fromUi(ev) { const t = ev.target; return !!(t && t.closest && t.closest("#draw-bar, #fabs, #topbar, #sheet, #banner, #live-panel, #legend, .leaflet-control")); }
+  el.addEventListener("pointerdown", (ev) => {
+    if (!RT.drawMode || DR.pan || fromUi(ev)) return;
+    DR.pointers.set(ev.pointerId, true);
+    if (DR.pointers.size > 1) {                  // second finger: pinch zoom, drop the stroke in progress
+      if (DR.stroke) { DR.pts.length = DR.stroke.n0; DR.stroke = null; drawRender(); }
+      return;
+    }
+    if (ev.button != null && ev.button > 0) return;
+    const cp = map.mouseEventToContainerPoint(ev);
+    DR.stroke = { id: ev.pointerId, last: cp, n0: DR.pts.length, moved: false };
+    drawAdd(map.containerPointToLatLng(cp));
+    drawRender();
+    ev.preventDefault();
+  }, { passive: false });
+  el.addEventListener("pointermove", (ev) => {
+    const st = DR.stroke;
+    if (!RT.drawMode || !st || st.id !== ev.pointerId) return;
+    const cp = map.mouseEventToContainerPoint(ev);
+    if (cp.distanceTo(st.last) < DRAW_MOVE_PX) return;
+    st.last = cp; st.moved = true;
+    if (drawAdd(map.containerPointToLatLng(cp))) drawRender();
+    ev.preventDefault();
+  }, { passive: false });
+  function end(ev) {
+    DR.pointers.delete(ev.pointerId);
+    const st = DR.stroke;
+    if (!st || st.id !== ev.pointerId) return;
+    DR.stroke = null;
+    if (st.moved && DR.pts.length - st.n0 > 2) {   // freehand: keep the shape, drop the jitter
+      const head = DR.pts.slice(0, st.n0), run = DR.pts.slice(st.n0);
+      DR.pts = head.concat(drawSimplify(run, 0.12));
+    }
+    drawRender();
+  }
+  el.addEventListener("pointerup", end);
+  el.addEventListener("pointercancel", end);
+})();
+function drawRunnerPos(px) {
+  if (!RT.posLayer) RT.posLayer = L.layerGroup().addTo(map);
+  RT.posLayer.clearLayers();
+  if (px && px.length >= 2 && px[0] != null) {
+    RT.posLayer.addLayer(L.marker(ll(px[0], px[1]), { icon: L.divIcon({ className: "", html: '<div class="runner-pos" title="Runner sees you here"></div>', iconSize: [0, 0] }),
+      interactive: false, keyboard: false }));
+  }
+}
+async function drawSend() {
+  if (DR.pts.length < 2 || DR.sending) return;
+  const len = drawBarLen(DR.pts);
+  const body = drawPayload(`Drawn route ${fmtRouteDist(len).replace(/^~/, "")}`);
+  DR.sending = true; drawRender();
+  try {
+    const r = await routeFetch(ROUTE_GOAL, { method: "POST", body });
+    let j = null;
+    try { j = await r.json(); } catch (e) { j = null; }
+    if (!r.ok) {
+      showBanner((j && j.error) ? String(j.error) : (r.status === 413 ? "Route too long to send - draw fewer points" : "Could not send the route"));
+      return;
+    }
+    drawExit();
+    routeDraw(j && j.plan, j && j.goal);
+    routeSetStatusCard({ state: "goal_set", goal: j && j.goal, plan: j && j.plan, stop_requested: false, runner: null });
+    const steep = ((j && j.plan && j.plan.steep) || []).length;
+    showBanner(`Route sent. Press F12 in game to walk it.${steep ? ` ${steep} steep spot${steep > 1 ? "s" : ""} on it (red rings).` : ""}`);
+    routeSchedulePoll(1000);
+  } catch (e) {
+    showBanner("Route runner offline");
+  } finally {
+    DR.sending = false;
+    if (RT.drawMode) drawRender();
+  }
+}
+(function drawBindUi() {
+  const bar = document.getElementById("draw-bar");
+  L.DomEvent.disableClickPropagation(bar); L.DomEvent.disableScrollPropagation(bar);
+  document.getElementById("db-undo").addEventListener("click", () => { DR.pts.pop(); drawRender(); });
+  document.getElementById("db-clear").addEventListener("click", () => { DR.pts = []; drawRender(); });
+  document.getElementById("db-pan").addEventListener("click", () => drawSetPan(!DR.pan));
+  document.getElementById("db-sugg").addEventListener("click", () => drawUseSuggested());
+  document.getElementById("db-cancel").addEventListener("click", () => drawExit());
+  document.getElementById("db-send").addEventListener("click", () => drawSend());
+  // Show Go here + Draw route as soon as the PC's route API answers (LAN page only; GitHub Pages has no API).
+  // (only on the logger's own port 8787, or with ?route=1, so other hosts never log a 404 for the probe)
+  if (location.port === "8787" || new URLSearchParams(location.search).get("route") === "1") setTimeout(() => { routeProbe(); }, 1200);
+  document.addEventListener("keydown", (ev) => {
+    if (!RT.drawMode) return;
+    if (ev.key === "Escape") drawExit();
+    else if ((ev.key === "z" && (ev.ctrlKey || ev.metaKey)) || ev.key === "Backspace") { ev.preventDefault(); DR.pts.pop(); drawRender(); }
+  });
 })();
 </script>
 </body>
