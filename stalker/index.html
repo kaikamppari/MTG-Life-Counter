@@ -659,6 +659,17 @@ html.short #lv-alert .al-m { font-size: 11px; }
 @media (max-width: 480px) { #lv-alert { padding: 7px 9px; } #lv-alert .al-l { font-size: 13px; } }
 /* map labels follow the marker scale (--ui) with a floor/ceiling */
 .poi-label { font-size: clamp(8px, calc(9px * var(--ui, 1)), 16px); }
+/* v2: the open Key is a capped, scrolling popover left of the round buttons */
+#legend:not(.collapsed) { z-index: 815; box-sizing: border-box; overscroll-behavior: contain; scrollbar-width: thin; }
+#legend .lg-row span:last-child, #legend .lg-cat { white-space: normal; min-width: 0; }
+#legend .lg-factions { max-width: none; }
+#legend .lg-note { max-width: none; }
+#legend.lg-narrow .lg-acts, #legend.lg-narrow .lg-glyphs, #legend.lg-narrow .lg-rings { grid-template-columns: 1fr; }
+#legend.lg-narrow .lg-acts span, #legend.lg-narrow .lg-glyphs span, #legend.lg-narrow .lg-rings span { white-space: normal; }
+#legend.lg-narrow .lg-factions { flex-direction: column; flex-wrap: nowrap; }
+#legend .lg-route { color: var(--muted); }
+#legend .lg-route b { color: var(--text); font-weight: 600; }
+
 /* ===================== end responsive pass ===================== */
 </style>
 </head>
@@ -705,6 +716,7 @@ html.short #lv-alert .al-m { font-size: 11px; }
   <div class="lg-live" id="lg-live"></div>
 
   <div class="lg-note" id="lg-approx" hidden>Fight positions are approximate until the map is calibrated.</div>
+  <div class="lg-note lg-route" id="lg-route"></div>
 </div>
 
 <section id="sheet" class="collapsed">
@@ -2384,6 +2396,12 @@ document.getElementById("lg-toggle").addEventListener("click", (ev) => {
   const open = lg.classList.toggle("collapsed") === false;
   ev.currentTarget.textContent = open ? "Key ▾" : "Key ▸";
   ev.currentTarget.setAttribute("aria-expanded", String(open));
+  if (open && window.innerWidth < 700 && typeof LV !== "undefined" && LV.on) {
+    if (S.focusedTheater) LV.regionOpen = false; else LV.min = true;   // not saved: just making room
+    renderLivePanel();
+  }
+  if (typeof placeLegend === "function") placeLegend();
+  if (typeof LV !== "undefined" && LV.on && typeof positionLivePanel === "function") positionLivePanel();
 });
 map.on("click", (e) => {
   if (typeof routeConsumeClick === "function" && routeConsumeClick(e)) return;
@@ -3224,6 +3242,52 @@ if (window.ResizeObserver) {
 }
 setTimeout(layoutChrome, 0);
 document.fonts && document.fonts.ready && document.fonts.ready.then(() => { layoutChrome(); refitOverviewSoon(); });
+function placeLegend() {
+  // The Key opens upward from its button. Keep it left of the round-button column, below the
+  // header, above the drawer; cap width/height to what's free and scroll inside if needed.
+  const leg = document.getElementById("legend");
+  if (!leg || leg.hidden || getComputedStyle(leg).display === "none") return;
+  const W = window.innerWidth, H = window.innerHeight, wide = W >= 700;
+  const lz = parseFloat(getComputedStyle(leg).zoom) || 1;
+  const open = !leg.classList.contains("collapsed");
+  const fab = visRect("#fabs");
+  const fabWall = fab && !(fab.width > 120 && fab.height < 90) ? fab.left - 8 : W - 10;
+  const lp = visRect("#live-panel");
+  const lpCol = wide && lp && lp.height > 80 && lp.width < W * 0.6 && !document.getElementById("live-panel").classList.contains("min");
+  let topLim = 8;
+  for (const sel of ["#topbar .brand", "#status", "#filters", "#btn-back"]) { const r = visRect(sel); if (r) topLim = Math.max(topLim, r.bottom + 8); }
+  const lpPill = lp && lp.height <= 80 ? lp : null;
+  leg.style.maxWidth = ""; leg.style.maxHeight = ""; leg.style.overflowY = "";
+  let leftPx, rightEdge = fabWall;
+  if (lpCol) {
+    // docked feed column on the left: the Key lives in the right gutter, its RIGHT edge pinned left of the FABs
+    leftPx = null;
+    leg.style.left = "auto";
+    leg.style.right = Math.round((W - rightEdge) / lz) + "px";
+  } else {
+    leg.style.right = "";
+    leftPx = 10;
+    leg.style.left = "";
+  }
+  const minLeft = lpCol ? lp.right + 8 : 10;
+  const availW = Math.max(120, rightEdge - minLeft);
+  leg.style.maxWidth = Math.round(Math.min(availW, 340) / lz) + "px";
+  leg.classList.toggle("lg-narrow", availW < 250);
+  if (!open) return;
+  const r0 = leg.getBoundingClientRect();
+  if (lpPill && lpPill.left < r0.right && lpPill.right > r0.left) topLim = Math.max(topLim, lpPill.bottom + 8);
+  const availH = Math.max(90, r0.bottom - topLim);
+  leg.style.maxHeight = Math.round(availH / lz) + "px";
+  leg.style.overflowY = "auto";
+}
+function legendRouteHint() {
+  const el = document.getElementById("lg-route"); if (!el) return;
+  const rt = typeof RT !== "undefined" ? RT : null;
+  if (rt && rt.ready) el.innerHTML = "✎ <b>Draw route</b> and ➤ <b>Go here</b> are the round buttons on the right.";
+  else if (ON_PAGES || location.port !== "8787") el.innerHTML = "✎ Route drawing works on your PC's local page (<b>http://&lt;PC-IP&gt;:8787</b>), not here.";
+  else el.innerHTML = "✎ Route buttons appear when the PC's route runner answers.";
+}
+window.addEventListener("resize", () => { if (typeof placeLegend === "function") setTimeout(placeLegend, 0); });
 function routeCardEls() {
   return ["route-confirm", "route-status", "draw-bar"]
     .map(id => document.getElementById(id))
@@ -3408,6 +3472,7 @@ function positionLivePanel() {
       lp.style.top = Math.round((f.top + (f.height - pw.height) / 2) / z) + "px";
     }
   }
+  if (typeof placeLegend === "function") placeLegend();
   if (typeof refitOverviewSoon === "function") refitOverviewSoon();
 }
 function lpSameShape(a, b) {
@@ -3523,6 +3588,11 @@ function renderLivePanel() {
   lp.querySelector("#lp-head").onclick = () => {
     if (S.focusedTheater) { LV.regionOpen = !LV.regionOpen; if (lpSizeClass() === "small") store.set("liveRegionOpen", LV.regionOpen); }
     else { LV.min = !LV.min; lpMinSave(LV.min); }
+    const lgE = document.getElementById("legend");
+    if (window.innerWidth < 700 && lgE && !lgE.classList.contains("collapsed") && !(S.focusedTheater ? !LV.regionOpen : LV.min)) {
+      lgE.classList.add("collapsed"); const t = document.getElementById("lg-toggle");
+      if (t) { t.textContent = "Key ▸"; t.setAttribute("aria-expanded", "false"); }
+    }
     renderLivePanel();
   };
   const sc = LV._msgScroll || 0;
@@ -3728,6 +3798,7 @@ async function routeProbe() {
     if (!r.ok) throw new Error("offline");
     RT.ready = true; RT.offline = false;
     routeEnsureFab();
+    if (typeof legendRouteHint === "function") legendRouteHint();
     return true;
   } catch (e) {
     RT.ready = false; RT.offline = true;
@@ -3737,6 +3808,7 @@ async function routeProbe() {
     const dfab = document.getElementById("btn-draw");
     if (dfab) dfab.remove();
     if (typeof drawExit === "function" && RT.drawMode) drawExit();
+    if (typeof legendRouteHint === "function") legendRouteHint();
     return false;
   }
 }
@@ -4271,6 +4343,7 @@ async function drawSend() {
   // Show Go here + Draw route as soon as the PC's route API answers (LAN page only; GitHub Pages has no API).
   // (only on the logger's own port 8787, or with ?route=1, so other hosts never log a 404 for the probe)
   if (location.port === "8787" || new URLSearchParams(location.search).get("route") === "1") setTimeout(() => { routeProbe(); }, 1200);
+  if (typeof legendRouteHint === "function") legendRouteHint();
   document.addEventListener("keydown", (ev) => {
     if (!RT.drawMode) return;
     if (ev.key === "Escape") drawExit();
