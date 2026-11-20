@@ -1194,6 +1194,8 @@ function highlightFight(id) {
   if (!rec) return;
   const btn = document.querySelector(`.rc-battle[data-id="${id}"]`);
   if (btn) btn.classList.add("on");
+  const pop = rec.marker.getPopup();
+  if (pop) pop.options.autoPan = false;          // panTo below is the one move; autoPan + panTo shook the map
   rec.marker.openPopup();
   const el = rec.marker.getElement();
   if (el) el.classList.add("hl");
@@ -2320,7 +2322,11 @@ function lvTextColor(f) {
 }
 function liveTopInset() {
   const lp = document.getElementById("live-panel");
-  return lp && !lp.hidden ? Math.round(lp.getBoundingClientRect().bottom + 8) : 0;
+  if (!lp || lp.hidden) return 0;
+  const r = lp.getBoundingClientRect();
+  // Desktop 2x panel is a tall left column — its bottom edge is NOT a top inset.
+  // Only a full-width (phone) panel sits above the map.
+  return r.width >= window.innerWidth * 0.6 ? Math.round(r.bottom + 8) : 0;
 }
 function liveMapPad() {
   // Viewport inset so fly-to / popups land in the free map, not under the 2x live panel or region card.
@@ -2351,8 +2357,25 @@ function livePanPoint(latlng) {
   if (Math.abs(dx) > 2 || Math.abs(dy) > 2) map.panBy([dx, dy], { animate: false });
 }
 function liveAutoPanPad() {
+  // Keep the popup in the free map, but NEVER ask Leaflet for more padding than
+  // the viewport can satisfy — unsatisfiable autoPanPadding (e.g. liveTopInset =
+  // the tall 2x panel's bottom edge) pans the map off the north of the image
+  // and oscillates (Kai: "shaking / fight at the very bottom").
   const pad = liveMapPad();
-  return { autoPanPaddingTopLeft: L.point(pad.left, Math.max(60, pad.top)), autoPanPaddingBottomRight: L.point(pad.right, pad.bottom) };
+  const W = window.innerWidth, H = window.innerHeight;
+  const popupH = 260, popupW = 320, minFree = 360;
+  let left = Math.max(10, pad.left), top = Math.max(40, pad.top);
+  let right = Math.max(10, pad.right), bottom = Math.max(16, pad.bottom);
+  // A full-width 2x live panel can be half the phone screen. Overlapping that
+  // panel is better than reserving its full height as autoPan padding.
+  top = Math.min(top, Math.max(80, Math.round(H * 0.28)));
+  if (top + bottom + minFree > H) top = Math.max(60, H - bottom - minFree);
+  if (top + bottom + popupH > H) top = Math.max(40, H - bottom - popupH);
+  if (left + right + popupW > W) {
+    if (left >= right) left = Math.max(10, W - right - popupW);
+    else right = Math.max(10, W - left - popupW);
+  }
+  return { autoPanPaddingTopLeft: L.point(left, top), autoPanPaddingBottomRight: L.point(right, bottom) };
 }
 function lvSidesHtml(f) {
   const n = (s) => f.source === "radio" || !s.fielded ? "" : ` ${s.fielded}`;   // radio reports carry no head count
@@ -2558,7 +2581,7 @@ function renderMsgMarkers(placedFights) {
         : L.divIcon({ className: "msg-ico", iconSize: [size, size], iconAnchor: [size / 2, size / 2],
         html: `<div class="msg-mark${hot ? " hot" : ""}" style="--c:${msgColor(m)}" title="${esc(m.label)}">${msgSvg(m)}</div>` }) });
     mk.bindPopup("", { maxWidth: 290 });
-    mk.on("click", () => { mk.getPopup().options.autoPanPaddingTopLeft = L.point(10, Math.max(60, liveTopInset())); mk.setPopupContent(msgPopup(m)); });
+    mk.on("click", () => { Object.assign(mk.getPopup().options, liveAutoPanPad()); mk.setPopupContent(msgPopup(m)); });
     layer.msgs.addLayer(mk);
     LV.msgMarkers.set(m.id, mk);
   }
@@ -2761,7 +2784,7 @@ function msgFocusList(id) {
   const m = LV.msgById.get(Number(id)); if (!m) return;
   const root = (m.reply_to && LV.msgById.has(m.reply_to)) ? LV.msgById.get(m.reply_to) : m;
   const mk = LV.msgMarkers.get(root.id);
-  if (mk) { mk.getPopup().options.autoPanPaddingTopLeft = L.point(10, Math.max(60, liveTopInset())); mk.setPopupContent(msgPopup(root)); mk.openPopup(); }
+  if (mk) { Object.assign(mk.getPopup().options, liveAutoPanPad()); mk.setPopupContent(msgPopup(root)); mk.openPopup(); }
 }
 window.addEventListener("resize", () => lvAlertPlace());
 /* ---- Live Zone Wanderers groups: faction emblem + activity ring + member count ---- */
@@ -2948,16 +2971,21 @@ function renderLive() {
     const key = `${size}|${st.active ? 1 : 0}|${f.fielded}|${(f.sides || []).map(s => s.faction + s.fielded).join(",")}`;
     if (!rec.marker) {
       rec.marker = L.marker(it.latlng, { pane: "livePane", keyboard: true, zIndexOffset: 3000 });
-      rec.marker.on("click", () => { rec.marker.getPopup().options.autoPanPaddingTopLeft = L.point(10, Math.max(160, liveTopInset())); rec.marker.setPopupContent(lvPopup(rec.fight, lvState(rec))); });
+      rec.marker.on("click", () => { Object.assign(rec.marker.getPopup().options, liveAutoPanPad()); rec.marker.setPopupContent(lvPopup(rec.fight, lvState(rec))); });
       rec.marker.bindPopup("", { autoPanPaddingTopLeft: L.point(10, 160) });
       layer.live.addLayer(rec.marker);
-    } else rec.marker.setLatLng(it.latlng);
+    }
+    const pop = rec.marker.getPopup(), ap = pop ? pop.options.autoPan : true;
+    if (pop) pop.options.autoPan = false;
+    const cur = rec.marker.getLatLng();
+    if (!cur || Math.abs(cur.lat - it.latlng.lat) > 1e-6 || Math.abs(cur.lng - it.latlng.lng) > 1e-6) rec.marker.setLatLng(it.latlng);
     if (rec.key !== key) {
       rec.marker.setIcon(L.divIcon({ className: "live-ico", iconSize: [size, size], iconAnchor: [size / 2, size / 2], html: lvIconHtml(f, size, !st.active) }));
       rec.key = key;
     }
     rec.marker.setOpacity(st.op);
     if (rec.marker.isPopupOpen()) rec.marker.setPopupContent(lvPopup(f, st));
+    if (pop) pop.options.autoPan = ap;
   }
   // fights first, then groups nudged off them, then radio markers nudged off both
   const openMsg = [...LV.msgMarkers.entries()].find(([, mk]) => mk.isPopupOpen());
@@ -3275,7 +3303,7 @@ function lvFocus(id) {
   if (S.focusedTheater && !inFocusedTheater(f.u, f.v)) closeTheaters();
   const z = Math.max(map.getZoom(), (S.fitZoom != null ? S.fitZoom : 0) + 1.5);
   map.flyTo(ll(f.u, f.v), Math.min(z, map.getMaxZoom()), { duration: 0.6 });
-  map.once("moveend", () => { livePanPoint(ll(f.u, f.v)); renderLive(); if (rec.marker) { Object.assign(rec.marker.getPopup().options, liveAutoPanPad()); rec.marker.setPopupContent(lvPopup(rec.fight, lvState(rec))); rec.marker.openPopup(); } });
+  map.once("moveend", () => { livePanPoint(ll(f.u, f.v)); renderLive(); if (rec.marker) { Object.assign(rec.marker.getPopup().options, liveAutoPanPad(), { autoPan: false }); rec.marker.setPopupContent(lvPopup(rec.fight, lvState(rec))); rec.marker.openPopup(); rec.marker.getPopup().options.autoPan = true; } });
 }
 function lvApply(d) {
   const seen = new Set();
