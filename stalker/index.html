@@ -1667,9 +1667,11 @@ const ZH_HIRES = {
       window.innerWidth < 700 ||
       (typeof navigator !== "undefined" && navigator.deviceMemory && navigator.deviceMemory <= 4)
     );
+    // map.jpg is last so the public GitHub Pages copy, which only ships
+    // that original 1500x1314 image, still gets a real base map.
     return phone
-      ? [id + "_hires_4k.jpg", id + "_hires.jpg", id + ".jpg"]
-      : [id + "_hires.jpg", id + "_hires_4k.jpg", id + ".jpg"];
+      ? [id + "_hires_4k.jpg", id + "_hires.jpg", id + ".jpg", "map.jpg"]
+      : [id + "_hires.jpg", id + "_hires_4k.jpg", id + ".jpg", "map.jpg"];
   }
 };
 
@@ -2073,8 +2075,9 @@ function ensureBaseMap(d) {
   const primary = (typeof zhBasemapUrl === "function") ? zhBasemapUrl() : MAP_IMAGE_URL;
   const fallback = (typeof zhBasemapFallback === "function") ? zhBasemapFallback() : MAP_IMAGE_URL;
   const candidates = (ZH_HIRES && ZH_HIRES.enabled && !d.sample && typeof ZH_HIRES.urls === "function")
-    ? ZH_HIRES.urls(gradeId)
+    ? ZH_HIRES.urls(gradeId).slice()
     : [primary, fallback, MAP_IMAGE_URL];
+  if (candidates.indexOf("map.jpg") < 0) candidates.push("map.jpg");
   const key = `${dw}x${dh}|${d.sample ? "s" : "r"}|${candidates.join(",")}`;
   if (S.mapKey === key) return Promise.resolve();
   S.mapKey = key;
